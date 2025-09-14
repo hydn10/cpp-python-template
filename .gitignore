@@ -1,7 +1,6 @@
-out*/
-
 
 # Build outputs
+out*/
 build/
 _skbuild/
 dist/
@@ -66,4 +65,3 @@ cmake-build-*/
 
 # Jupyter
 .ipynb_checkpoints/
-
