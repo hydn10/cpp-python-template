@@ -1,0 +1,42 @@
+[build-system]
+requires = [
+  "scikit-build-core>=0.9",
+  "pybind11>=2.11",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "mylib-apps"
+version = "0.1.0"
+description = "Apps for a C++ library: pybind11-backed plotting/visualization"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [{ name = "Your Name" }]
+license = { text = "Proprietary" }
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: C++",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Operating System :: OS Independent",
+]
+
+# Python runtime dependencies for analysis/plotting use of the binding
+dependencies = [
+  "numpy>=1.22",
+  "matplotlib>=3.6",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7",
+]
+
+[project.scripts]
+mylib-plot = "mylib_apps.cli:main"
+
+[tool.scikit-build]
+wheel.packages = ["python/mylib_apps"]
+build-dir = "_skbuild"
+cmake.verbose = false
+cmake.minimum-version = "3.21"
+cmake.build-type = "Release"
