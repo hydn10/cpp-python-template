@@ -110,6 +110,45 @@
         "release",
         "build-examples"
       ]
+    },
+    {
+      "name": "ci-linux",
+      "displayName": "CI Linux (Unix Makefiles, Release)",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTING": "ON",
+        "BUILD_EXAMPLES": "ON",
+        "BUILD_PYTHON": "OFF"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "ci-windows",
+      "displayName": "CI Windows (VS2022, Release)",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "BUILD_TESTING": "ON",
+        "BUILD_EXAMPLES": "ON",
+        "BUILD_PYTHON": "OFF"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
     }
   ],
   "buildPresets":[
@@ -120,6 +159,15 @@
     {
       "name":"dev-x64-win-release",
       "configurePreset":"dev-x64-win-release"
+    },
+    {
+      "name": "ci-linux",
+      "configurePreset": "ci-linux"
+    },
+    {
+      "name": "ci-windows",
+      "configurePreset": "ci-windows",
+      "configuration": "Release"
     }
   ],
   "testPresets":[
@@ -136,6 +184,17 @@
       "output":{
         "verbosity":"verbose"
       }
+    },
+    {
+      "name": "ci-linux",
+      "configurePreset": "ci-linux",
+      "output": { "verbosity": "verbose" }
+    },
+    {
+      "name": "ci-windows",
+      "configurePreset": "ci-windows",
+      "configuration": "Release",
+      "output": { "verbosity": "verbose" }
     }
   ],
   "workflowPresets":[
@@ -171,6 +230,22 @@
           "type":"test",
           "name":"dev-x64-win-release"
         }
+      ]
+    },
+    {
+      "name": "ci-linux-all",
+      "steps": [
+        { "type": "configure", "name": "ci-linux" },
+        { "type": "build", "name": "ci-linux" },
+        { "type": "test", "name": "ci-linux" }
+      ]
+    },
+    {
+      "name": "ci-windows-all",
+      "steps": [
+        { "type": "configure", "name": "ci-windows" },
+        { "type": "build", "name": "ci-windows" },
+        { "type": "test", "name": "ci-windows" }
       ]
     }
   ]

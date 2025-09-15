@@ -1,47 +1,57 @@
-name: CMake CI
+name: CI
 
 on:
   push:
   pull_request:
 
 jobs:
-  build-and-test:
-    name: ${{ matrix.os }} C++ build and CTest
+  cmake:
+    name: ${{ matrix.os }} C++ (CMake Presets)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            preset: ci-linux-all
+            example: out/build/ci-linux/mylib_example
+          - os: windows-latest
+            preset: ci-windows-all
+            example: out/build/ci-windows/Release/mylib_example.exe
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure (Release)
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=ON -DBUILD_PYTHON=OFF -DBUILD_TESTING=ON
+      - name: Run CMake workflow preset
+        run: cmake --workflow --preset ${{ matrix.preset }}
 
-      - name: Build
-        run: cmake --build build --config Release --parallel
-
-      - name: CTest
-        run: ctest --test-dir build --output-on-failure -C Release
-
-      - name: Run example (Linux)
-        if: runner.os == 'Linux'
+      - name: Run example
+        shell: bash
         run: |
-          chmod +x build/mylib_example || true
-          ./build/mylib_example
+          chmod +x "${{ matrix.example }}" || true
+          "${{ matrix.example }}"
 
-      - name: Run example (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          if (Test-Path "build/Release/mylib_example.exe") {
-            & "build/Release/mylib_example.exe"
-          } elseif (Test-Path "build/mylib_example.exe") {
-            & "build/mylib_example.exe"
-          } else {
-            Get-ChildItem -Recurse build | Write-Output
-            throw "mylib_example.exe not found"
-          }
+  nix:
+    name: Nix (flake)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Nix flake show
+        run: nix flake show
+
+      - name: Build default package (C++ library)
+        run: nix build .#default -L
+
+      - name: Run C++ example via flake app
+        run: nix run .#mylib-example
+
+      - name: Build python-app env
+        run: nix build .#python-app -L
