@@ -55,7 +55,12 @@
             # Ensure scikit-build-core can find CMake/Ninja when building the local package
             (final: prev: {
               "mylib-apps" = prev."mylib-apps".overrideAttrs (old: {
-                nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.cmake pkgs.ninja ];
+                # Provide CMake, Ninja, and pybind11 for CMake's find_package
+                nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+                  pkgs.cmake
+                  pkgs.ninja
+                  pkgs.python3Packages.pybind11
+                ];
                 # Keep examples off inside the Python wheel build
                 env = (old.env or { }) // {
                   CMAKE_GENERATOR = "Ninja";
@@ -132,4 +137,3 @@
       };
     };
 }
-

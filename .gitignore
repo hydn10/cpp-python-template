@@ -1,5 +1,6 @@
 
 # Build outputs
+result*
 out*/
 build/
 _skbuild/
