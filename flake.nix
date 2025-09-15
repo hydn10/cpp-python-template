@@ -2,17 +2,59 @@
   inputs = {
     # Track nixpkgs; you can update with `nix flake update` later.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # Optional: included for future uv-based workflows; devShell exposes `uv`.
-    uv2nix.url = "github:pyproject-nix/uv2nix";
+
+    # Pyproject/nix builders and uv2nix for building from uv.lock
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, uv2nix }:
+  outputs = {
+    self,
+    nixpkgs,
+    uv2nix,
+    pyproject-nix,
+    pyproject-build-systems,
+  }:
     let
       system = "x86_64-linux"; # scope limited as requested
       pkgs = import nixpkgs { inherit system; };
 
       # Use the default Python from nixpkgs so it tracks updates; easy to change.
       python = pkgs.python3;
+
+      # Load uv workspace from repo root (uses pyproject.toml + uv.lock)
+      workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
+
+      # Overlay mapping workspace packages to pyproject.nix builders
+      overlay = workspace.mkPyprojectOverlay {
+        # Prefer wheels for third-party packages; local packages still build from sources
+        sourcePreference = "wheel";
+      };
+
+      # Compose a Python package set via pyproject.nix + uv2nix overlay + build-system fixups
+      pythonSet =
+        (pkgs.callPackage pyproject-nix.build.packages { inherit python; }).overrideScope
+          (pkgs.lib.composeManyExtensions [
+            pyproject-build-systems.overlays.default
+            overlay
+            # extra fixups can go here
+            (_final: _prev: { })
+          ]);
 
       # C++ library package (default)
       mylib = pkgs.stdenv.mkDerivation {
@@ -31,34 +73,9 @@
         doCheck = false;
       };
 
-      # Python CLI app built via PEP 517 using scikit-build-core
-      mylibApps = python.pkgs.buildPythonApplication rec {
-        pname = "mylib-apps";
-        version = "0.1.0";
-        pyproject = true;
-        src = ./.;
-
-        # Build-time tools and PEP 517 backend deps (match pyproject [build-system])
-        nativeBuildInputs = [
-          pkgs.cmake
-          pkgs.ninja
-          python.pkgs.scikit-build-core
-          python.pkgs.pybind11
-        ];
-
-        # Runtime Python deps
-        propagatedBuildInputs = [
-          python.pkgs.numpy
-          python.pkgs.matplotlib
-        ];
-
-        # Avoid building extra artifacts here
-        env.CMAKE_BUILD_TYPE = "Release";
-        env.CMAKE_ARGS = "-DBUILD_EXAMPLES=OFF";
-
-        # No tests defined here
-        doCheck = false;
-      };
+      # Build virtualenvs from uv workspace deps
+      mylibApps = pythonSet.mkVirtualEnv "mylib-apps-env" workspace.deps.default;
+      mylibAppsDev = pythonSet.mkVirtualEnv "mylib-apps-dev-env" workspace.deps.all;
     in {
       packages.${system} = {
         default = mylib;
@@ -82,24 +99,28 @@
 
       # Dev shell that inherits deps from both packages and also provides common tools
       devShells.${system}.default = pkgs.mkShell {
-        # Pull buildInputs/propagatedBuildInputs from the packages automatically
-        inputsFrom = [ mylib mylibApps ];
-
-        nativeBuildInputs = [
+        # Pull C++ build deps; include Python env explicitly
+        inputsFrom = [ mylib ];
+        packages = [
+          mylib
+          mylibAppsDev
           pkgs.cmake
           pkgs.ninja
           pkgs.pkg-config
-          pkgs.uv  # convenient uv tool in the shell
+          pkgs.uv
+          python
         ];
-
-        # Make the chosen Python and pip available conveniently
-        buildInputs = [ python python.pkgs.pip ];
-
-        # Helpful environment hints
+        env = {
+          # Keep uv pure and use nixpkgs Python inside the shell
+          UV_NO_SYNC = "1";
+          UV_PYTHON_DOWNLOADS = "never";
+          UV_PYTHON = python.interpreter;
+        };
         shellHook = ''
+          unset PYTHONPATH
           echo "Dev shell ready"
           echo "- C++: cmake + ninja available; build dir suggestion: out/build"
-          echo "- Python: ${python.interpreter} with numpy/matplotlib; uv available"
+          echo "- Python venv from uv2nix on PATH; uv available"
         '';
       };
     };

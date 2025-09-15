@@ -53,7 +53,8 @@ This repo includes a Nix flake targeting `x86_64-linux`.
 
 Notes:
 
-- The dev shell inherits dependencies from both the C++ library and the Python app, and adds `cmake`, `ninja`, `pkg-config`, and `uv` for convenience. The Python interpreter used is `pkgs.python3` (nixpkgs’ default), so it will track nixpkgs updates.
+- The Python app is built using uv2nix from `uv.lock` and `pyproject.toml`.
+- The dev shell inherits the C++ package deps and provides a uv2nix-built virtualenv with all optional and dev dependency groups enabled, plus `cmake`, `ninja`, `pkg-config`, and `uv`. The Python interpreter used is `pkgs.python3` (nixpkgs’ default), so it will track nixpkgs updates.
 - If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
 
 ## Python apps with UV (locked env)
