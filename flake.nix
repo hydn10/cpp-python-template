@@ -75,7 +75,6 @@
 
       # Build virtualenvs from uv workspace deps
       mylibApps = pythonSet.mkVirtualEnv "mylib-apps-env" workspace.deps.default;
-      mylibAppsDev = pythonSet.mkVirtualEnv "mylib-apps-dev-env" workspace.deps.all;
     in {
       packages.${system} = {
         default = mylib;
@@ -102,8 +101,6 @@
         # Pull C++ build deps; include Python env explicitly
         inputsFrom = [ mylib ];
         packages = [
-          mylib
-          mylibAppsDev
           pkgs.cmake
           pkgs.ninja
           pkgs.pkg-config
