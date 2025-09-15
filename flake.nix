@@ -15,19 +15,16 @@
       python = pkgs.python3;
 
       # C++ library package (default)
-      mylib = pkgs.stdenv.mkDerivation rec {
+      mylib = pkgs.stdenv.mkDerivation {
         pname = "mylib";
         version = "0.1.0";
         src = ./.;
 
-        nativeBuildInputs = [ pkgs.cmake pkgs.ninja ];
+        nativeBuildInputs = [ pkgs.cmake ];
         # Build only the C++ parts for the default library package
         cmakeFlags = [
-          "-G" "Ninja"
           "-DBUILD_PYTHON=OFF"
           "-DBUILD_EXAMPLES=ON"
-          # Release by default; override via `cmakeFlags` or env if desired
-          "-DCMAKE_BUILD_TYPE=Release"
         ];
 
         # Standard CMake phases (provided by cmake/ninja setup hooks)
