@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 project(mylib VERSION 0.1.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
+include(CTest) # Provides BUILD_TESTING option and CTest integration
 
 option(BUILD_EXAMPLES "Build C++ example program" ON)
 option(BUILD_PYTHON "Build Python extension module" OFF)
@@ -94,4 +95,14 @@ if(BUILD_PYTHON)
       RUNTIME DESTINATION ${SKBUILD_PLATLIB_DIR}/mylib_apps
     )
   endif()
+endif()
+
+# Simple C++ unit test using CTest (no external framework)
+if(BUILD_TESTING)
+  add_executable(mylib_unit
+    tests/cpp/test_compute_value.cpp
+  )
+  target_link_libraries(mylib_unit PRIVATE mylib)
+  target_compile_features(mylib_unit PRIVATE cxx_std_17)
+  add_test(NAME compute_value COMMAND mylib_unit)
 endif()
