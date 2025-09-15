@@ -52,8 +52,18 @@
           (pkgs.lib.composeManyExtensions [
             pyproject-build-systems.overlays.default
             overlay
-            # extra fixups can go here
-            (_final: _prev: { })
+            # Ensure scikit-build-core can find CMake/Ninja when building the local package
+            (final: prev: {
+              "mylib-apps" = prev."mylib-apps".overrideAttrs (old: {
+                nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.cmake pkgs.ninja ];
+                # Keep examples off inside the Python wheel build
+                env = (old.env or { }) // {
+                  CMAKE_GENERATOR = "Ninja";
+                  CMAKE_ARGS = "-DBUILD_EXAMPLES=OFF";
+                  CMAKE_BUILD_TYPE = "Release";
+                };
+              });
+            })
           ]);
 
       # C++ library package (default)
