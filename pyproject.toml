@@ -37,5 +37,5 @@ mylib-plot = "mylib_apps.cli:main"
 [tool.scikit-build]
 wheel.packages = ["python/mylib_apps"]
 build-dir = "out/_skbuild"
-cmake.verbose = false
+build.verbose = false
 cmake.build-type = "Release"
