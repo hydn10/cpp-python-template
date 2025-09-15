@@ -38,6 +38,15 @@ build/Release/mylib_example.exe
 ./build/mylib_example
 ```
 
+## Testing
+
+- With CMake workflow presets:
+  - Linux: `cmake --workflow --preset ci-linux-all`
+  - Windows: `cmake --workflow --preset ci-windows-all`
+- Just run tests via test presets:
+  - Linux: `ctest --preset ci-linux`
+  - Windows: `ctest --preset ci-windows -C Release`
+
 ## Nix (flake)
 
 This repo includes a Nix flake targeting `x86_64-linux`.
@@ -54,7 +63,7 @@ This repo includes a Nix flake targeting `x86_64-linux`.
 Notes:
 
 - The Python app is built using uv2nix from `uv.lock` and `pyproject.toml`.
-- The dev shell inherits the C++ package deps and provides a uv2nix-built virtualenv with all optional and dev dependency groups enabled, plus `cmake`, `ninja`, `pkg-config`, and `uv`. The Python interpreter used is `pkgs.python3` (nixpkgs’ default), so it will track nixpkgs updates.
+- The dev shell inherits the C++ package deps and provides a uv2nix-built virtualenv for runtime dependencies (no Python test tooling), plus `cmake`, `ninja`, `pkg-config`, and `uv`. The Python interpreter used is `pkgs.python3` (nixpkgs’ default), so it will track nixpkgs updates.
 - If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
 
 ## Python apps with UV (locked env)
@@ -76,10 +85,6 @@ uv run mylib-plot
 # With options
 # uv run mylib-plot --xmin -10 --xmax 10 --points 401 --save plot.png
 
-# Optional: include dev tools (pytest) in the lock and env
-# uv lock --extra dev
-# uv sync --frozen --extra dev
-# uv run pytest -q
 ```
 
 Notes:

@@ -26,10 +26,7 @@ dependencies = [
   "matplotlib>=3.6",
 ]
 
-[project.optional-dependencies]
-dev = [
-  "pytest>=7",
-]
+## No Python testing dependencies; Python is only a small visualization script.
 
 [project.scripts]
 mylib-plot = "mylib_apps.cli:main"
