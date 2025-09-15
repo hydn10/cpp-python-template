@@ -38,6 +38,24 @@ build/Release/mylib_example.exe
 ./build/mylib_example
 ```
 
+## Nix (flake)
+
+This repo includes a Nix flake targeting `x86_64-linux`.
+
+- Build the C++ library (default package):
+  - `nix build` → result is the installed library in `result/`
+- Run the C++ example app:
+  - `nix run .#mylib-example`
+- Run the Python plotting app (console script):
+  - `nix run .#mylib-plot`
+- Enter a development shell with C++ and Python tools + deps available:
+  - `nix develop`
+
+Notes:
+
+- The dev shell inherits dependencies from both the C++ library and the Python app, and adds `cmake`, `ninja`, `pkg-config`, and `uv` for convenience. The Python interpreter used is `pkgs.python3` (nixpkgs’ default), so it will track nixpkgs updates.
+- If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
+
 ## Python apps with UV (locked env)
 
 This repo treats Python as an application wrapper for visualization, so we recommend locking dependencies for reproducibility.

@@ -70,6 +70,11 @@ if(BUILD_EXAMPLES)
   add_executable(mylib_example examples/cpp_example.cpp)
   target_link_libraries(mylib_example PRIVATE mylib)
   target_compile_features(mylib_example PRIVATE cxx_std_17)
+
+  # Install the example program when examples are enabled
+  install(TARGETS mylib_example
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
 endif()
 
 # Python binding using pybind11 (built when BUILD_PYTHON=ON, default under scikit-build)
