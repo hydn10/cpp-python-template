@@ -5,96 +5,103 @@
     "minor":25,
     "patch":0
   },
-  "configurePresets":[
+  "configurePresets": [
     {
-      "name":"build-python",
-      "hidden":true,
-      "cacheVariables":{
-        "BUILD_PYTHON":"ON"
+      "name": "build-python",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_PYTHON": "ON"
       }
     },
     {
-      "name":"build-examples",
-      "hidden":true,
-      "cacheVariables":{
-        "BUILD_EXAMPLES":"ON"
+      "name": "build-examples",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_EXAMPLES": "ON"
       }
     },
     {
-      "name":"windows-cl-base",
-      "hidden":true,
-      "generator":"Ninja",
-      "binaryDir":"${sourceDir}/out/build/${presetName}",
-      "installDir":"${sourceDir}/out/install/${presetName}",
-      "cacheVariables":{
-        "CMAKE_CXX_COMPILER":"cl.exe"
+      "name": "enable-clang-tidy",
+      "hidden": true,
+      "cacheVariables": {
+        "ENABLE_CLANG_TIDY": "ON"
+      }
+    },
+    {
+      "name": "windows-cl-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "cl.exe"
       },
-      "condition":{
-        "type":"equals",
-        "lhs":"${hostSystemName}",
-        "rhs":"Windows"
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
     },
     {
-      "name":"windows-clang-base",
-      "hidden":true,
-      "generator":"Ninja",
-      "binaryDir":"${sourceDir}/out/build/${presetName}",
-      "installDir":"${sourceDir}/out/install/${presetName}",
-      "cacheVariables":{
-        "CMAKE_CXX_COMPILER":"clang-cl.exe"
+      "name": "windows-clang-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang-cl.exe"
       },
-      "condition":{
-        "type":"equals",
-        "lhs":"${hostSystemName}",
-        "rhs":"Windows"
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
     },
     {
-      "name":"linux-base",
-      "hidden":true,
-      "generator":"Unix Makefiles",
-      "binaryDir":"${sourceDir}/out/build/${presetName}",
-      "installDir":"${sourceDir}/out/install/${presetName}",
-      "condition":{
-        "type":"equals",
-        "lhs":"${hostSystemName}",
-        "rhs":"Linux"
+      "name": "linux-base",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
     },
     {
-      "name":"x64",
-      "hidden":true,
-      "architecture":{
-        "value":"x64",
-        "strategy":"external"
+      "name": "x64",
+      "hidden": true,
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
       }
     },
     {
-      "name":"debug",
-      "hidden":true,
-      "cacheVariables":{
-        "CMAKE_BUILD_TYPE":"Debug"
+      "name": "debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name":"release",
-      "hidden":true,
-      "cacheVariables":{
-        "CMAKE_BUILD_TYPE":"Release"
+      "name": "release",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name":"profile",
-      "hidden":true,
-      "cacheVariables":{
-        "CMAKE_BUILD_TYPE":"RelWithDebInfo"
+      "name": "profile",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
-      "name":"dev-x64-win-debug",
-      "displayName":"x64 Debug (cl)",
-      "inherits":[
+      "name": "dev-x64-win-debug",
+      "displayName": "x64 Debug (cl)",
+      "inherits": [
         "x64",
         "windows-cl-base",
         "debug",
@@ -102,9 +109,9 @@
       ]
     },
     {
-      "name":"dev-x64-win-release",
-      "displayName":"x64 Release (cl)",
-      "inherits":[
+      "name": "dev-x64-win-release",
+      "displayName": "x64 Release (cl)",
+      "inherits": [
         "x64",
         "windows-cl-base",
         "release",
@@ -113,7 +120,7 @@
     },
     {
       "name": "ci-linux",
-      "displayName": "CI Linux (Unix Makefiles, Release)",
+      "displayName": "CI Linux",
       "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
@@ -121,7 +128,9 @@
         "CMAKE_BUILD_TYPE": "Release",
         "BUILD_TESTING": "ON",
         "BUILD_EXAMPLES": "ON",
-        "BUILD_PYTHON": "OFF"
+        "BUILD_PYTHON": "OFF",
+        "ENABLE_CLANG_TIDY": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       },
       "condition": {
         "type": "equals",
@@ -131,24 +140,14 @@
     },
     {
       "name": "ci-windows",
-      "displayName": "CI Windows (VS2022, Release)",
-      "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "installDir": "${sourceDir}/out/install/${presetName}",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "cacheVariables": {
-        "BUILD_TESTING": "ON",
-        "BUILD_EXAMPLES": "ON",
-        "BUILD_PYTHON": "OFF"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      }
+      "displayName": "CI Windows",
+      "inherits": [
+        "windows-cl-base",
+        "x64",
+        "release",
+        "build-examples",
+        "enable-clang-tidy"
+      ]
     }
   ],
   "buildPresets":[

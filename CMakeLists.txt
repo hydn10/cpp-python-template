@@ -1,9 +1,32 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.25)
 
-project(mylib VERSION 0.1.0 LANGUAGES CXX)
+# Trigger configuration on file change.
+configure_file(mylib.json mylib.json)
+
+file(READ ${CMAKE_CURRENT_BINARY_DIR}/mylib.json MYLIB_JSON_STRING)
+string(JSON VERSION_FROM_JSON GET ${MYLIB_JSON_STRING} version)
+
+project(mylib LANGUAGES CXX VERSION ${VERSION_FROM_JSON})
 
 include(GNUInstallDirs)
 include(CTest) # Provides BUILD_TESTING option and CTest integration
+
+# Optionally enable clang-tidy during builds
+option(ENABLE_CLANG_TIDY "Run clang-tidy analysis during build" OFF)
+
+if(ENABLE_CLANG_TIDY)
+  find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+  if(CLANG_TIDY_EXE)
+    message(STATUS "clang-tidy enabled: ${CLANG_TIDY_EXE}")
+    # Treat all reported diagnostics as errors to fail CI if issues are found
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--warnings-as-errors=*")
+  else()
+    message(WARNING "ENABLE_CLANG_TIDY=ON but clang-tidy was not found in PATH")
+  endif()
+endif()
+
+# Export compile commands for external tooling (clang-tidy, etc.)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "" FORCE)
 
 option(BUILD_EXAMPLES "Build C++ example program" ON)
 option(BUILD_PYTHON "Build Python extension module" OFF)

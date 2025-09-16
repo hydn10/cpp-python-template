@@ -47,6 +47,21 @@ build/Release/mylib_example.exe
   - Linux: `ctest --preset ci-linux`
   - Windows: `ctest --preset ci-windows -C Release`
 
+## Static Analysis (clang-tidy)
+
+- Configuration lives in `.clang-tidy` (tweak checks as needed).
+- Run automatically during build by enabling the CMake option:
+  - Linux/macOS (Ninja/Makefiles):
+    - `cmake -S . -B build -DENABLE_CLANG_TIDY=ON -DCMAKE_BUILD_TYPE=Debug`
+    - `cmake --build build`
+  - Windows (MSVC generator):
+    - `cmake -S . -B build -DENABLE_CLANG_TIDY=ON`
+    - `cmake --build build --config Debug`
+- Alternatively, run manually using compile commands:
+  - `cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
+  - `clang-tidy -p build src/mylib.cpp src/bindings/python/module.cpp examples/cpp_example.cpp`
+  - Or `run-clang-tidy` if available.
+
 ## Nix (flake)
 
 This repo includes a Nix flake targeting `x86_64-linux`.

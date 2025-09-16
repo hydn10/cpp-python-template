@@ -116,6 +116,7 @@
         # Pull C++ build deps; include Python env explicitly
         inputsFrom = [ mylib ];
         packages = [
+          pkgs.clang-tools
           mylibApps
           pkgs.cmake
           pkgs.ninja
