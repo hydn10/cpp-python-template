@@ -54,7 +54,7 @@ jobs:
       - name: Run example
         shell: pwsh
         run: |
-          ./out/build/ci-windows/Release/mylib_example.exe
+          ./out/build/ci-windows/mylib_example.exe
 
   nix:
     name: Nix (flake)

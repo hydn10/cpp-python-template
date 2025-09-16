@@ -105,7 +105,8 @@
         "x64",
         "windows-cl-base",
         "debug",
-        "build-examples"
+        "build-examples",
+        "enable-clang-tidy"
       ]
     },
     {
@@ -121,22 +122,13 @@
     {
       "name": "ci-linux",
       "displayName": "CI Linux",
-      "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "installDir": "${sourceDir}/out/install/${presetName}",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "BUILD_TESTING": "ON",
-        "BUILD_EXAMPLES": "ON",
-        "BUILD_PYTHON": "OFF",
-        "ENABLE_CLANG_TIDY": "ON",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
+      "inherits": [
+        "linux-base",
+        "x64",
+        "release",
+        "build-examples",
+        "enable-clang-tidy"
+      ]
     },
     {
       "name": "ci-windows",
