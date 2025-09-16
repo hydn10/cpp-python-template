@@ -72,6 +72,9 @@ jobs:
       - name: Build default package (C++ library)
         run: nix build .#default -L
 
+      - name: Nix flake check
+        run: nix flake check -L
+
       - name: Run C++ example via flake app
         run: nix run .#mylib-example
 
