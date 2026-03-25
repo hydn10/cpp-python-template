@@ -11,32 +11,10 @@ project(mylib LANGUAGES CXX VERSION ${VERSION_FROM_JSON})
 include(GNUInstallDirs)
 include(CTest) # Provides BUILD_TESTING option and CTest integration
 
-# Optionally enable clang-tidy during builds
-option(ENABLE_CLANG_TIDY "Run clang-tidy analysis during build" OFF)
-
-if(ENABLE_CLANG_TIDY)
-  find_program(CLANG_TIDY_EXE NAMES clang-tidy)
-  if(CLANG_TIDY_EXE)
-    message(STATUS "clang-tidy enabled: ${CLANG_TIDY_EXE}")
-    # Treat all reported diagnostics as errors to fail CI if issues are found
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--warnings-as-errors=*")
-  else()
-    message(WARNING "ENABLE_CLANG_TIDY=ON but clang-tidy was not found in PATH")
-  endif()
-endif()
-
-# Export compile commands for external tooling (clang-tidy, etc.)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "" FORCE)
-
-option(BUILD_EXAMPLES "Build C++ example program" ON)
+option(BUILD_EXAMPLES "Build C++ example program" OFF)
 option(BUILD_PYTHON "Build Python extension module" OFF)
 
-# If building via scikit-build-core, enable Python extension by default
-if(DEFINED SKBUILD)
-  set(BUILD_PYTHON ON)
-endif()
-
-add_library(mylib STATIC
+add_library(mylib
   src/mylib.cpp
 )
 
@@ -93,7 +71,7 @@ install(FILES
 if(BUILD_EXAMPLES)
   add_executable(mylib_example examples/cpp_example.cpp)
   target_link_libraries(mylib_example PRIVATE mylib)
-  target_compile_features(mylib_example PRIVATE cxx_std_17)
+  target_compile_features(mylib_example PRIVATE cxx_std_23)
 
   # Install the example program when examples are enabled
   install(TARGETS mylib_example
@@ -101,14 +79,14 @@ if(BUILD_EXAMPLES)
   )
 endif()
 
-# Python binding using pybind11 (built when BUILD_PYTHON=ON, default under scikit-build)
+# Python binding using nanobind (built when BUILD_PYTHON=ON)
 if(BUILD_PYTHON)
-  find_package(pybind11 CONFIG REQUIRED)
-  pybind11_add_module(_core MODULE
+  find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+  find_package(nanobind CONFIG REQUIRED)
+  nanobind_add_module(_core
     src/bindings/python/module.cpp
   )
   target_link_libraries(_core PRIVATE mylib)
-  target_compile_features(_core PRIVATE cxx_std_17)
 
   # When building with scikit-build-core, install the extension into the Python package
   if(DEFINED SKBUILD)
@@ -126,6 +104,6 @@ if(BUILD_TESTING)
     tests/cpp/test_compute_value.cpp
   )
   target_link_libraries(mylib_unit PRIVATE mylib)
-  target_compile_features(mylib_unit PRIVATE cxx_std_17)
+  target_compile_features(mylib_unit PRIVATE cxx_std_23)
   add_test(NAME compute_value COMMAND mylib_unit)
 endif()

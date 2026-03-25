@@ -1,29 +1,30 @@
 # mylib — Minimal C++ library with Python apps
 
-This is a minimal example of a C++ library that is consumable from both C++ and Python. It uses modern CMake for the C++ project, and pybind11 + scikit-build-core for the Python extension. Python workflows use UV.
+This is a minimal example of a C++ library that is consumable from both C++ and Python. It uses modern CMake for the C++ project, nanobind + scikit-build-core for the Python extension, and `uv` for Python environment management.
 
-The library exposes a single function:
+The C++ library stays Python-agnostic. It exposes a scalar helper and a more realistic data-generation function:
 
-```
+```cpp
 double mylib::compute_value(double x);  // returns x*x + 1.0
+std::vector<double> mylib::compute_values(double xmin, double xmax, std::size_t point_count);
 ```
 
-Python here is an application wrapper only. The internal extension is not a public API; use the provided console scripts.
+Python here is still an application wrapper only. The internal extension is not intended as a public API; use the provided console scripts.
 
 ## Layout
 
 - `include/mylib/mylib.hpp` — public C++ header
 - `src/mylib.cpp` — C++ library implementation
 - `examples/cpp_example.cpp` — tiny C++ app using the library
-- `src/bindings/python/module.cpp` — pybind11 module definition
+- `src/bindings/python/module.cpp` — nanobind module definition
 - `python/mylib_apps/` — Python application package (console scripts), internal extension at `_core`
 - `CMakeLists.txt` — modern CMake project (installs C++ library + headers)
 - `pyproject.toml` — scikit-build-core configuration for Python packaging
 
 ## Prereqs
 
-- C++17-capable compiler and CMake >= 3.21
-- Python 3.8+ and [uv](https://github.com/astral-sh/uv)
+- C++17-capable compiler and CMake >= 3.25
+- Python 3.9+ and [uv](https://docs.astral.sh/uv/)
 
 ## Build and run the C++ example
 
@@ -80,38 +81,37 @@ Notes:
 - The Python app is built using uv2nix from `uv.lock` and `pyproject.toml`.
 - The dev shell inherits the C++ package deps and provides a uv2nix-built virtualenv for runtime dependencies (no Python test tooling), plus `cmake`, `ninja`, `pkg-config`, and `uv`. The Python interpreter used is `pkgs.python3` (nixpkgs’ default), so it will track nixpkgs updates.
 - If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
+- When `buildPython = true`, the Nix derivation also passes `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` so the static C++ library can be linked into the Python extension on platforms that require PIC.
 
 ## Python apps with UV (locked env)
 
-This repo treats Python as an application wrapper for visualization, so we recommend locking dependencies for reproducibility.
+This repo treats Python as an application wrapper for visualization. Let `uv` manage the environment and editable install.
 
-```
-# 1) Create/update a lockfile from pyproject.toml
+```bash
+# Create or refresh the lockfile when dependencies change
 uv lock
 
-# 2) Create/sync the environment strictly to the lockfile
+# Create/sync the project environment from the lockfile
 uv sync --frozen
 
-# 3) Install this project (builds the C++ extension via scikit-build-core)
-uv pip install -e .
-
-# Plotting demo (installed console script)
+# Run the plotting demo
 uv run mylib-plot
-# With options
-# uv run mylib-plot --xmin -10 --xmax 10 --points 401 --save plot.png
 
+# Save a plot instead of opening a window
+uv run mylib-plot --xmin -10 --xmax 10 --points 401 --save plot.png
+
+# Internal import for debugging only
+uv run python -c "import mylib_apps._core as m; print(m.compute_values(-1.0, 1.0, 3))"
 ```
 
 Notes:
 
-- The Python build requires `pybind11` (declared in `pyproject.toml`) and will be provided automatically during build.
-- When building C++ only (not via scikit-build-core), the Python extension is not required and will be skipped unless you pass `-DBUILD_PYTHON=ON` and have pybind11 available to CMake.
-- The application’s Python deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and are locked via `uv.lock`.
-
-Advanced
-
-- Internal import for debugging only (not API):
-  - `uv run python -c "import mylib_apps._core as m; print(m.compute_value(3.0))"`
+- `uv sync` installs the project in editable mode, so there is no separate `uv pip install -e .` step.
+- After C++ source changes, run `uv sync` again to rebuild the extension in the project environment.
+- The Python build requires `nanobind` and will be provided automatically from `pyproject.toml`.
+- The scikit-build frontend in `pyproject.toml` passes `BUILD_PYTHON=ON` and `CMAKE_POSITION_INDEPENDENT_CODE=ON` for Python packaging builds.
+- For direct CMake builds, the Python extension is skipped unless you pass `-DBUILD_PYTHON=ON` and provide nanobind to CMake. On platforms that require PIC for shared modules, also pass `-DCMAKE_POSITION_INDEPENDENT_CODE=ON`.
+- The application runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
 
 ## Using the C++ library from another CMake project
 

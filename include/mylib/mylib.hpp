@@ -1,10 +1,16 @@
 #pragma once
 
-namespace mylib {
+#include <cstddef>
+#include <vector>
 
-// Computes a simple value; used from both C++ and Python.
-// Example definition: x*x + 1.0
-double compute_value(double x);
+namespace mylib
+{
 
-}  // namespace mylib
+double
+compute_value(double x);
 
+
+std::vector<double>
+compute_values(double xmin, double xmax, std::size_t point_count);
+
+} // namespace mylib

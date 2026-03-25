@@ -9,6 +9,17 @@ let
     workspaceRoot = ../.;
   };
 
+  # Temporary shim until pyproject-build-systems adds native nanobind support.
+  nanobindBuildSystemShim = final: prev: {
+    nanobind = pkgs.lib.extendDerivation true {
+      passthru = (python.pkgs.nanobind.passthru or { }) // {
+        dependencies = { };
+        optional-dependencies = { };
+        dependency-groups = { };
+      };
+    } python.pkgs.nanobind;
+  };
+
   overlay = workspace.mkPyprojectOverlay {
     sourcePreference = "wheel";
   };
@@ -17,18 +28,21 @@ let
     (pkgs.callPackage pyproject-nix.build.packages { inherit python; }).overrideScope
       (pkgs.lib.composeManyExtensions [
         pyproject-build-systems.overlays.default
+        nanobindBuildSystemShim
         overlay
         (final: prev: {
           "mylib-apps" = prev."mylib-apps".overrideAttrs (old: {
             nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
               pkgs.cmake
               pkgs.ninja
-              pkgs.python3Packages.pybind11
+              final.nanobind
             ];
             env = (old.env or { }) // {
               CMAKE_GENERATOR = "Ninja";
               CMAKE_ARGS = "-DBUILD_EXAMPLES=OFF";
               CMAKE_BUILD_TYPE = "Release";
+              # nixpkgs installs nanobind's CMake package under site-packages.
+              nanobind_DIR = "${final.nanobind}/${python.sitePackages}/nanobind/cmake";
             };
           });
         })
@@ -51,4 +65,3 @@ in {
     UV_PYTHON = python.interpreter;
   };
 }
-

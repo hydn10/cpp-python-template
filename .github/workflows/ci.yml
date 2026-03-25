@@ -26,6 +26,30 @@ jobs:
           chmod +x "out/build/ci-linux/mylib_example" || true
           "out/build/ci-linux/mylib_example"
 
+  python-linux:
+    name: Linux Python (uv + nanobind smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Sync project
+        run: uv sync --frozen
+
+      - name: Import extension
+        run: uv run python -c "import mylib_apps._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
+
+      - name: Run plotting CLI
+        run: uv run mylib-plot --save out/ci-plot.png
+
   cmake-windows:
     name: Windows C++ (CMake CI Workflow)
     runs-on: windows-latest

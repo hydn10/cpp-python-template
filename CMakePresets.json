@@ -10,7 +10,8 @@
       "name": "build-python",
       "hidden": true,
       "cacheVariables": {
-        "BUILD_PYTHON": "ON"
+        "BUILD_PYTHON": "ON",
+        "CMAKE_POSITION_INDEPENDENT_CODE": "ON"
       }
     },
     {
@@ -24,7 +25,8 @@
       "name": "enable-clang-tidy",
       "hidden": true,
       "cacheVariables": {
-        "ENABLE_CLANG_TIDY": "ON"
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
@@ -120,6 +122,17 @@
       ]
     },
     {
+      "name": "dev-x64-win-release-python",
+      "displayName": "x64 Release + Python (cl)",
+      "inherits": [
+        "x64",
+        "windows-cl-base",
+        "release",
+        "build-examples",
+        "build-python"
+      ]
+    },
+    {
       "name": "ci-linux",
       "displayName": "CI Linux",
       "inherits": [
@@ -152,6 +165,10 @@
       "configurePreset":"dev-x64-win-release"
     },
     {
+      "name":"dev-x64-win-release-python",
+      "configurePreset":"dev-x64-win-release-python"
+    },
+    {
       "name": "ci-linux",
       "configurePreset": "ci-linux"
     },
@@ -172,6 +189,13 @@
     {
       "name":"dev-x64-win-release",
       "configurePreset":"dev-x64-win-release",
+      "output":{
+        "verbosity":"verbose"
+      }
+    },
+    {
+      "name":"dev-x64-win-release-python",
+      "configurePreset":"dev-x64-win-release-python",
       "output":{
         "verbosity":"verbose"
       }
@@ -220,6 +244,23 @@
         {
           "type":"test",
           "name":"dev-x64-win-release"
+        }
+      ]
+    },
+    {
+      "name":"dev-x64-win-release-python-all",
+      "steps":[
+        {
+          "type":"configure",
+          "name":"dev-x64-win-release-python"
+        },
+        {
+          "type":"build",
+          "name":"dev-x64-win-release-python"
+        },
+        {
+          "type":"test",
+          "name":"dev-x64-win-release-python"
         }
       ]
     },

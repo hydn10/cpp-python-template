@@ -38,5 +38,7 @@ in
       "-DBUILD_PYTHON=${buildPythonFlag}"
       "-DBUILD_EXAMPLES=${buildExamplesFlag}"
       "-DENABLE_CLANG_TIDY=${enableClangTidyFlag}"
+    ] ++ lib.optionals buildPython [
+      "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
     ];
   }
