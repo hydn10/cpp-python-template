@@ -23,20 +23,27 @@ Python here is still an application wrapper only. The internal extension is not 
 
 ## Prereqs
 
-- C++17-capable compiler and CMake >= 3.25
+- CMake >= 3.25
+- C++23-capable compiler to build this repo's examples/tests
+- C++17 is sufficient for downstream consumers of the installed `mylib` library target
 - Python 3.9+ and [uv](https://docs.astral.sh/uv/)
 
 ## Build and run the C++ example
 
+Single-config generators (Linux/macOS, Ninja, Unix Makefiles):
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DMYLIB_BUILD_EXAMPLES=ON -DMYLIB_BUILD_TESTING=OFF
+cmake --build build
+./build/examples/mylib-cpp-example
 ```
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release --target mylib_example
 
-# Run (Windows):
-build/Release/mylib_example.exe
+Multi-config generators (Visual Studio on Windows):
 
-# Run (Linux/macOS):
-./build/mylib_example
+```powershell
+cmake -S . -B build -DMYLIB_BUILD_EXAMPLES=ON -DMYLIB_BUILD_TESTING=OFF
+cmake --build build --config Release
+./build/examples/Release/mylib-cpp-example.exe
 ```
 
 ## Testing
@@ -51,12 +58,12 @@ build/Release/mylib_example.exe
 ## Static Analysis (clang-tidy)
 
 - Configuration lives in `.clang-tidy` (tweak checks as needed).
-- Run automatically during build by enabling the CMake option:
+- Run automatically during build by setting the standard CMake launcher variable:
   - Linux/macOS (Ninja/Makefiles):
-    - `cmake -S . -B build -DENABLE_CLANG_TIDY=ON -DCMAKE_BUILD_TYPE=Debug`
+    - `cmake -S . -B build -DCMAKE_CXX_CLANG_TIDY='clang-tidy;--warnings-as-errors=*' -DCMAKE_BUILD_TYPE=Debug`
     - `cmake --build build`
   - Windows (MSVC generator):
-    - `cmake -S . -B build -DENABLE_CLANG_TIDY=ON`
+    - `cmake -S . -B build -DCMAKE_CXX_CLANG_TIDY='clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc'`
     - `cmake --build build --config Debug`
 - Alternatively, run manually using compile commands:
   - `cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
@@ -109,8 +116,8 @@ Notes:
 - `uv sync` installs the project in editable mode, so there is no separate `uv pip install -e .` step.
 - After C++ source changes, run `uv sync` again to rebuild the extension in the project environment.
 - The Python build requires `nanobind` and will be provided automatically from `pyproject.toml`.
-- The scikit-build frontend in `pyproject.toml` passes `BUILD_PYTHON=ON` and `CMAKE_POSITION_INDEPENDENT_CODE=ON` for Python packaging builds.
-- For direct CMake builds, the Python extension is skipped unless you pass `-DBUILD_PYTHON=ON` and provide nanobind to CMake. On platforms that require PIC for shared modules, also pass `-DCMAKE_POSITION_INDEPENDENT_CODE=ON`.
+- The scikit-build frontend in `pyproject.toml` passes `-DMYLIB_BUILD_PYTHON=ON` and `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` for Python packaging builds.
+- For direct CMake builds, the Python extension is skipped unless you pass `-DMYLIB_BUILD_PYTHON=ON` and provide nanobind to CMake. On platforms that require PIC for shared modules, also pass `-DCMAKE_POSITION_INDEPENDENT_CODE=ON`.
 - The application runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
 
 ## Using the C++ library from another CMake project

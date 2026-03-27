@@ -62,6 +62,7 @@ Thumbs.db
 CMakeCache.txt
 CMakeFiles/
 cmake-build-*/
+CMakeUserPresets.json
 
 # Jupyter
 .ipynb_checkpoints/

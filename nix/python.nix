@@ -39,7 +39,6 @@ let
             ];
             env = (old.env or { }) // {
               CMAKE_GENERATOR = "Ninja";
-              CMAKE_ARGS = "-DBUILD_EXAMPLES=OFF";
               CMAKE_BUILD_TYPE = "Release";
               # nixpkgs installs nanobind's CMake package under site-packages.
               nanobind_DIR = "${final.nanobind}/${python.sitePackages}/nanobind/cmake";
@@ -63,5 +62,11 @@ in {
     UV_NO_SYNC = "1";
     UV_PYTHON_DOWNLOADS = "never";
     UV_PYTHON = python.interpreter;
+    # Wheels installed by uv (for example NumPy) may still need these shared
+    # libraries at runtime on Nix systems.
+    LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+      pkgs.stdenv.cc.cc.lib
+      pkgs.zlib
+    ];
   };
 }

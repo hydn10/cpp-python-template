@@ -4,42 +4,55 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   cmake-linux:
     name: Linux C++ (CMake CI Workflow)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install clang-tidy
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-tidy
+          sudo apt-get install -y clang-tidy gcc-14 g++-14
 
       - name: Run CMake workflow preset
+        env:
+          CC: gcc-14
+          CXX: g++-14
         run: cmake --workflow --preset ci-linux-all
 
       - name: Run example
         shell: bash
         run: |
-          chmod +x "out/build/ci-linux/mylib_example" || true
-          "out/build/ci-linux/mylib_example"
+          "out/build/ci-linux/examples/mylib-cpp-example"
 
   python-linux:
     name: Linux Python (uv + nanobind smoke test)
     runs-on: ubuntu-latest
+    env:
+      CC: gcc-14
+      CXX: g++-14
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Install GCC 14
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-14 g++-14
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
 
       - name: Sync project
         run: uv sync --frozen
@@ -55,7 +68,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install LLVM
         uses: KyleMayes/install-llvm-action@v2
@@ -78,14 +91,14 @@ jobs:
       - name: Run example
         shell: pwsh
         run: |
-          ./out/build/ci-windows/mylib_example.exe
+          ./out/build/ci-windows/examples/mylib-cpp-example.exe
 
   nix:
     name: Nix (flake)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31

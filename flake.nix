@@ -36,6 +36,7 @@
 
       pythonModules = import ./nix/python.nix {
         inherit pkgs uv2nix pyproject-nix pyproject-build-systems;
+        python = pkgs.python3;
       };
 
       mylibWithExamples = cpp.mylibWithExamples;
@@ -52,7 +53,7 @@
         # C++ example (installed into $out/bin by CMake when examples are ON)
         mylib-example = {
           type = "app";
-          program = "${mylibWithExamples}/bin/mylib_example";
+          program = "${mylibWithExamples}/bin/mylib-cpp-example";
         };
         # Python CLI from [project.scripts]
         mylib-plot = {
@@ -87,4 +88,3 @@
       });
     };
 }
-

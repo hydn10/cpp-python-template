@@ -19,8 +19,6 @@ let
   buildTestsFlag = mkCMakeFlag buildTests;
   buildPythonFlag = mkCMakeFlag buildPython;
   buildExamplesFlag = mkCMakeFlag buildExamples;
-  enableClangTidyFlag = mkCMakeFlag enableClangTidy;
-
 in
   stdenv.mkDerivation
   {
@@ -34,10 +32,12 @@ in
     nativeBuildInputs = [ cmake ] ++ (if enableClangTidy then [ clang-tools ] else [ ]);
 
     cmakeFlags = [
-      "-DBUILD_TESTING=${buildTestsFlag}"
-      "-DBUILD_PYTHON=${buildPythonFlag}"
-      "-DBUILD_EXAMPLES=${buildExamplesFlag}"
-      "-DENABLE_CLANG_TIDY=${enableClangTidyFlag}"
+      "-DMYLIB_BUILD_TESTING=${buildTestsFlag}"
+      "-DMYLIB_BUILD_PYTHON=${buildPythonFlag}"
+      "-DMYLIB_BUILD_EXAMPLES=${buildExamplesFlag}"
+    ] ++ lib.optionals enableClangTidy [
+      "-DCMAKE_CXX_CLANG_TIDY=clang-tidy;--warnings-as-errors=*"
+      "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
     ] ++ lib.optionals buildPython [
       "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
     ];

@@ -9,6 +9,8 @@ int
 main()
 try
 {
+  std::FILE *const error_stream = stderr;
+
   try
   {
     double const xmin = -2.0;
@@ -16,23 +18,23 @@ try
 
     auto const values = mylib::compute_values(xmin, xmax, 5);
 
-    std::print(stdout, "compute_values({:g}, {:g}, 5) =", xmin, xmax);
+    std::print("compute_values({:g}, {:g}, 5) =", xmin, xmax);
 
     for (double const value : values)
     {
-      std::print(stdout, " {:g}", value);
+      std::print(" {:g}", value);
     }
-    std::print(stdout, "\n");
+    std::print("\n");
 
     return 0;
   }
   catch (std::exception const &exception)
   {
-    std::println(stderr, "example failed: {}", exception.what());
+    std::println(error_stream, "example failed: {}", exception.what());
   }
   catch (...)
   {
-    std::println(stderr, "example failed with an unknown exception");
+    std::println(error_stream, "example failed with an unknown exception");
   }
 
   return 1;

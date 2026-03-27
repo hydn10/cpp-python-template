@@ -10,6 +10,8 @@ int
 main()
 try
 {
+  std::FILE *const error_stream = stderr;
+
   try
   {
     double const x = 3.0;
@@ -18,28 +20,28 @@ try
 
     if (std::abs(got - expected) > 1e-12)
     {
-      std::println(stderr, "compute_value({:g}) expected {:g}, got {:g}", x, expected, got);
+      std::println(error_stream, "compute_value({:g}) expected {:g}, got {:g}", x, expected, got);
       return 1;
     }
 
     auto const values = mylib::compute_values(-1.0, 1.0, 3);
     if (values.size() != 3U)
     {
-      std::println(stderr, "compute_values returned {} samples, expected 3", values.size());
+      std::println(error_stream, "compute_values returned {} samples, expected 3", values.size());
       return 1;
     }
 
     if (std::abs(values.at(0) - 2.0) > 1e-12 || std::abs(values.at(1) - 1.0) > 1e-12 ||
         std::abs(values.at(2) - 2.0) > 1e-12)
     {
-      std::println(stderr, "compute_values returned unexpected samples");
+      std::println(error_stream, "compute_values returned unexpected samples");
       return 1;
     }
 
     auto const single_value = mylib::compute_values(2.0, 5.0, 1);
     if (single_value.size() != 1U || std::abs(single_value.front() - 5.0) > 1e-12)
     {
-      std::println(stderr, "compute_values single-point case failed");
+      std::println(error_stream, "compute_values single-point case failed");
       return 1;
     }
 
@@ -47,11 +49,11 @@ try
   }
   catch (std::exception const &exception)
   {
-    std::println(stderr, "test failed: {}", exception.what());
+    std::println(error_stream, "test failed: {}", exception.what());
   }
   catch (...)
   {
-    std::println(stderr, "test failed with an unknown exception");
+    std::println(error_stream, "test failed with an unknown exception");
   }
 
   return 1;

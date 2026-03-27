@@ -10,7 +10,7 @@
       "name": "build-python",
       "hidden": true,
       "cacheVariables": {
-        "BUILD_PYTHON": "ON",
+        "MYLIB_BUILD_PYTHON": "ON",
         "CMAKE_POSITION_INDEPENDENT_CODE": "ON"
       }
     },
@@ -18,15 +18,32 @@
       "name": "build-examples",
       "hidden": true,
       "cacheVariables": {
-        "BUILD_EXAMPLES": "ON"
+        "MYLIB_BUILD_EXAMPLES": "ON"
+      }
+    },
+    {
+      "name": "build-testing",
+      "hidden": true,
+      "cacheVariables": {
+        "MYLIB_BUILD_TESTING": "ON"
       }
     },
     {
       "name": "enable-clang-tidy",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc",
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--warnings-as-errors=*",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "enable-clang-tidy-windows",
+      "hidden": true,
+      "inherits": [
+        "enable-clang-tidy"
+      ],
+      "cacheVariables": {
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc"
       }
     },
     {
@@ -107,8 +124,9 @@
         "x64",
         "windows-cl-base",
         "debug",
+        "build-testing",
         "build-examples",
-        "enable-clang-tidy"
+        "enable-clang-tidy-windows"
       ]
     },
     {
@@ -118,6 +136,7 @@
         "x64",
         "windows-cl-base",
         "release",
+        "build-testing",
         "build-examples"
       ]
     },
@@ -128,6 +147,7 @@
         "x64",
         "windows-cl-base",
         "release",
+        "build-testing",
         "build-examples",
         "build-python"
       ]
@@ -139,6 +159,7 @@
         "linux-base",
         "x64",
         "release",
+        "build-testing",
         "build-examples",
         "enable-clang-tidy"
       ]
@@ -150,8 +171,9 @@
         "windows-cl-base",
         "x64",
         "release",
+        "build-testing",
         "build-examples",
-        "enable-clang-tidy"
+        "enable-clang-tidy-windows"
       ]
     }
   ],

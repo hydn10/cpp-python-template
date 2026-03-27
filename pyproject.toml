@@ -40,5 +40,5 @@ cmake.build-type = "Release"
 cmake.version = ">=3.25"
 
 [tool.scikit-build.cmake.define]
-BUILD_PYTHON = true
+MYLIB_BUILD_PYTHON = true
 CMAKE_POSITION_INDEPENDENT_CODE = true
