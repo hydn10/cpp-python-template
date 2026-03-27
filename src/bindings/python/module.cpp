@@ -1,45 +1,40 @@
 #include <mylib/mylib.hpp>
 
-#include <nanobind/nanobind.h>
-#include <nanobind/ndarray.h>
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 
+#include <algorithm>
 #include <cstddef>
-#include <memory>
 #include <vector>
 
 
-namespace nb = nanobind;
+namespace py = pybind11;
 
 
 namespace
 {
 
-using samples_array = nb::ndarray<nb::numpy, double const, nb::ndim<1>, nb::c_contig>;
-
-samples_array
+py::array_t<double>
 as_numpy_array(std::vector<double> values)
 {
-  auto storage = std::make_unique<std::vector<double>>(std::move(values));
-  auto *data = storage->data();
-  auto const size = storage->size();
-  nb::capsule owner(
-      storage.release(), [](void *pointer) noexcept { delete static_cast<std::vector<double> *>(pointer); });
-  return samples_array(data, {size}, owner);
+  auto result = py::array_t<double>(values.size());
+  std::copy(values.cbegin(), values.cend(), result.mutable_data());
+  return result;
 }
 
 } // namespace
 
-NB_MODULE(_core, m)
+PYBIND11_MODULE(_core, m)
 {
-  m.doc() = "nanobind bindings for mylib";
+  m.doc() = "pybind11 bindings for mylib";
 
-  m.def("compute_value", &mylib::compute_value, nb::arg("x"), "Compute x*x + 1.0.");
+  m.def("compute_value", &mylib::compute_value, py::arg("x"), "Compute x*x + 1.0.");
   m.def(
       "compute_values",
       [](double xmin, double xmax, std::size_t point_count)
   { return as_numpy_array(mylib::compute_values(xmin, xmax, point_count)); },
-      nb::arg("xmin"),
-      nb::arg("xmax"),
-      nb::arg("point_count"),
+      py::arg("xmin"),
+      py::arg("xmax"),
+      py::arg("point_count"),
       "Sample compute_value() over an evenly spaced grid and return a NumPy array.");
 }

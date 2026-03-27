@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> None:
 
     plt.figure(figsize=(6, 4))
     plt.plot(x, y, label="x*x + 1")
-    plt.title("mylib.compute_values via nanobind")
+    plt.title("mylib.compute_values via pybind11")
     plt.xlabel("x")
     plt.ylabel("y")
     plt.grid(True, ls=":", alpha=0.6)

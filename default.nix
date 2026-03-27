@@ -29,7 +29,9 @@ in
 
     src = lib.cleanSource ./.;
 
-    nativeBuildInputs = [ cmake ] ++ (if enableClangTidy then [ clang-tools ] else [ ]);
+    nativeBuildInputs =
+      [ cmake ]
+      ++ (if enableClangTidy then [ clang-tools ] else [ ]);
 
     cmakeFlags = [
       "-DMYLIB_BUILD_TESTING=${buildTestsFlag}"

@@ -1,7 +1,7 @@
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
-find_package(nanobind CONFIG REQUIRED)
+find_package(pybind11 CONFIG REQUIRED)
 
-nanobind_add_module(
+pybind11_add_module(
     _core
     "${PROJECT_SOURCE_DIR}/src/bindings/python/module.cpp"
 )

@@ -76,10 +76,9 @@
           ++ pythonModules.shellPackages;
         env = pythonModules.shellEnv;
         shellHook = ''
-          unset PYTHONPATH
           echo "Dev shell ready"
           echo "- C++: cmake + ninja available; build dir suggestion: out/build"
-          echo "- Python venv from uv2nix on PATH; uv available"
+          echo "- Python: run 'uv sync' to create/update .venv, then use 'uv run ...'"
         '';
       };
 

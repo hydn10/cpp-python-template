@@ -9,64 +9,66 @@ let
     workspaceRoot = ../.;
   };
 
-  # Temporary shim until pyproject-build-systems adds native nanobind support.
-  nanobindBuildSystemShim = final: prev: {
-    nanobind = pkgs.lib.extendDerivation true {
-      passthru = (python.pkgs.nanobind.passthru or { }) // {
-        dependencies = { };
-        optional-dependencies = { };
-        dependency-groups = { };
-      };
-    } python.pkgs.nanobind;
-  };
-
   overlay = workspace.mkPyprojectOverlay {
     sourcePreference = "wheel";
   };
 
+  hacks = pkgs.callPackage pyproject-nix.build.hacks { };
+
   pythonSet =
     (pkgs.callPackage pyproject-nix.build.packages { inherit python; }).overrideScope
       (pkgs.lib.composeManyExtensions [
-        pyproject-build-systems.overlays.default
-        nanobindBuildSystemShim
+        pyproject-build-systems.overlays.wheel
         overlay
-        (final: prev: {
-          "mylib-apps" = prev."mylib-apps".overrideAttrs (old: {
-            nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
-              pkgs.cmake
-              pkgs.ninja
-              final.nanobind
-            ];
-            env = (old.env or { }) // {
-              CMAKE_GENERATOR = "Ninja";
-              CMAKE_BUILD_TYPE = "Release";
-              # nixpkgs installs nanobind's CMake package under site-packages.
-              nanobind_DIR = "${final.nanobind}/${python.sitePackages}/nanobind/cmake";
+        (_final: prev: {
+            matplotlib = hacks.nixpkgsPrebuilt {
+              from = python.pkgs.matplotlib;
+              prev = prev.matplotlib;
             };
-          });
-        })
+
+            tkinter = hacks.nixpkgsPrebuilt {
+              from = python.pkgs.tkinter;
+            };
+
+            "mylib-apps" = prev."mylib-apps".overrideAttrs (old: {
+              nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
+                pkgs.cmake
+                pkgs.ninja
+                python.pkgs.pybind11
+              ];
+              env = (old.env or { }) // {
+                CMAKE_GENERATOR = "Ninja";
+                CMAKE_BUILD_TYPE = "Release";
+              };
+            });
+          })
       ]);
 
-  mylibApps = pythonSet.mkVirtualEnv "mylib-apps-env" workspace.deps.default;
+  mylibApps = pythonSet.mkVirtualEnv "mylib-apps-env" (
+    workspace.deps.default
+    // {
+      tkinter = [ ];
+    }
+  );
 
 in {
   inherit python pythonSet mylibApps;
 
   shellPackages = [
     pkgs.uv
-    mylibApps
     python
   ];
 
   shellEnv = {
-    UV_NO_SYNC = "1";
     UV_PYTHON_DOWNLOADS = "never";
     UV_PYTHON = python.interpreter;
-    # Wheels installed by uv (for example NumPy) may still need these shared
-    # libraries at runtime on Nix systems.
+    # uv manages .venv in the dev shell, but Tk is still supplied by nixpkgs.
+    PYTHONPATH = "${python.pkgs.tkinter}/${python.sitePackages}";
+    # PyPI wheels used by uv need GUI/runtime libraries visible on Nix.
     LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
       pkgs.stdenv.cc.cc.lib
-      pkgs.zlib
+      pkgs.libx11
+      pkgs.wayland
     ];
   };
 }

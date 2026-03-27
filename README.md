@@ -1,6 +1,6 @@
 # mylib — Minimal C++ library with Python apps
 
-This is a minimal example of a C++ library that is consumable from both C++ and Python. It uses modern CMake for the C++ project, nanobind + scikit-build-core for the Python extension, and `uv` for Python environment management.
+This is a minimal example of a C++ library that is consumable from both C++ and Python. It uses modern CMake for the C++ project, pybind11 + scikit-build-core for the Python extension, and `uv` for Python environment management.
 
 The C++ library stays Python-agnostic. It exposes a scalar helper and a more realistic data-generation function:
 
@@ -16,7 +16,7 @@ Python here is still an application wrapper only. The internal extension is not 
 - `include/mylib/mylib.hpp` — public C++ header
 - `src/mylib.cpp` — C++ library implementation
 - `examples/cpp_example.cpp` — tiny C++ app using the library
-- `src/bindings/python/module.cpp` — nanobind module definition
+- `src/bindings/python/module.cpp` — pybind11 module definition
 - `python/mylib_apps/` — Python application package (console scripts), internal extension at `_core`
 - `CMakeLists.txt` — modern CMake project (installs C++ library + headers)
 - `pyproject.toml` — scikit-build-core configuration for Python packaging
@@ -86,7 +86,7 @@ This repo includes a Nix flake targeting `x86_64-linux`.
 Notes:
 
 - The Python app is built using uv2nix from `uv.lock` and `pyproject.toml`.
-- The dev shell inherits the C++ package deps and provides a uv2nix-built virtualenv for runtime dependencies (no Python test tooling), plus `cmake`, `ninja`, `pkg-config`, and `uv`. The Python interpreter used is `pkgs.python3` (nixpkgs’ default), so it will track nixpkgs updates.
+- The dev shell is uv-first: it provides the C++ toolchain, `uv`, and a pinned Nix Python interpreter, but it does not put the packaged Python app environment on `PATH`. Inside `nix develop`, use `uv sync` to create/update `.venv` and `uv run ...` to execute project Python commands. The shell also exposes Nix-provided `tkinter` plus the X11/Wayland client libraries so uv-managed `matplotlib` can open interactive windows on Nix.
 - If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
 - When `buildPython = true`, the Nix derivation also passes `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` so the static C++ library can be linked into the Python extension on platforms that require PIC.
 
@@ -115,9 +115,9 @@ Notes:
 
 - `uv sync` installs the project in editable mode, so there is no separate `uv pip install -e .` step.
 - After C++ source changes, run `uv sync` again to rebuild the extension in the project environment.
-- The Python build requires `nanobind` and will be provided automatically from `pyproject.toml`.
+- The Python build requires `pybind11` and will be provided automatically from `pyproject.toml`.
 - The scikit-build frontend in `pyproject.toml` passes `-DMYLIB_BUILD_PYTHON=ON` and `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` for Python packaging builds.
-- For direct CMake builds, the Python extension is skipped unless you pass `-DMYLIB_BUILD_PYTHON=ON` and provide nanobind to CMake. On platforms that require PIC for shared modules, also pass `-DCMAKE_POSITION_INDEPENDENT_CODE=ON`.
+- For direct CMake builds, the Python extension is skipped unless you pass `-DMYLIB_BUILD_PYTHON=ON` and make `pybind11` available to the selected Python interpreter or CMake search path. On platforms that require PIC for shared modules, also pass `-DCMAKE_POSITION_INDEPENDENT_CODE=ON`.
 - The application runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
 
 ## Using the C++ library from another CMake project

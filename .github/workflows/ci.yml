@@ -32,7 +32,7 @@ jobs:
           "out/build/ci-linux/examples/mylib-cpp-example"
 
   python-linux:
-    name: Linux Python (uv + nanobind smoke test)
+    name: Linux Python (UV + Pybind11)
     runs-on: ubuntu-latest
     env:
       CC: gcc-14
