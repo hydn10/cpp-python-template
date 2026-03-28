@@ -30,6 +30,20 @@ Python here is still an application wrapper only. The internal extension is not 
 
 ## Build and run the C++ example
 
+With development workflow presets:
+
+```bash
+cmake --workflow --preset dev-linux-debug-all
+cmake --workflow --preset dev-linux-release-all
+cmake --workflow --preset dev-linux-release-python-all
+```
+
+```powershell
+cmake --workflow --preset dev-x64-win-debug-all
+cmake --workflow --preset dev-x64-win-release-all
+cmake --workflow --preset dev-x64-win-release-python-all
+```
+
 Single-config generators (Linux/macOS, Ninja, Unix Makefiles):
 
 ```bash
@@ -49,10 +63,14 @@ cmake --build build --config Release
 ## Testing
 
 - With CMake workflow presets:
+  - Linux dev: `cmake --workflow --preset dev-linux-debug-all` or `cmake --workflow --preset dev-linux-release-all`
   - Linux: `cmake --workflow --preset ci-linux-all`
+  - Windows dev: `cmake --workflow --preset dev-x64-win-debug-all` or `cmake --workflow --preset dev-x64-win-release-all`
   - Windows: `cmake --workflow --preset ci-windows-all`
 - Just run tests via test presets:
+  - Linux dev: `ctest --preset dev-linux-debug` or `ctest --preset dev-linux-release`
   - Linux: `ctest --preset ci-linux`
+  - Windows dev: `ctest --preset dev-x64-win-debug -C Debug` or `ctest --preset dev-x64-win-release -C Release`
   - Windows: `ctest --preset ci-windows -C Release`
 
 ## Static Analysis (clang-tidy)

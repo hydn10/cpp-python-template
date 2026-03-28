@@ -54,11 +54,17 @@
         mylib-example = {
           type = "app";
           program = "${mylibWithExamples}/bin/mylib-cpp-example";
+          meta = {
+            description = "Run the packaged C++ example for the mylib template.";
+          };
         };
         # Python CLI from [project.scripts]
         mylib-plot = {
           type = "app";
           program = "${pythonModules.mylibApps}/bin/mylib-plot";
+          meta = {
+            description = "Run the packaged plotting CLI for the mylib template.";
+          };
         };
       };
 

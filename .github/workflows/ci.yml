@@ -11,6 +11,9 @@ jobs:
   cmake-linux:
     name: Linux C++ (CMake CI Workflow)
     runs-on: ubuntu-latest
+    env:
+      CC: gcc-14
+      CXX: g++-14
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -21,9 +24,6 @@ jobs:
           sudo apt-get install -y clang-tidy gcc-14 g++-14
 
       - name: Run CMake workflow preset
-        env:
-          CC: gcc-14
-          CXX: g++-14
         run: cmake --workflow --preset ci-linux-all
 
       - name: Run example
@@ -31,12 +31,27 @@ jobs:
         run: |
           "out/build/ci-linux/examples/mylib-cpp-example"
 
+      - name: Install package
+        run: cmake --install out/build/ci-linux
+
+      - name: Configure consumer package smoke test
+        run: >
+          cmake -S tests/consumer-cmake -B out/build/consumer-cmake-linux
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/ci-linux"
+
+      - name: Build consumer package smoke test
+        run: cmake --build out/build/consumer-cmake-linux
+
+      - name: Run consumer package smoke test
+        run: ./out/build/consumer-cmake-linux/mylib-consumer-smoke
+
   python-linux:
     name: Linux Python (UV + Pybind11)
     runs-on: ubuntu-latest
     env:
       CC: gcc-14
       CXX: g++-14
+      MPLBACKEND: Agg
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -60,7 +75,53 @@ jobs:
       - name: Import extension
         run: uv run python -c "import mylib_apps._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
 
+      - name: Create output directory
+        run: mkdir -p out
+
       - name: Run plotting CLI
+        run: uv run mylib-plot --save out/ci-plot.png
+
+  python-windows:
+    name: Windows Python (UV + Pybind11)
+    runs-on: windows-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up MSVC environment
+        shell: pwsh
+        run: |
+          $info = vswhere -latest -format json | ConvertFrom-Json
+          $module_name = 'Microsoft.VisualStudio.DevShell.dll'
+          $module_path = Join-Path $info.installationPath 'Common7' 'Tools' $module_name
+          Import-Module $module_path
+          Enter-VsDevShell -VsInstanceId $info.instanceId -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -no_logo"
+          Get-ChildItem 'env:' | ForEach-Object { echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
+
+      - name: Sync project
+        shell: pwsh
+        run: uv sync --frozen
+
+      - name: Import extension
+        shell: pwsh
+        run: uv run python -c "import mylib_apps._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
+
+      - name: Create output directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Path out -Force | Out-Null
+
+      - name: Run plotting CLI
+        shell: pwsh
         run: uv run mylib-plot --save out/ci-plot.png
 
   cmake-windows:
@@ -93,6 +154,24 @@ jobs:
         run: |
           ./out/build/ci-windows/examples/mylib-cpp-example.exe
 
+      - name: Install package
+        shell: pwsh
+        run: cmake --install out/build/ci-windows --config Release
+
+      - name: Configure consumer package smoke test
+        shell: pwsh
+        run: >
+          cmake -S tests/consumer-cmake -B out/build/consumer-cmake-windows
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/ci-windows"
+
+      - name: Build consumer package smoke test
+        shell: pwsh
+        run: cmake --build out/build/consumer-cmake-windows --config Release
+
+      - name: Run consumer package smoke test
+        shell: pwsh
+        run: ./out/build/consumer-cmake-windows/Release/mylib-consumer-smoke.exe
+
   nix:
     name: Nix (flake)
     runs-on: ubuntu-latest
@@ -114,6 +193,11 @@ jobs:
 
       - name: Run C++ example via flake app
         run: nix run .#mylib-example
+
+      - name: Run Python plotting app via flake app
+        run: |
+          mkdir -p out
+          nix run .#mylib-plot -- --save out/ci-plot.png
 
       - name: Build python-app env
         run: nix build .#python-app -L

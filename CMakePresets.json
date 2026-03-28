@@ -118,6 +118,41 @@
       }
     },
     {
+      "name": "dev-linux-debug",
+      "displayName": "Linux Debug",
+      "inherits": [
+        "linux-base",
+        "x64",
+        "debug",
+        "build-testing",
+        "build-examples",
+        "enable-clang-tidy"
+      ]
+    },
+    {
+      "name": "dev-linux-release",
+      "displayName": "Linux Release",
+      "inherits": [
+        "linux-base",
+        "x64",
+        "release",
+        "build-testing",
+        "build-examples"
+      ]
+    },
+    {
+      "name": "dev-linux-release-python",
+      "displayName": "Linux Release + Python",
+      "inherits": [
+        "linux-base",
+        "x64",
+        "release",
+        "build-testing",
+        "build-examples",
+        "build-python"
+      ]
+    },
+    {
       "name": "dev-x64-win-debug",
       "displayName": "x64 Debug (cl)",
       "inherits": [
@@ -179,6 +214,18 @@
   ],
   "buildPresets":[
     {
+      "name":"dev-linux-debug",
+      "configurePreset":"dev-linux-debug"
+    },
+    {
+      "name":"dev-linux-release",
+      "configurePreset":"dev-linux-release"
+    },
+    {
+      "name":"dev-linux-release-python",
+      "configurePreset":"dev-linux-release-python"
+    },
+    {
       "name":"dev-x64-win-debug",
       "configurePreset":"dev-x64-win-debug"
     },
@@ -201,6 +248,27 @@
     }
   ],
   "testPresets":[
+    {
+      "name":"dev-linux-debug",
+      "configurePreset":"dev-linux-debug",
+      "output":{
+        "verbosity":"verbose"
+      }
+    },
+    {
+      "name":"dev-linux-release",
+      "configurePreset":"dev-linux-release",
+      "output":{
+        "verbosity":"verbose"
+      }
+    },
+    {
+      "name":"dev-linux-release-python",
+      "configurePreset":"dev-linux-release-python",
+      "output":{
+        "verbosity":"verbose"
+      }
+    },
     {
       "name":"dev-x64-win-debug",
       "configurePreset":"dev-x64-win-debug",
@@ -235,6 +303,57 @@
     }
   ],
   "workflowPresets":[
+    {
+      "name":"dev-linux-debug-all",
+      "steps":[
+        {
+          "type":"configure",
+          "name":"dev-linux-debug"
+        },
+        {
+          "type":"build",
+          "name":"dev-linux-debug"
+        },
+        {
+          "type":"test",
+          "name":"dev-linux-debug"
+        }
+      ]
+    },
+    {
+      "name":"dev-linux-release-all",
+      "steps":[
+        {
+          "type":"configure",
+          "name":"dev-linux-release"
+        },
+        {
+          "type":"build",
+          "name":"dev-linux-release"
+        },
+        {
+          "type":"test",
+          "name":"dev-linux-release"
+        }
+      ]
+    },
+    {
+      "name":"dev-linux-release-python-all",
+      "steps":[
+        {
+          "type":"configure",
+          "name":"dev-linux-release-python"
+        },
+        {
+          "type":"build",
+          "name":"dev-linux-release-python"
+        },
+        {
+          "type":"test",
+          "name":"dev-linux-release-python"
+        }
+      ]
+    },
     {
       "name":"dev-x64-win-debug-all",
       "steps":[
