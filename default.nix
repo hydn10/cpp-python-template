@@ -10,9 +10,9 @@
 }:
 let
   pname = "mylib";
-  mylibJson = builtins.fromJSON (builtins.readFile ./mylib.json);
+  vcpkgManifest = builtins.fromJSON (builtins.readFile ./vcpkg.json);
 
-  version = mylibJson.version;
+  version = vcpkgManifest.version;
 
   mkCMakeFlag = opt: if opt then "ON" else "OFF";
 

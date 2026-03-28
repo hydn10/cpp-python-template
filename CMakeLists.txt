@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.25)
 
 # Trigger configuration on file change.
-configure_file(mylib.json mylib.json COPYONLY)
+configure_file(vcpkg.json vcpkg.json COPYONLY)
 
-file(READ "${CMAKE_CURRENT_BINARY_DIR}/mylib.json" MYLIB_JSON_STRING)
+file(READ "${CMAKE_CURRENT_BINARY_DIR}/vcpkg.json" MYLIB_JSON_STRING)
 string(JSON VERSION_FROM_JSON GET "${MYLIB_JSON_STRING}" version)
 
 project(mylib LANGUAGES CXX VERSION "${VERSION_FROM_JSON}")

@@ -1,6 +1,6 @@
 # mylib — Minimal C++ library with Python apps
 
-This is a minimal example of a C++ library that is consumable from both C++ and Python. It uses modern CMake for the C++ project, pybind11 + scikit-build-core for the Python extension, and `uv` for Python environment management.
+This is a minimal example of a C++ library that is consumable from both C++ and Python. It uses modern CMake for the C++ project, a `vcpkg.json` manifest for C++ dependencies, pybind11 + scikit-build-core for the Python extension, and `uv` for Python environment management.
 
 The C++ library stays Python-agnostic. It exposes a scalar helper and a more realistic data-generation function:
 
@@ -26,7 +26,16 @@ Python here is still an application wrapper only. The internal extension is not 
 - CMake >= 3.25
 - C++23-capable compiler to build this repo's examples/tests
 - C++17 is sufficient for downstream consumers of the installed `mylib` library target
+- [vcpkg](https://learn.microsoft.com/vcpkg/) when configuring with the repo's manifest dependencies (currently `Eigen3`)
 - Python 3.9+ and [uv](https://docs.astral.sh/uv/)
+
+For C++ builds that should resolve manifest dependencies, point CMake at the vcpkg toolchain, for example:
+
+```bash
+cmake -S . -B build \
+  -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+  -DCMAKE_BUILD_TYPE=Release
+```
 
 ## Build and run the C++ example
 
@@ -134,6 +143,7 @@ Notes:
 - `uv sync` installs the project in editable mode, so there is no separate `uv pip install -e .` step.
 - After C++ source changes, run `uv sync` again to rebuild the extension in the project environment.
 - The Python build requires `pybind11` and will be provided automatically from `pyproject.toml`.
+- The project version used by the C++ build is read from `vcpkg.json`.
 - The scikit-build frontend in `pyproject.toml` passes `-DMYLIB_BUILD_PYTHON=ON` and `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` for Python packaging builds.
 - For direct CMake builds, the Python extension is skipped unless you pass `-DMYLIB_BUILD_PYTHON=ON` and make `pybind11` available to the selected Python interpreter or CMake search path. On platforms that require PIC for shared modules, also pass `-DCMAKE_POSITION_INDEPENDENT_CODE=ON`.
 - The application runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
