@@ -8,6 +8,7 @@ let
   workspace = uv2nix.lib.workspace.loadWorkspace {
     workspaceRoot = ../.;
   };
+  mylib = pkgs.callPackage ../default.nix { };
 
   overlay = workspace.mkPyprojectOverlay {
     sourcePreference = "wheel";
@@ -36,6 +37,7 @@ let
                 pkgs.ninja
                 python.pkgs.pybind11
               ];
+              buildInputs = (old.buildInputs or [ ]) ++ (mylib.buildInputs or [ ]);
               env = (old.env or { }) // {
                 CMAKE_GENERATOR = "Ninja";
                 CMAKE_BUILD_TYPE = "Release";

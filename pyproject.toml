@@ -37,7 +37,7 @@ wheel.packages = ["python/mylib_apps"]
 build-dir = "out/_skbuild"
 build.verbose = false
 cmake.build-type = "Release"
-cmake.version = ">=3.25"
+cmake.version = ">=3.26"
 
 [tool.scikit-build.cmake.define]
 MYLIB_BUILD_PYTHON = true

@@ -3,6 +3,7 @@
 , python3
 , cmake
 , clang-tools
+, eigen
 , buildTests ? false
 , buildPython ? false
 , buildExamples ? false
@@ -32,6 +33,8 @@ in
     nativeBuildInputs =
       [ cmake ]
       ++ (if enableClangTidy then [ clang-tools ] else [ ]);
+
+    buildInputs = [ eigen ];
 
     cmakeFlags = [
       "-DMYLIB_BUILD_TESTING=${buildTestsFlag}"

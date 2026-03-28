@@ -1,5 +1,7 @@
 set(target_name mylib)
 
+find_package(Eigen3 CONFIG REQUIRED)
+
 add_library(${target_name})
 add_library(mylib::mylib ALIAS ${target_name})
 
@@ -16,6 +18,7 @@ target_sources(
 )
 
 target_compile_features(${target_name} PUBLIC cxx_std_17)
+target_link_libraries(${target_name} PRIVATE "$<BUILD_LOCAL_INTERFACE:Eigen3::Eigen>")
 
 set_target_properties(
     ${target_name}

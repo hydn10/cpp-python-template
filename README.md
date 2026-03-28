@@ -2,7 +2,7 @@
 
 This is a minimal example of a C++ library that is consumable from both C++ and Python. It uses modern CMake for the C++ project, a `vcpkg.json` manifest for C++ dependencies, pybind11 + scikit-build-core for the Python extension, and `uv` for Python environment management.
 
-The C++ library stays Python-agnostic. It exposes a scalar helper and a more realistic data-generation function:
+The C++ library stays Python-agnostic. It exposes a scalar helper and a more realistic data-generation function, while using Eigen internally to evaluate batches of sample points without exposing Eigen in the public API:
 
 ```cpp
 double mylib::compute_value(double x);  // returns x*x + 1.0
@@ -23,13 +23,13 @@ Python here is still an application wrapper only. The internal extension is not 
 
 ## Prereqs
 
-- CMake >= 3.25
+- CMake >= 3.26
 - C++23-capable compiler to build this repo's examples/tests
 - C++17 is sufficient for downstream consumers of the installed `mylib` library target
-- [vcpkg](https://learn.microsoft.com/vcpkg/) when configuring with the repo's manifest dependencies (currently `Eigen3`)
+- [vcpkg](https://learn.microsoft.com/vcpkg/) with `VCPKG_ROOT` set when configuring outside Nix; the presets use it to provide the repo's manifest dependencies (currently `Eigen3`)
 - Python 3.9+ and [uv](https://docs.astral.sh/uv/)
 
-For C++ builds that should resolve manifest dependencies, point CMake at the vcpkg toolchain, for example:
+Outside Nix, the presets in `CMakePresets.json` route CMake through the vcpkg toolchain via `VCPKG_ROOT`, so the existing configure/build/test/workflow presets will pick up manifest dependencies automatically. If you run `cmake -S` manually instead of using a preset, pass the toolchain file explicitly:
 
 ```bash
 cmake -S . -B build \
@@ -56,7 +56,11 @@ cmake --workflow --preset dev-x64-win-release-python-all
 Single-config generators (Linux/macOS, Ninja, Unix Makefiles):
 
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DMYLIB_BUILD_EXAMPLES=ON -DMYLIB_BUILD_TESTING=OFF
+cmake -S . -B build \
+  -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DMYLIB_BUILD_EXAMPLES=ON \
+  -DMYLIB_BUILD_TESTING=OFF
 cmake --build build
 ./build/examples/mylib-cpp-example
 ```
@@ -64,7 +68,10 @@ cmake --build build
 Multi-config generators (Visual Studio on Windows):
 
 ```powershell
-cmake -S . -B build -DMYLIB_BUILD_EXAMPLES=ON -DMYLIB_BUILD_TESTING=OFF
+cmake -S . -B build `
+  -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+  -DMYLIB_BUILD_EXAMPLES=ON `
+  -DMYLIB_BUILD_TESTING=OFF
 cmake --build build --config Release
 ./build/examples/Release/mylib-cpp-example.exe
 ```
@@ -87,13 +94,13 @@ cmake --build build --config Release
 - Configuration lives in `.clang-tidy` (tweak checks as needed).
 - Run automatically during build by setting the standard CMake launcher variable:
   - Linux/macOS (Ninja/Makefiles):
-    - `cmake -S . -B build -DCMAKE_CXX_CLANG_TIDY='clang-tidy;--warnings-as-errors=*' -DCMAKE_BUILD_TYPE=Debug`
+    - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DCMAKE_CXX_CLANG_TIDY='clang-tidy;--warnings-as-errors=*' -DCMAKE_BUILD_TYPE=Debug`
     - `cmake --build build`
   - Windows (MSVC generator):
-    - `cmake -S . -B build -DCMAKE_CXX_CLANG_TIDY='clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc'`
+    - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DCMAKE_CXX_CLANG_TIDY='clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc'`
     - `cmake --build build --config Debug`
 - Alternatively, run manually using compile commands:
-  - `cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
+  - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
   - `clang-tidy -p build lib/src/mylib.cpp lib/src/bindings/python/module.cpp examples/cpp_example.cpp`
   - Or `run-clang-tidy` if available.
 
@@ -143,6 +150,7 @@ Notes:
 - `uv sync` installs the project in editable mode, so there is no separate `uv pip install -e .` step.
 - After C++ source changes, run `uv sync` again to rebuild the extension in the project environment.
 - The Python build requires `pybind11` and will be provided automatically from `pyproject.toml`.
+- Outside Nix, Python packaging builds also need Eigen to be discoverable by CMake; exporting `CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"` before `uv sync` is the simplest way to match the preset-based C++ builds.
 - The project version used by the C++ build is read from `vcpkg.json`.
 - The scikit-build frontend in `pyproject.toml` passes `-DMYLIB_BUILD_PYTHON=ON` and `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` for Python packaging builds.
 - For direct CMake builds, the Python extension is skipped unless you pass `-DMYLIB_BUILD_PYTHON=ON` and make `pybind11` available to the selected Python interpreter or CMake search path. On platforms that require PIC for shared modules, also pass `-DCMAKE_POSITION_INDEPENDENT_CODE=ON`.

@@ -1,5 +1,7 @@
 #include <mylib/mylib.hpp>
 
+#include <Eigen/Core> // NOLINT(misc-include-cleaner)
+
 #include <cstddef>
 #include <vector>
 
@@ -29,12 +31,15 @@ compute_values(double xmin, double xmax, std::size_t point_count)
     return values;
   }
 
-  double const step = (xmax - xmin) / static_cast<double>(point_count - 1U);
-  for (std::size_t index = 0; index < point_count; ++index)
-  {
-    double const x = xmin + (step * static_cast<double>(index));
-    values[index] = compute_value(x);
-  }
+  // NOLINTBEGIN(misc-include-cleaner)
+  auto const sample_count = static_cast<Eigen::Index>(point_count);
+  auto const x_values = Eigen::ArrayXd::LinSpaced(sample_count, xmin, xmax);
+  auto sampled_values = Eigen::Map<Eigen::ArrayXd>(values.data(), sample_count);
+  // NOLINTEND(misc-include-cleaner)
+
+  // This helper evaluates the same scalar expression over a uniform grid,
+  // which maps neatly to Eigen's array operations without changing the public API.
+  sampled_values = x_values.unaryExpr([](double x) { return compute_value(x); });
 
   return values;
 }

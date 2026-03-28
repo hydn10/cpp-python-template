@@ -2,7 +2,7 @@
   "version":6,
   "cmakeMinimumRequired":{
     "major":3,
-    "minor":25,
+    "minor":26,
     "patch":0
   },
   "configurePresets": [
@@ -29,6 +29,11 @@
       }
     },
     {
+      "name": "use-vcpkg",
+      "hidden": true,
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+    },
+    {
       "name": "enable-clang-tidy",
       "hidden": true,
       "cacheVariables": {
@@ -49,6 +54,9 @@
     {
       "name": "windows-cl-base",
       "hidden": true,
+      "inherits": [
+        "use-vcpkg"
+      ],
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
@@ -64,6 +72,9 @@
     {
       "name": "windows-clang-base",
       "hidden": true,
+      "inherits": [
+        "use-vcpkg"
+      ],
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
@@ -79,6 +90,9 @@
     {
       "name": "linux-base",
       "hidden": true,
+      "inherits": [
+        "use-vcpkg"
+      ],
       "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
