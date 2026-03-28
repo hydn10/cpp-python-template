@@ -3,7 +3,7 @@ find_package(pybind11 CONFIG REQUIRED)
 
 pybind11_add_module(
     _core
-    "${PROJECT_SOURCE_DIR}/src/bindings/python/module.cpp"
+    "${PROJECT_SOURCE_DIR}/lib/src/bindings/python/module.cpp"
 )
 
 target_link_libraries(_core PRIVATE mylib::mylib)

@@ -13,10 +13,10 @@ Python here is still an application wrapper only. The internal extension is not 
 
 ## Layout
 
-- `include/mylib/mylib.hpp` — public C++ header
-- `src/mylib.cpp` — C++ library implementation
+- `lib/include/mylib/mylib.hpp` — public C++ header
+- `lib/src/mylib.cpp` — C++ library implementation
 - `examples/cpp_example.cpp` — tiny C++ app using the library
-- `src/bindings/python/module.cpp` — pybind11 module definition
+- `lib/src/bindings/python/module.cpp` — pybind11 module definition
 - `python/mylib_apps/` — Python application package (console scripts), internal extension at `_core`
 - `CMakeLists.txt` — modern CMake project (installs C++ library + headers)
 - `pyproject.toml` — scikit-build-core configuration for Python packaging
@@ -67,7 +67,7 @@ cmake --build build --config Release
     - `cmake --build build --config Debug`
 - Alternatively, run manually using compile commands:
   - `cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
-  - `clang-tidy -p build src/mylib.cpp src/bindings/python/module.cpp examples/cpp_example.cpp`
+  - `clang-tidy -p build lib/src/mylib.cpp lib/src/bindings/python/module.cpp examples/cpp_example.cpp`
   - Or `run-clang-tidy` if available.
 
 ## Nix (flake)

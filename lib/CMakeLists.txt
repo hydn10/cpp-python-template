@@ -8,11 +8,11 @@ target_sources(
     PUBLIC
         FILE_SET HEADERS
         BASE_DIRS
-            "${PROJECT_SOURCE_DIR}/include"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include"
         FILES
-            "${PROJECT_SOURCE_DIR}/include/mylib/mylib.hpp"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/mylib/mylib.hpp"
     PRIVATE
-        "${PROJECT_SOURCE_DIR}/src/mylib.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/mylib.cpp"
 )
 
 target_compile_features(${target_name} PUBLIC cxx_std_17)
