@@ -8,12 +8,13 @@ pybind11_add_module(
 
 target_link_libraries(_core PRIVATE mylib::mylib)
 
-# When building with scikit-build-core, install the extension into the Python package.
+# When building with scikit-build-core, install the extension into the shared
+# support package used by the Python console apps.
 if(DEFINED SKBUILD)
     install(
         TARGETS _core
-        LIBRARY DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_apps"
-        RUNTIME DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_apps"
+        LIBRARY DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_internal"
+        RUNTIME DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_internal"
     )
 endif()
 

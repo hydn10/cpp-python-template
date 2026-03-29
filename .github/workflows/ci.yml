@@ -80,7 +80,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Import extension
-        run: uv run python -c "import mylib_apps._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
+        run: uv run python -c "import mylib_internal._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
 
       - name: Create output directory
         run: mkdir -p out
@@ -88,52 +88,8 @@ jobs:
       - name: Run plotting CLI
         run: uv run mylib-plot --save out/ci-plot.png
 
-  python-windows:
-    name: Windows Python (UV + Pybind11)
-    runs-on: windows-latest
-    env:
-      MPLBACKEND: Agg
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Set up MSVC environment
-        shell: pwsh
-        run: |
-          $info = vswhere -latest -format json | ConvertFrom-Json
-          $module_name = 'Microsoft.VisualStudio.DevShell.dll'
-          $module_path = Join-Path $info.installationPath 'Common7' 'Tools' $module_name
-          Import-Module $module_path
-          Enter-VsDevShell -VsInstanceId $info.instanceId -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -no_logo"
-          Get-ChildItem 'env:' | ForEach-Object { echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
-
-      - name: Sync project
-        shell: pwsh
-        run: uv sync --frozen
-
-      - name: Import extension
-        shell: pwsh
-        run: uv run python -c "import mylib_apps._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
-
-      - name: Create output directory
-        shell: pwsh
-        run: New-Item -ItemType Directory -Path out -Force | Out-Null
-
-      - name: Run plotting CLI
-        shell: pwsh
-        run: uv run mylib-plot --save out/ci-plot.png
+      - name: Run dump CLI
+        run: uv run mylib-dump --points 5 --output out/ci-values.csv
 
   cmake-windows:
     name: Windows C++ (CMake CI Workflow)
@@ -186,6 +142,57 @@ jobs:
         shell: pwsh
         run: ./out/build/consumer-cmake-windows/Release/mylib-consumer-smoke.exe
 
+  python-windows:
+    name: Windows Python (UV + Pybind11)
+    runs-on: windows-latest
+    env:
+      MPLBACKEND: Agg
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up MSVC environment
+        shell: pwsh
+        run: |
+          $info = vswhere -latest -format json | ConvertFrom-Json
+          $module_name = 'Microsoft.VisualStudio.DevShell.dll'
+          $module_path = Join-Path $info.installationPath 'Common7' 'Tools' $module_name
+          Import-Module $module_path
+          Enter-VsDevShell -VsInstanceId $info.instanceId -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -no_logo"
+          Get-ChildItem 'env:' | ForEach-Object { echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
+
+      - name: Sync project
+        shell: pwsh
+        run: uv sync --frozen
+
+      - name: Import extension
+        shell: pwsh
+        run: uv run python -c "import mylib_internal._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
+
+      - name: Create output directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Path out -Force | Out-Null
+
+      - name: Run plotting CLI
+        shell: pwsh
+        run: uv run mylib-plot --save out/ci-plot.png
+
+      - name: Run dump CLI
+        shell: pwsh
+        run: uv run mylib-dump --points 5 --output out/ci-values.csv
+
   nix:
     name: Nix (flake)
     runs-on: ubuntu-latest
@@ -213,5 +220,10 @@ jobs:
           mkdir -p out
           nix run .#mylib-plot -- --save out/ci-plot.png
 
-      - name: Build python-app env
-        run: nix build .#python-app -L
+      - name: Run Python dump app via flake app
+        run: |
+          mkdir -p out
+          nix run .#mylib-dump -- --points 5 --output out/ci-values.csv
+
+      - name: Build python-apps env
+        run: nix build .#python-apps -L

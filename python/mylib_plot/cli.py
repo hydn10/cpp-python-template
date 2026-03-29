@@ -1,34 +1,30 @@
 import argparse
+from typing import Optional, Sequence
+
 import matplotlib.pyplot as plt
-import numpy as np
 
-from ._core import compute_values
+from mylib_internal.sample_series import add_sample_range_arguments
+from mylib_internal.sample_series import compute_sample_series
+from mylib_internal.sample_series import parse_sample_grid
 
 
-def main(argv: list[str] | None = None) -> None:
+def main(argv: Optional[Sequence[str]] = None) -> None:
     parser = argparse.ArgumentParser(
         description="Plot mylib.compute_values over a range"
     )
-    parser.add_argument("--xmin", type=float, default=-5.0, help="Minimum x value")
-    parser.add_argument("--xmax", type=float, default=5.0, help="Maximum x value")
-    parser.add_argument(
-        "--points", type=int, default=201, help="Number of points in the range"
-    )
+    add_sample_range_arguments(parser)
     parser.add_argument(
         "--save",
         type=str,
         default=None,
         help="Optional path to save the plot (PNG). If omitted, shows the plot",
     )
-    args = parser.parse_args(argv)
-    if args.points < 1:
-        parser.error("--points must be at least 1")
+    args, sample_grid = parse_sample_grid(parser, argv)
 
-    x = np.linspace(args.xmin, args.xmax, args.points)
-    y = compute_values(args.xmin, args.xmax, args.points)
+    x_values, y_values = compute_sample_series(sample_grid)
 
     plt.figure(figsize=(6, 4))
-    plt.plot(x, y, label="x*x + 1")
+    plt.plot(x_values, y_values, label="x*x + 1")
     plt.title("mylib.compute_values via pybind11")
     plt.xlabel("x")
     plt.ylabel("y")

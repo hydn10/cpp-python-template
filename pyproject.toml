@@ -8,7 +8,7 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "mylib-apps"
 version = "0.1.0"
-description = "Apps for a C++ library: pybind11-backed plotting/visualization"
+description = "Console apps for a C++ library, backed by a shared pybind11 extension"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "Your Name" }]
@@ -20,20 +20,25 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 
-# Python runtime dependencies for analysis/plotting use of the binding
+# Python runtime dependencies shared by the console apps
 dependencies = [
   "numpy>=1.22",
   "matplotlib>=3.6",
 ]
 
-## No Python testing dependencies; Python is only a small visualization script.
+## No Python testing dependencies; Python is only a small set of console apps.
 
 [project.scripts]
-mylib-plot = "mylib_apps.cli:main"
+mylib-plot = "mylib_plot.cli:main"
+mylib-dump = "mylib_dump.cli:main"
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
-wheel.packages = ["python/mylib_apps"]
+wheel.packages = [
+  "python/mylib_internal",
+  "python/mylib_plot",
+  "python/mylib_dump",
+]
 build-dir = "out/_skbuild"
 build.verbose = false
 cmake.build-type = "Release"

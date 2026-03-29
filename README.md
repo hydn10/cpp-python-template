@@ -9,7 +9,7 @@ double mylib::compute_value(double x);  // returns x*x + 1.0
 std::vector<double> mylib::compute_values(double xmin, double xmax, std::size_t point_count);
 ```
 
-Python here is still an application wrapper only. The internal extension is not intended as a public API; use the provided console scripts.
+Python here is still an application wrapper only. The internal extension is not intended as a public API; use the provided console scripts such as `mylib-plot` and `mylib-dump`.
 
 ## Layout
 
@@ -17,7 +17,9 @@ Python here is still an application wrapper only. The internal extension is not 
 - `lib/src/mylib.cpp` — C++ library implementation
 - `examples/cpp_example.cpp` — tiny C++ app using the library
 - `lib/src/bindings/python/module.cpp` — pybind11 module definition
-- `python/mylib_apps/` — Python application package (console scripts), internal extension at `_core`
+- `python/mylib_internal/` — shared/internal Python support package, internal extension at `_core`
+- `python/mylib_plot/` — plotting console app package
+- `python/mylib_dump/` — CSV dump console app package
 - `CMakeLists.txt` — modern CMake project (installs C++ library + headers)
 - `pyproject.toml` — scikit-build-core configuration for Python packaging
 
@@ -112,21 +114,25 @@ This repo includes a Nix flake targeting `x86_64-linux`.
   - `nix build` → result is the installed library in `result/`
 - Run the C++ example app:
   - `nix run .#mylib-example`
-- Run the Python plotting app (console script):
+- Run the Python plotting app:
   - `nix run .#mylib-plot`
+- Run the Python CSV dump app:
+  - `nix run .#mylib-dump`
+- Build the packaged Python apps environment:
+  - `nix build .#python-apps`
 - Enter a development shell with C++ and Python tools + deps available:
   - `nix develop`
 
 Notes:
 
-- The Python app is built using uv2nix from `uv.lock` and `pyproject.toml`.
-- The dev shell is uv-first: it provides the C++ toolchain, `uv`, and a pinned Nix Python interpreter, but it does not put the packaged Python app environment on `PATH`. Inside `nix develop`, use `uv sync` to create/update `.venv` and `uv run ...` to execute project Python commands. The shell also exposes Nix-provided `tkinter` plus the X11/Wayland client libraries so uv-managed `matplotlib` can open interactive windows on Nix.
+- The Python apps are built using uv2nix from `uv.lock` and `pyproject.toml`.
+- The dev shell is uv-first: it provides the C++ toolchain, `uv`, and a pinned Nix Python interpreter, but it does not put the packaged Python apps environment on `PATH`. Inside `nix develop`, use `uv sync` to create/update `.venv` and `uv run ...` to execute project Python commands. The shell also exposes Nix-provided `tkinter` plus the X11/Wayland client libraries so uv-managed `matplotlib` can open interactive windows on Nix.
 - If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
 - When `buildPython = true`, the Nix derivation also passes `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` so the static C++ library can be linked into the Python extension on platforms that require PIC.
 
 ## Python apps with UV (locked env)
 
-This repo treats Python as an application wrapper for visualization. Let `uv` manage the environment and editable install.
+This repo treats Python as a small set of console apps built on top of a shared internal extension. Let `uv` manage the environment and editable install.
 
 ```bash
 # Create or refresh the lockfile when dependencies change
@@ -141,8 +147,14 @@ uv run mylib-plot
 # Save a plot instead of opening a window
 uv run mylib-plot --xmin -10 --xmax 10 --points 401 --save plot.png
 
+# Dump sampled values as CSV
+uv run mylib-dump --points 5
+
+# Write sampled values to a CSV file
+uv run mylib-dump --points 5 --output values.csv
+
 # Internal import for debugging only
-uv run python -c "import mylib_apps._core as m; print(m.compute_values(-1.0, 1.0, 3))"
+uv run python -c "import mylib_internal._core as m; print(m.compute_values(-1.0, 1.0, 3))"
 ```
 
 Notes:
@@ -154,7 +166,7 @@ Notes:
 - The project version used by the C++ build is read from `vcpkg.json`.
 - The scikit-build frontend in `pyproject.toml` passes `-DMYLIB_BUILD_PYTHON=ON` and `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` for Python packaging builds.
 - For direct CMake builds, the Python extension is skipped unless you pass `-DMYLIB_BUILD_PYTHON=ON` and make `pybind11` available to the selected Python interpreter or CMake search path. On platforms that require PIC for shared modules, also pass `-DCMAKE_POSITION_INDEPENDENT_CODE=ON`.
-- The application runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
+- The console app runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
 
 ## Using the C++ library from another CMake project
 

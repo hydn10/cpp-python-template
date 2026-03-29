@@ -45,6 +45,7 @@
       packages.${system} = {
         default = cpp.mylib;
         mylib = cpp.mylib;
+        python-apps = pythonModules.mylibApps;
         python-app = pythonModules.mylibApps;
       };
 
@@ -64,6 +65,13 @@
           program = "${pythonModules.mylibApps}/bin/mylib-plot";
           meta = {
             description = "Run the packaged plotting CLI for the mylib template.";
+          };
+        };
+        mylib-dump = {
+          type = "app";
+          program = "${pythonModules.mylibApps}/bin/mylib-dump";
+          meta = {
+            description = "Run the packaged CSV dump CLI for the mylib template.";
           };
         };
       };
