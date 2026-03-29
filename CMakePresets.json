@@ -256,9 +256,24 @@
       "configurePreset": "ci-linux"
     },
     {
+      "name": "ci-linux-verify-headers",
+      "configurePreset": "ci-linux",
+      "targets": [
+        "all_verify_interface_header_sets"
+      ]
+    },
+    {
       "name": "ci-windows",
       "configurePreset": "ci-windows",
       "configuration": "Release"
+    },
+    {
+      "name": "ci-windows-verify-headers",
+      "configurePreset": "ci-windows",
+      "configuration": "Release",
+      "targets": [
+        "all_verify_interface_header_sets"
+      ]
     }
   ],
   "testPresets":[
@@ -424,6 +439,7 @@
       "steps": [
         { "type": "configure", "name": "ci-linux" },
         { "type": "build", "name": "ci-linux" },
+        { "type": "build", "name": "ci-linux-verify-headers" },
         { "type": "test", "name": "ci-linux" }
       ]
     },
@@ -432,6 +448,7 @@
       "steps": [
         { "type": "configure", "name": "ci-windows" },
         { "type": "build", "name": "ci-windows" },
+        { "type": "build", "name": "ci-windows-verify-headers" },
         { "type": "test", "name": "ci-windows" }
       ]
     }
