@@ -15,6 +15,8 @@ function(add_mylib_example example_name)
             EXPORT_NAME "${example_name}-example"
     )
 
+    mylib_stage_runtime_dlls(${target_name})
+
     install(
         TARGETS ${target_name}
         EXPORT mylib-targets

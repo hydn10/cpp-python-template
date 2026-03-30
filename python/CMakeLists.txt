@@ -8,6 +8,8 @@ pybind11_add_module(
 
 target_link_libraries(_core PRIVATE mylib::mylib)
 
+mylib_stage_runtime_dlls(_core)
+
 # When building with scikit-build-core, install the extension into the shared
 # support package used by the Python console apps.
 if(DEFINED SKBUILD)

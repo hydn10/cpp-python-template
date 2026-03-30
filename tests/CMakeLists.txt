@@ -11,6 +11,8 @@ target_sources(
 target_compile_features(${target_name} PRIVATE cxx_std_23)
 target_link_libraries(${target_name} PRIVATE mylib::mylib)
 
+mylib_stage_runtime_dlls(${target_name})
+
 add_test(NAME compute_value COMMAND ${target_name})
 
 message(STATUS "Added test: ${target_name}")

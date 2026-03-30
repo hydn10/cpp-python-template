@@ -8,6 +8,8 @@ string(JSON VERSION_FROM_JSON GET "${MYLIB_JSON_STRING}" version)
 
 project(mylib LANGUAGES CXX VERSION "${VERSION_FROM_JSON}")
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/mylib-windows-runtime.cmake")
+
 set(MYLIB_BUILD_TESTING_DEFAULT "${PROJECT_IS_TOP_LEVEL}")
 option(
     MYLIB_BUILD_TESTING
