@@ -29,6 +29,13 @@
       }
     },
     {
+      "name": "build-shared",
+      "hidden": true,
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": "ON"
+      }
+    },
+    {
       "name": "use-vcpkg",
       "hidden": true,
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
@@ -214,6 +221,18 @@
       ]
     },
     {
+      "name": "ci-linux-shared",
+      "displayName": "CI Linux Shared",
+      "inherits": [
+        "linux-base",
+        "x64",
+        "release",
+        "build-testing",
+        "build-examples",
+        "build-shared"
+      ]
+    },
+    {
       "name": "ci-windows",
       "displayName": "CI Windows",
       "inherits": [
@@ -223,6 +242,18 @@
         "build-testing",
         "build-examples",
         "enable-clang-tidy-windows"
+      ]
+    },
+    {
+      "name": "ci-windows-shared",
+      "displayName": "CI Windows Shared",
+      "inherits": [
+        "windows-cl-base",
+        "x64",
+        "release",
+        "build-testing",
+        "build-examples",
+        "build-shared"
       ]
     }
   ],
@@ -256,6 +287,10 @@
       "configurePreset": "ci-linux"
     },
     {
+      "name": "ci-linux-shared",
+      "configurePreset": "ci-linux-shared"
+    },
+    {
       "name": "ci-linux-verify-headers",
       "configurePreset": "ci-linux",
       "targets": [
@@ -265,6 +300,11 @@
     {
       "name": "ci-windows",
       "configurePreset": "ci-windows",
+      "configuration": "Release"
+    },
+    {
+      "name": "ci-windows-shared",
+      "configurePreset": "ci-windows-shared",
       "configuration": "Release"
     },
     {
@@ -325,8 +365,19 @@
       "output": { "verbosity": "verbose" }
     },
     {
+      "name": "ci-linux-shared",
+      "configurePreset": "ci-linux-shared",
+      "output": { "verbosity": "verbose" }
+    },
+    {
       "name": "ci-windows",
       "configurePreset": "ci-windows",
+      "configuration": "Release",
+      "output": { "verbosity": "verbose" }
+    },
+    {
+      "name": "ci-windows-shared",
+      "configurePreset": "ci-windows-shared",
       "configuration": "Release",
       "output": { "verbosity": "verbose" }
     }
@@ -444,12 +495,28 @@
       ]
     },
     {
+      "name": "ci-linux-shared-all",
+      "steps": [
+        { "type": "configure", "name": "ci-linux-shared" },
+        { "type": "build", "name": "ci-linux-shared" },
+        { "type": "test", "name": "ci-linux-shared" }
+      ]
+    },
+    {
       "name": "ci-windows-all",
       "steps": [
         { "type": "configure", "name": "ci-windows" },
         { "type": "build", "name": "ci-windows" },
         { "type": "build", "name": "ci-windows-verify-headers" },
         { "type": "test", "name": "ci-windows" }
+      ]
+    },
+    {
+      "name": "ci-windows-shared-all",
+      "steps": [
+        { "type": "configure", "name": "ci-windows-shared" },
+        { "type": "build", "name": "ci-windows-shared" },
+        { "type": "test", "name": "ci-windows-shared" }
       ]
     }
   ]

@@ -48,6 +48,26 @@ jobs:
       - name: Run consumer package smoke test
         run: ./out/build/consumer-cmake-linux/mylib-consumer-smoke
 
+      - name: Run shared CMake workflow preset
+        run: cmake --workflow --preset ci-linux-shared-all
+
+      - name: Install shared package
+        run: cmake --install out/build/ci-linux-shared
+
+      - name: Configure shared consumer package smoke test
+        run: >
+          cmake -S tests/consumer-cmake -B out/build/consumer-cmake-linux-shared
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/ci-linux-shared"
+
+      - name: Build shared consumer package smoke test
+        run: cmake --build out/build/consumer-cmake-linux-shared
+
+      - name: Run shared consumer package smoke test
+        shell: bash
+        run: |
+          export LD_LIBRARY_PATH="${{ github.workspace }}/out/install/ci-linux-shared/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+          ./out/build/consumer-cmake-linux-shared/mylib-consumer-smoke
+
   python-linux:
     name: Linux Python (UV + Pybind11)
     runs-on: ubuntu-latest
@@ -141,6 +161,30 @@ jobs:
       - name: Run consumer package smoke test
         shell: pwsh
         run: ./out/build/consumer-cmake-windows/Release/mylib-consumer-smoke.exe
+
+      - name: Run shared CMake workflow preset
+        shell: pwsh
+        run: cmake --workflow --preset ci-windows-shared-all
+
+      - name: Install shared package
+        shell: pwsh
+        run: cmake --install out/build/ci-windows-shared --config Release
+
+      - name: Configure shared consumer package smoke test
+        shell: pwsh
+        run: >
+          cmake -S tests/consumer-cmake -B out/build/consumer-cmake-windows-shared
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/ci-windows-shared"
+
+      - name: Build shared consumer package smoke test
+        shell: pwsh
+        run: cmake --build out/build/consumer-cmake-windows-shared --config Release
+
+      - name: Run shared consumer package smoke test
+        shell: pwsh
+        run: |
+          $env:PATH = "${{ github.workspace }}\out\install\ci-windows-shared\bin;$env:PATH"
+          ./out/build/consumer-cmake-windows-shared/Release/mylib-consumer-smoke.exe
 
   python-windows:
     name: Windows Python (UV + Pybind11)
