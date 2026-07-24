@@ -82,7 +82,7 @@
         inputsFrom = [ cpp.mylib ];
         packages =
           [
-            pkgs.clang-tools
+            pkgs.llvmPackages_22.clang-tools
             pkgs.cmake
             pkgs.ninja
             pkgs.pkg-config

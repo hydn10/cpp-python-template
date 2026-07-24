@@ -21,10 +21,17 @@ jobs:
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
 
-      - name: Install clang-tidy
+      - name: Install LLVM 22
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "22.1.6"
+          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
+          env: false
+
+      - name: Install GCC 14
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-tidy gcc-14 g++-14
+          sudo apt-get install -y gcc-14 g++-14
 
       - name: Run CMake workflow preset
         run: cmake --workflow --preset ci-linux-all
@@ -121,10 +128,12 @@ jobs:
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
 
-      - name: Install LLVM
+      - name: Install LLVM 22
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: "19"
+          version: "22.1.6"
+          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
+          env: false
 
       - name: Set up environment
         run: |

@@ -1,7 +1,7 @@
 { lib
 , stdenv
 , cmake
-, clang-tools
+, llvmPackages_22
 , eigen
 , buildTests ? false
 , buildExamples ? false
@@ -29,7 +29,7 @@ in
 
     nativeBuildInputs =
       [ cmake ]
-      ++ (if enableClangTidy then [ clang-tools ] else [ ]);
+      ++ (if enableClangTidy then [ llvmPackages_22.clang-tools ] else [ ]);
 
     buildInputs = [ eigen ];
 

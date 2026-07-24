@@ -38,6 +38,7 @@ Ordinary CMake workflows build and test the native project only.
 - CMake >= 3.26
 - C++23-capable compiler to build this repo's examples/tests
 - C++17 is sufficient for downstream consumers of the installed `mylib` library target
+- LLVM/clang-tidy 22 when static analysis is enabled
 - [vcpkg](https://learn.microsoft.com/vcpkg/) with `VCPKG_ROOT` set when configuring outside Nix; the presets use it to provide the repo's manifest dependencies (currently `Eigen3`)
 - Python 3.9+ and [uv](https://docs.astral.sh/uv/)
 
@@ -99,9 +100,9 @@ cmake --build build --config Release
   - Windows dev: `ctest --preset dev-x64-win-debug -C Debug` or `ctest --preset dev-x64-win-release -C Release`
   - Windows: `ctest --preset ci-windows -C Release`
 
-## Static Analysis (clang-tidy)
+## Static Analysis (clang-tidy 22)
 
-- Configuration lives in `.clang-tidy` (tweak checks as needed).
+- LLVM 22 is required; configuration lives in `.clang-tidy` (tweak checks as needed).
 - Run automatically during build by setting the standard CMake launcher variable:
   - Linux/macOS (Ninja/Makefiles):
     - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DCMAKE_CXX_CLANG_TIDY='clang-tidy;--warnings-as-errors=*' -DCMAKE_BUILD_TYPE=Debug`
@@ -134,7 +135,7 @@ This repo includes a Nix flake targeting `x86_64-linux`.
 Notes:
 
 - The Python apps are built using uv2nix from `uv.lock` and `pyproject.toml`.
-- The dev shell is uv-first: it provides the C++ toolchain, `uv`, and a pinned Nix Python interpreter, but it does not put the packaged Python apps environment on `PATH`. Inside `nix develop`, use `uv sync` to create/update `.venv` and `uv run ...` to execute project Python commands. The shell also exposes Nix-provided `tkinter` plus the X11/Wayland client libraries so uv-managed `matplotlib` can open interactive windows on Nix.
+- The dev shell is uv-first: it provides the C++ toolchain, LLVM 22 tools, `uv`, and a pinned Nix Python interpreter, but it does not put the packaged Python apps environment on `PATH`. Inside `nix develop`, use `uv sync` to create/update `.venv` and `uv run ...` to execute project Python commands. The shell also exposes Nix-provided `tkinter` plus the X11/Wayland client libraries so uv-managed `matplotlib` can open interactive windows on Nix.
 - If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
 
 ## Python apps with UV (locked env)
