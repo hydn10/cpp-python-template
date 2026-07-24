@@ -25,7 +25,7 @@ option(
 set(MYLIB_BUILD_PYTHON_DEFAULT OFF)
 option(
     MYLIB_BUILD_PYTHON
-    "Build the Python extension module. Default: ${MYLIB_BUILD_PYTHON_DEFAULT}."
+    "Build the optional Python extension module. Default: ${MYLIB_BUILD_PYTHON_DEFAULT}."
     "${MYLIB_BUILD_PYTHON_DEFAULT}")
     
 

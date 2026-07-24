@@ -1,11 +1,9 @@
 { lib
 , stdenv
-, python3
 , cmake
 , clang-tools
 , eigen
 , buildTests ? false
-, buildPython ? false
 , buildExamples ? false
 , enableClangTidy ? false
 }:
@@ -18,7 +16,6 @@ let
   mkCMakeFlag = opt: if opt then "ON" else "OFF";
 
   buildTestsFlag = mkCMakeFlag buildTests;
-  buildPythonFlag = mkCMakeFlag buildPython;
   buildExamplesFlag = mkCMakeFlag buildExamples;
 in
   stdenv.mkDerivation
@@ -38,12 +35,9 @@ in
 
     cmakeFlags = [
       "-DMYLIB_BUILD_TESTING=${buildTestsFlag}"
-      "-DMYLIB_BUILD_PYTHON=${buildPythonFlag}"
       "-DMYLIB_BUILD_EXAMPLES=${buildExamplesFlag}"
     ] ++ lib.optionals enableClangTidy [
       "-DCMAKE_CXX_CLANG_TIDY=clang-tidy;--warnings-as-errors=*"
       "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-    ] ++ lib.optionals buildPython [
-      "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
     ];
   }

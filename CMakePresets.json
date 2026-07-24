@@ -7,14 +7,6 @@
   },
   "configurePresets": [
     {
-      "name": "build-python",
-      "hidden": true,
-      "cacheVariables": {
-        "MYLIB_BUILD_PYTHON": "ON",
-        "CMAKE_POSITION_INDEPENDENT_CODE": "ON"
-      }
-    },
-    {
       "name": "build-examples",
       "hidden": true,
       "cacheVariables": {
@@ -162,18 +154,6 @@
       ]
     },
     {
-      "name": "dev-linux-release-python",
-      "displayName": "Linux Release + Python",
-      "inherits": [
-        "linux-base",
-        "x64",
-        "release",
-        "build-testing",
-        "build-examples",
-        "build-python"
-      ]
-    },
-    {
       "name": "dev-x64-win-debug",
       "displayName": "x64 Debug (cl)",
       "inherits": [
@@ -194,18 +174,6 @@
         "release",
         "build-testing",
         "build-examples"
-      ]
-    },
-    {
-      "name": "dev-x64-win-release-python",
-      "displayName": "x64 Release + Python (cl)",
-      "inherits": [
-        "x64",
-        "windows-cl-base",
-        "release",
-        "build-testing",
-        "build-examples",
-        "build-python"
       ]
     },
     {
@@ -267,20 +235,12 @@
       "configurePreset":"dev-linux-release"
     },
     {
-      "name":"dev-linux-release-python",
-      "configurePreset":"dev-linux-release-python"
-    },
-    {
       "name":"dev-x64-win-debug",
       "configurePreset":"dev-x64-win-debug"
     },
     {
       "name":"dev-x64-win-release",
       "configurePreset":"dev-x64-win-release"
-    },
-    {
-      "name":"dev-x64-win-release-python",
-      "configurePreset":"dev-x64-win-release-python"
     },
     {
       "name": "ci-linux",
@@ -332,13 +292,6 @@
       }
     },
     {
-      "name":"dev-linux-release-python",
-      "configurePreset":"dev-linux-release-python",
-      "output":{
-        "verbosity":"verbose"
-      }
-    },
-    {
       "name":"dev-x64-win-debug",
       "configurePreset":"dev-x64-win-debug",
       "output":{
@@ -348,13 +301,6 @@
     {
       "name":"dev-x64-win-release",
       "configurePreset":"dev-x64-win-release",
-      "output":{
-        "verbosity":"verbose"
-      }
-    },
-    {
-      "name":"dev-x64-win-release-python",
-      "configurePreset":"dev-x64-win-release-python",
       "output":{
         "verbosity":"verbose"
       }
@@ -418,23 +364,6 @@
       ]
     },
     {
-      "name":"dev-linux-release-python-all",
-      "steps":[
-        {
-          "type":"configure",
-          "name":"dev-linux-release-python"
-        },
-        {
-          "type":"build",
-          "name":"dev-linux-release-python"
-        },
-        {
-          "type":"test",
-          "name":"dev-linux-release-python"
-        }
-      ]
-    },
-    {
       "name":"dev-x64-win-debug-all",
       "steps":[
         {
@@ -465,23 +394,6 @@
         {
           "type":"test",
           "name":"dev-x64-win-release"
-        }
-      ]
-    },
-    {
-      "name":"dev-x64-win-release-python-all",
-      "steps":[
-        {
-          "type":"configure",
-          "name":"dev-x64-win-release-python"
-        },
-        {
-          "type":"build",
-          "name":"dev-x64-win-release-python"
-        },
-        {
-          "type":"test",
-          "name":"dev-x64-win-release-python"
         }
       ]
     },

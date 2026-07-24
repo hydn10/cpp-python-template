@@ -11,6 +11,18 @@ std::vector<double> mylib::compute_values(double xmin, double xmax, std::size_t 
 
 Python here is still an application wrapper only. The internal extension is not intended as a public API; use the provided console scripts such as `mylib-plot` and `mylib-dump`.
 
+The Python extension has one supported user-facing build path:
+
+```text
+uv
+    -> scikit-build-core
+        -> CMake
+            -> pybind11 extension
+                -> mylib
+```
+
+Ordinary CMake workflows build and test the native project only.
+
 ## Layout
 
 - `lib/include/mylib/mylib.hpp` — public C++ header
@@ -44,13 +56,11 @@ With development workflow presets:
 ```bash
 cmake --workflow --preset dev-linux-debug-all
 cmake --workflow --preset dev-linux-release-all
-cmake --workflow --preset dev-linux-release-python-all
 ```
 
 ```powershell
 cmake --workflow --preset dev-x64-win-debug-all
 cmake --workflow --preset dev-x64-win-release-all
-cmake --workflow --preset dev-x64-win-release-python-all
 ```
 
 Single-config generators (Linux/macOS, Ninja, Unix Makefiles):
@@ -101,7 +111,7 @@ cmake --build build --config Release
     - `cmake --build build --config Debug`
 - Alternatively, run manually using compile commands:
   - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
-  - `clang-tidy -p build lib/src/mylib.cpp lib/src/bindings/python/module.cpp examples/cpp_example.cpp`
+  - `clang-tidy -p build lib/src/mylib.cpp examples/cpp_example.cpp`
   - Or `run-clang-tidy` if available.
 
 ## Nix (flake)
@@ -126,11 +136,10 @@ Notes:
 - The Python apps are built using uv2nix from `uv.lock` and `pyproject.toml`.
 - The dev shell is uv-first: it provides the C++ toolchain, `uv`, and a pinned Nix Python interpreter, but it does not put the packaged Python apps environment on `PATH`. Inside `nix develop`, use `uv sync` to create/update `.venv` and `uv run ...` to execute project Python commands. The shell also exposes Nix-provided `tkinter` plus the X11/Wayland client libraries so uv-managed `matplotlib` can open interactive windows on Nix.
 - If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
-- When `buildPython = true`, the Nix derivation also passes `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` so the static C++ library can be linked into the Python extension on platforms that require PIC.
 
 ## Python apps with UV (locked env)
 
-This repo treats Python as a small set of console apps built on top of a shared internal extension. Let `uv` manage the environment and editable install.
+This repo treats Python as a small set of console apps built on top of a shared internal extension. `uv sync --locked` is the supported extension build workflow: uv manages the environment and invokes scikit-build-core for the editable install.
 
 ```bash
 # Create or refresh the lockfile when dependencies change
@@ -162,8 +171,6 @@ Notes:
 - The Python build requires `pybind11` and will be provided automatically from `pyproject.toml`.
 - Outside Nix, Python packaging builds also need Eigen to be discoverable by CMake; exporting `CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"` before `uv sync` is the simplest way to match the preset-based C++ builds.
 - The project version used by the C++ build and Python distribution metadata is read from `vcpkg.json`.
-- The scikit-build frontend in `pyproject.toml` passes `-DMYLIB_BUILD_PYTHON=ON` and `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` for Python packaging builds.
-- For direct CMake builds, the Python extension is skipped unless you pass `-DMYLIB_BUILD_PYTHON=ON` and make `pybind11` available to the selected Python interpreter or CMake search path. On platforms that require PIC for shared modules, also pass `-DCMAKE_POSITION_INDEPENDENT_CODE=ON`.
 - The console app runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
 
 ## Using the C++ library from another CMake project

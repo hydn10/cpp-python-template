@@ -69,7 +69,7 @@ jobs:
           ./out/build/consumer-cmake-linux-shared/mylib-consumer-smoke
 
   python-linux:
-    name: Linux Python (UV + Pybind11)
+    name: Linux Python (uv + scikit-build-core)
     runs-on: ubuntu-latest
     env:
       CC: gcc-14
@@ -97,19 +97,19 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Sync project
-        run: uv sync --frozen
+        run: uv sync --locked
 
       - name: Import extension
-        run: uv run python -c "import mylib_internal._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
+        run: uv run --locked python -c "import mylib_tools._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
 
       - name: Create output directory
         run: mkdir -p out
 
       - name: Run plotting CLI
-        run: uv run mylib-plot --save out/ci-plot.png
+        run: uv run --locked mylib-plot --save out/ci-plot.png
 
       - name: Run dump CLI
-        run: uv run mylib-dump --points 5 --output out/ci-values.csv
+        run: uv run --locked mylib-dump --points 5 --output out/ci-values.csv
 
   cmake-windows:
     name: Windows C++ (CMake CI Workflow)
@@ -187,7 +187,7 @@ jobs:
           ./out/build/consumer-cmake-windows-shared/Release/mylib-consumer-smoke.exe
 
   python-windows:
-    name: Windows Python (UV + Pybind11)
+    name: Windows Python (uv + scikit-build-core)
     runs-on: windows-latest
     env:
       MPLBACKEND: Agg
@@ -219,11 +219,11 @@ jobs:
 
       - name: Sync project
         shell: pwsh
-        run: uv sync --frozen
+        run: uv sync --locked
 
       - name: Import extension
         shell: pwsh
-        run: uv run python -c "import mylib_internal._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
+        run: uv run --locked python -c "import mylib_tools._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
 
       - name: Create output directory
         shell: pwsh
@@ -231,11 +231,11 @@ jobs:
 
       - name: Run plotting CLI
         shell: pwsh
-        run: uv run mylib-plot --save out/ci-plot.png
+        run: uv run --locked mylib-plot --save out/ci-plot.png
 
       - name: Run dump CLI
         shell: pwsh
-        run: uv run mylib-dump --points 5 --output out/ci-values.csv
+        run: uv run --locked mylib-dump --points 5 --output out/ci-values.csv
 
   nix:
     name: Nix (flake)
