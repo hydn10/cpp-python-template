@@ -31,7 +31,7 @@ let
               from = python.pkgs.tkinter;
             };
 
-            "mylib-apps" = prev."mylib-apps".overrideAttrs (old: {
+            "mylib-tools" = prev."mylib-tools".overrideAttrs (old: {
               nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
                 pkgs.cmake
                 pkgs.ninja
@@ -46,7 +46,7 @@ let
           })
       ]);
 
-  mylibApps = pythonSet.mkVirtualEnv "mylib-apps-env" (
+  mylibApps = pythonSet.mkVirtualEnv "mylib-tools-env" (
     workspace.deps.default
     // {
       tkinter = [ ];

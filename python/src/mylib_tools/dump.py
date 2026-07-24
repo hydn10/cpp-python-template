@@ -2,9 +2,9 @@ import argparse
 from pathlib import Path
 from typing import Optional, Sequence
 
-from mylib_internal.sample_series import add_sample_range_arguments
-from mylib_internal.sample_series import compute_sample_series
-from mylib_internal.sample_series import parse_sample_grid
+from mylib_tools.sample_series import add_sample_range_arguments
+from mylib_tools.sample_series import compute_sample_series
+from mylib_tools.sample_series import parse_sample_grid
 
 
 def main(argv: Optional[Sequence[str]] = None) -> None:

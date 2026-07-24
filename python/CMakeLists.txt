@@ -15,8 +15,8 @@ mylib_stage_runtime_dlls(_core)
 if(DEFINED SKBUILD)
     install(
         TARGETS _core
-        LIBRARY DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_internal"
-        RUNTIME DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_internal"
+        LIBRARY DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_tools"
+        RUNTIME DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_tools"
     )
 endif()
 

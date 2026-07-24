@@ -17,9 +17,7 @@ Python here is still an application wrapper only. The internal extension is not 
 - `lib/src/mylib.cpp` — C++ library implementation
 - `examples/cpp_example.cpp` — tiny C++ app using the library
 - `lib/src/bindings/python/module.cpp` — pybind11 module definition
-- `python/mylib_internal/` — shared/internal Python support package, internal extension at `_core`
-- `python/mylib_plot/` — plotting console app package
-- `python/mylib_dump/` — CSV dump console app package
+- `python/src/mylib_tools/` — Python tool package, including the private extension at `_core`
 - `CMakeLists.txt` — modern CMake project (installs C++ library + headers)
 - `pyproject.toml` — scikit-build-core configuration for Python packaging
 
@@ -139,22 +137,22 @@ This repo treats Python as a small set of console apps built on top of a shared 
 uv lock
 
 # Create/sync the project environment from the lockfile
-uv sync --frozen
+uv sync --locked
 
 # Run the plotting demo
-uv run mylib-plot
+uv run --locked mylib-plot
 
 # Save a plot instead of opening a window
-uv run mylib-plot --xmin -10 --xmax 10 --points 401 --save plot.png
+uv run --locked mylib-plot --xmin -10 --xmax 10 --points 401 --save plot.png
 
 # Dump sampled values as CSV
-uv run mylib-dump --points 5
+uv run --locked mylib-dump --points 5
 
 # Write sampled values to a CSV file
-uv run mylib-dump --points 5 --output values.csv
+uv run --locked mylib-dump --points 5 --output values.csv
 
 # Internal import for debugging only
-uv run python -c "import mylib_internal._core as m; print(m.compute_values(-1.0, 1.0, 3))"
+uv run --locked python -c "import mylib_tools._core as m; print(m.compute_values(-1.0, 1.0, 3))"
 ```
 
 Notes:
@@ -163,7 +161,7 @@ Notes:
 - After C++ source changes, run `uv sync` again to rebuild the extension in the project environment.
 - The Python build requires `pybind11` and will be provided automatically from `pyproject.toml`.
 - Outside Nix, Python packaging builds also need Eigen to be discoverable by CMake; exporting `CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"` before `uv sync` is the simplest way to match the preset-based C++ builds.
-- The project version used by the C++ build is read from `vcpkg.json`.
+- The project version used by the C++ build and Python distribution metadata is read from `vcpkg.json`.
 - The scikit-build frontend in `pyproject.toml` passes `-DMYLIB_BUILD_PYTHON=ON` and `-DCMAKE_POSITION_INDEPENDENT_CODE=ON` for Python packaging builds.
 - For direct CMake builds, the Python extension is skipped unless you pass `-DMYLIB_BUILD_PYTHON=ON` and make `pybind11` available to the selected Python interpreter or CMake search path. On platforms that require PIC for shared modules, also pass `-DCMAKE_POSITION_INDEPENDENT_CODE=ON`.
 - The console app runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
