@@ -127,8 +127,14 @@ jobs:
       - name: Check native static Release
         run: just cpp check release
 
+      - name: Check installed static CMake package
+        run: just cpp ci check-installed release
+
       - name: Check native shared Release
         run: just cpp check shared-release
+
+      - name: Check installed shared CMake package
+        run: just cpp ci check-installed shared-release
 
       - name: Smoke-test Python applications
         if: matrix.comprehensive

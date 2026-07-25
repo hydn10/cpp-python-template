@@ -143,7 +143,8 @@ recipe uses the current shell environment, just like its raw command.
 | `cpp verify-headers [preset]` | Verify that each public header is self-contained |
 | `cpp test [preset]` | Run its native tests |
 | `cpp check [preset]` | Configure, build, verify public headers, and test |
-| `cpp rm [preset]` | Remove that preset's build and install trees |
+| `cpp ci check-installed [preset]` | Install a native build and build the CMake consumer against it |
+| `cpp rm [preset]` | Remove that preset's native build, install, and consumer trees |
 | `py sync` | Create or synchronize the locked Python environment |
 | `py rebuild` | Incrementally rebuild and reinstall the extension |
 | `py plot [arguments]` / `py dump [arguments]` | Run a locked Python CLI |
@@ -228,11 +229,32 @@ the explicitly registered native tests. Static Debug, static Release, and
 shared Release checks are all local workflows; broader compiler and platform
 combinations remain CI concerns.
 
+The installed CMake package has a separate, minimal consumer check. After
+building a preset, run `just cpp ci check-installed [preset]`, or use the
+underlying commands directly:
+
+```bash
+cmake --install out/build/release
+cmake -S tests/consumer-cmake -B out/build/consumer-cmake/release \
+  -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH=/path/to/repository/out/install/release
+cmake --build out/build/consumer-cmake/release
+```
+
+Use `shared-release` in the build and install paths to check the shared
+package. `CMAKE_PREFIX_PATH` must be absolute because CMake interprets relative
+package-search paths from the consumer build tree. This check only verifies
+that the installed package can be found and linked by an ordinary downstream
+CMake project.
+
 CI expresses native coverage as data-driven toolchain lanes. Comprehensive
 lanes run Debug with clang-tidy and the Python application smoke check in
 addition to static and shared Release. Compatibility lanes run the two Release
-native configurations. A future toolchain can opt into the comprehensive suite
-by changing its matrix entry rather than duplicating the workflow.
+native configurations. Every lane also builds the installed-package consumer
+for both Release configurations. A future toolchain can opt into the
+comprehensive suite by changing its matrix entry rather than duplicating the
+workflow.
 
 ## Static Analysis (clang-tidy 22)
 
