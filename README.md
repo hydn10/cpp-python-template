@@ -187,7 +187,7 @@ just py rebuild
 ```
 
 ```powershell
-. .\tools\Activate-Vcpkg.ps1
+. .\tools\activate-vcpkg.ps1
 just cpp check
 just cpp check release
 just cpp check shared-release

@@ -6,7 +6,7 @@ This document describes how this repository should evolve at the repository-desi
 
 It is intended for human contributors and coding agents. It is not a folder map and it is not a command reference. The README and the repository itself show the current mechanics. This document explains the principles that should keep those mechanics coherent as tools change.
 
-This repository is a mixed C++ and Python project. The C++ library is the portable core. Python provides application-facing wrappers and packaging around that core. CMake, Python packaging, uv, vcpkg, Nix, and CI all have useful roles, but those roles should stay distinct.
+This repository is a mixed C++ and Python project. The C++ library is the portable core. Python provides application-facing wrappers and packaging around that core. CMake, Python packaging, uv, vcpkg, Nix, Just, and CI all have useful roles, but those roles should stay distinct.
 
 ---
 
@@ -30,11 +30,13 @@ Continuous integration
 
 Inner layers describe what the project is. Outer layers make it easier to provision, build, test, package, or verify.
 
+The layers express a direction of authority, not a sequence every workflow must traverse. An outer layer may delegate directly to the appropriate inner layer.
+
 The important rule is:
 
 > An outer layer should invoke, provision, validate, or package an inner layer. It should not redefine the inner layer independently.
 
-For this repository, CMake should remain the authoritative description of the native target graph. Python packaging should describe the Python package and delegate native extension builds through the normal native build interface. uv, vcpkg, Nix, presets, scripts, IDE integration, and CI should compose or provide those workflows, not replace them with parallel models.
+For this repository, CMake should remain the authoritative description of the native target graph. Python packaging should describe the Python package and delegate native extension builds through the normal native build interface. uv, vcpkg, Nix, Just, presets, activation helpers, IDE integration, and CI should compose or provide those workflows, not replace them with parallel models.
 
 ---
 
@@ -57,9 +59,12 @@ Typical ownership in this repository should be:
 | Concern | Owner |
 | --- | --- |
 | Native libraries, applications, examples, tests, install/export shape | CMake |
+| Native dependency requirements | CMake package discovery and target links |
 | Python package metadata, scripts, runtime dependencies | Python packaging metadata |
 | Python environment synchronization | uv and its lock state |
-| C++ dependency manifest mapping | vcpkg metadata |
+| Shared C++ and Python project version | vcpkg manifest |
+| vcpkg dependency mapping and baseline | vcpkg metadata |
+| Optional developer workflow composition | Just |
 | Reproducible development and package environments | Nix |
 | Remote platform matrix and result reporting | CI |
 
@@ -82,7 +87,7 @@ Good delegation in this repository looks like:
 - CI invoking repository-owned build and test workflows.
 - Python packaging invoking the native build through the configured backend rather than carrying its own native target graph.
 - Nix providing compilers, dependencies, Python, and package builds while deriving from the same project metadata where practical.
-- Presets and scripts selecting common configurations without becoming independent build systems.
+- Just recipes composing common workflows and CMake presets selecting common configurations without becoming independent build systems.
 
 Repeated commands or values are not automatically bad. Lockfiles, generated metadata, platform-specific package expressions, and CI matrix entries may repeat information for good reasons. The problem is manual, competing authority.
 
