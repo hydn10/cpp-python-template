@@ -30,11 +30,11 @@ try
   }
   catch (std::exception const &exception)
   {
-    std::println(error_stream, "example failed: {}", exception.what());
+    std::println(error_stream, "application failed: {}", exception.what());
   }
   catch (...)
   {
-    std::println(error_stream, "example failed with an unknown exception");
+    std::println(error_stream, "application failed with an unknown exception");
   }
 
   return 1;

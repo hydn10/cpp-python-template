@@ -4,6 +4,7 @@
 , llvmPackages_22
 , eigen
 , buildTests ? false
+, buildApps ? false
 , buildExamples ? false
 , enableClangTidy ? false
 }:
@@ -16,6 +17,7 @@ let
   mkCMakeFlag = opt: if opt then "ON" else "OFF";
 
   buildTestsFlag = mkCMakeFlag buildTests;
+  buildAppsFlag = mkCMakeFlag buildApps;
   buildExamplesFlag = mkCMakeFlag buildExamples;
 in
   stdenv.mkDerivation
@@ -35,6 +37,7 @@ in
 
     cmakeFlags = [
       "-DMYLIB_BUILD_TESTING=${buildTestsFlag}"
+      "-DMYLIB_BUILD_APPS=${buildAppsFlag}"
       "-DMYLIB_BUILD_EXAMPLES=${buildExamplesFlag}"
     ] ++ lib.optionals enableClangTidy [
       "-DCMAKE_CXX_CLANG_TIDY=clang-tidy;--warnings-as-errors=*"

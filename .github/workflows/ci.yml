@@ -36,10 +36,10 @@ jobs:
       - name: Run CMake workflow preset
         run: cmake --workflow --preset ci-linux-all
 
-      - name: Run example
+      - name: Run native application
         shell: bash
         run: |
-          "out/build/ci-linux/examples/mylib-cpp-example"
+          "out/build/ci-linux/apps/mylib-sample"
 
       - name: Install package
         run: cmake --install out/build/ci-linux
@@ -148,10 +148,10 @@ jobs:
       - name: Run CMake workflow preset
         run: cmake --workflow --preset ci-windows-all
 
-      - name: Run example
+      - name: Run native application
         shell: pwsh
         run: |
-          ./out/build/ci-windows/examples/mylib-cpp-example.exe
+          ./out/build/ci-windows/apps/mylib-sample.exe
 
       - name: Install package
         shell: pwsh
@@ -265,8 +265,8 @@ jobs:
       - name: Nix flake check
         run: nix flake check -L
 
-      - name: Run C++ example via flake app
-        run: nix run .#mylib-example
+      - name: Run native application via flake app
+        run: nix run .#mylib-sample
 
       - name: Run Python plotting app via flake app
         run: |

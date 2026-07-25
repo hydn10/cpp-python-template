@@ -49,5 +49,8 @@ input = "vcpkg.json"
 regex = '''"version"\s*:\s*"(?P<value>[^"]+)"'''
 
 [tool.scikit-build.cmake.define]
+MYLIB_BUILD_APPS = false
+MYLIB_BUILD_EXAMPLES = false
+MYLIB_BUILD_TESTING = false
 MYLIB_BUILD_PYTHON = true
 CMAKE_POSITION_INDEPENDENT_CODE = true

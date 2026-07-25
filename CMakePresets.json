@@ -7,6 +7,13 @@
   },
   "configurePresets": [
     {
+      "name": "build-apps",
+      "hidden": true,
+      "cacheVariables": {
+        "MYLIB_BUILD_APPS": "ON"
+      }
+    },
+    {
       "name": "build-examples",
       "hidden": true,
       "cacheVariables": {
@@ -138,6 +145,7 @@
         "x64",
         "debug",
         "build-testing",
+        "build-apps",
         "build-examples",
         "enable-clang-tidy"
       ]
@@ -150,6 +158,7 @@
         "x64",
         "release",
         "build-testing",
+        "build-apps",
         "build-examples"
       ]
     },
@@ -161,6 +170,7 @@
         "windows-cl-base",
         "debug",
         "build-testing",
+        "build-apps",
         "build-examples",
         "enable-clang-tidy-windows"
       ]
@@ -173,6 +183,7 @@
         "windows-cl-base",
         "release",
         "build-testing",
+        "build-apps",
         "build-examples"
       ]
     },
@@ -184,6 +195,7 @@
         "x64",
         "release",
         "build-testing",
+        "build-apps",
         "build-examples",
         "enable-clang-tidy"
       ]
@@ -196,6 +208,7 @@
         "x64",
         "release",
         "build-testing",
+        "build-apps",
         "build-examples",
         "build-shared"
       ]
@@ -208,6 +221,7 @@
         "x64",
         "release",
         "build-testing",
+        "build-apps",
         "build-examples",
         "enable-clang-tidy-windows"
       ]
@@ -220,6 +234,7 @@
         "x64",
         "release",
         "build-testing",
+        "build-apps",
         "build-examples",
         "build-shared"
       ]

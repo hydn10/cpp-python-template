@@ -56,7 +56,7 @@ Typical ownership in this repository should be:
 
 | Concern | Owner |
 | --- | --- |
-| Native libraries, examples, tests, install/export shape | CMake |
+| Native libraries, applications, examples, tests, install/export shape | CMake |
 | Python package metadata, scripts, runtime dependencies | Python packaging metadata |
 | Python environment synchronization | uv and its lock state |
 | C++ dependency manifest mapping | vcpkg metadata |

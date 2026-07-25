@@ -1,4 +1,4 @@
-# mylib — Minimal C++ library with Python apps
+# mylib — Minimal C++ library with native and Python apps
 
 This is a minimal example of a C++ library that is consumable from both C++ and Python. It uses modern CMake for the C++ project, a `vcpkg.json` manifest for C++ dependencies, pybind11 + scikit-build-core for the Python extension, and `uv` for Python environment management.
 
@@ -27,7 +27,8 @@ Ordinary CMake workflows build and test the native project only.
 
 - `lib/include/mylib/mylib.hpp` — public C++ header
 - `lib/src/mylib.cpp` — C++ library implementation
-- `examples/cpp_example.cpp` — tiny C++ app using the library
+- `apps/sample.cpp` — installed first-party native application
+- `examples/basic_usage.cpp` — minimal, noninstalled C++ consumption example
 - `lib/src/bindings/python/module.cpp` — pybind11 module definition
 - `python/src/mylib_tools/` — Python tool package, including the private extension at `_core`
 - `CMakeLists.txt` — modern CMake project (installs C++ library + headers)
@@ -50,7 +51,15 @@ cmake -S . -B build \
   -DCMAKE_BUILD_TYPE=Release
 ```
 
-## Build and run the C++ example
+The native target categories have independent CMake options:
+
+- `MYLIB_BUILD_APPS` builds repository applications, which may be installed and packaged.
+- `MYLIB_BUILD_EXAMPLES` builds consumption examples, which are never installed or exported.
+- `MYLIB_BUILD_TESTING` builds and registers native tests.
+
+All three default to enabled for a top-level CMake build and disabled when `mylib` is included as a subproject.
+
+## Build and run the native application and example
 
 With development workflow presets:
 
@@ -70,10 +79,12 @@ Single-config generators (Linux/macOS, Ninja, Unix Makefiles):
 cmake -S . -B build \
   -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
   -DCMAKE_BUILD_TYPE=Release \
+  -DMYLIB_BUILD_APPS=ON \
   -DMYLIB_BUILD_EXAMPLES=ON \
   -DMYLIB_BUILD_TESTING=OFF
 cmake --build build
-./build/examples/mylib-cpp-example
+./build/apps/mylib-sample
+./build/examples/mylib-basic-usage-example
 ```
 
 Multi-config generators (Visual Studio on Windows):
@@ -81,10 +92,12 @@ Multi-config generators (Visual Studio on Windows):
 ```powershell
 cmake -S . -B build `
   -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+  -DMYLIB_BUILD_APPS=ON `
   -DMYLIB_BUILD_EXAMPLES=ON `
   -DMYLIB_BUILD_TESTING=OFF
 cmake --build build --config Release
-./build/examples/Release/mylib-cpp-example.exe
+./build/apps/Release/mylib-sample.exe
+./build/examples/Release/mylib-basic-usage-example.exe
 ```
 
 ## Testing
@@ -112,7 +125,7 @@ cmake --build build --config Release
     - `cmake --build build --config Debug`
 - Alternatively, run manually using compile commands:
   - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
-  - `clang-tidy -p build lib/src/mylib.cpp examples/cpp_example.cpp`
+  - `clang-tidy -p build lib/src/mylib.cpp apps/sample.cpp examples/basic_usage.cpp`
   - Or `run-clang-tidy` if available.
 
 ## Nix (flake)
@@ -121,8 +134,10 @@ This repo includes a Nix flake targeting `x86_64-linux`.
 
 - Build the C++ library (default package):
   - `nix build` → result is the installed library in `result/`
-- Run the C++ example app:
-  - `nix run .#mylib-example`
+- Build the C++ library and native application:
+  - `nix build .#mylib-apps`
+- Run the native application:
+  - `nix run .#mylib-sample`
 - Run the Python plotting app:
   - `nix run .#mylib-plot`
 - Run the Python CSV dump app:
@@ -182,3 +197,6 @@ After installing this project (`cmake --install build --config Release`), you ca
 find_package(mylib CONFIG REQUIRED)
 target_link_libraries(your_target PRIVATE mylib::mylib)
 ```
+
+The install exports only `mylib::mylib`. If `MYLIB_BUILD_APPS=ON`, it also installs
+`mylib-sample` as a runtime application; examples are never installed.

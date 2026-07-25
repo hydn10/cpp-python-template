@@ -39,24 +39,25 @@
         python = pkgs.python3;
       };
 
-      mylibWithExamples = cpp.mylibWithExamples;
+      mylibWithApps = cpp.mylibWithApps;
       mylibWithTestsAndChecks = cpp.mylibWithTestsAndChecks;
     in {
       packages.${system} = {
         default = cpp.mylib;
         mylib = cpp.mylib;
+        mylib-apps = mylibWithApps;
         python-apps = pythonModules.mylibApps;
         python-app = pythonModules.mylibApps;
       };
 
       # Expose runnable apps
       apps.${system} = {
-        # C++ example (installed into $out/bin by CMake when examples are ON)
-        mylib-example = {
+        # First-party C++ application installed by CMake when applications are ON
+        mylib-sample = {
           type = "app";
-          program = "${mylibWithExamples}/bin/mylib-cpp-example";
+          program = "${mylibWithApps}/bin/mylib-sample";
           meta = {
-            description = "Run the packaged C++ example for the mylib template.";
+            description = "Run the packaged native sample application for mylib.";
           };
         };
         # Python CLI from [project.scripts]

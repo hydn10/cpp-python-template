@@ -9,12 +9,14 @@ string(JSON VERSION_FROM_JSON GET "${MYLIB_JSON_STRING}" version)
 project(mylib LANGUAGES CXX VERSION "${VERSION_FROM_JSON}")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/mylib-windows-runtime.cmake")
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
-set(MYLIB_BUILD_TESTING_DEFAULT "${PROJECT_IS_TOP_LEVEL}")
+set(MYLIB_BUILD_APPS_DEFAULT "${PROJECT_IS_TOP_LEVEL}")
 option(
-    MYLIB_BUILD_TESTING
-    "Build the tests. Default: ${MYLIB_BUILD_TESTING_DEFAULT}."
-    "${MYLIB_BUILD_TESTING_DEFAULT}")
+    MYLIB_BUILD_APPS
+    "Build the C++ applications. Default: ${MYLIB_BUILD_APPS_DEFAULT}."
+    "${MYLIB_BUILD_APPS_DEFAULT}")
 
 set(MYLIB_BUILD_EXAMPLES_DEFAULT "${PROJECT_IS_TOP_LEVEL}")
 option(
@@ -27,13 +29,18 @@ option(
     MYLIB_BUILD_PYTHON
     "Build the optional Python extension module. Default: ${MYLIB_BUILD_PYTHON_DEFAULT}."
     "${MYLIB_BUILD_PYTHON_DEFAULT}")
+
+set(MYLIB_BUILD_TESTING_DEFAULT "${PROJECT_IS_TOP_LEVEL}")
+option(
+    MYLIB_BUILD_TESTING
+    "Build the tests. Default: ${MYLIB_BUILD_TESTING_DEFAULT}."
+    "${MYLIB_BUILD_TESTING_DEFAULT}")
     
 
 add_subdirectory(lib)
 
-if(MYLIB_BUILD_TESTING)
-    enable_testing()
-    add_subdirectory(tests)
+if(MYLIB_BUILD_APPS)
+    add_subdirectory(apps)
 endif()
 
 if(MYLIB_BUILD_EXAMPLES)
@@ -44,9 +51,11 @@ if(MYLIB_BUILD_PYTHON)
     add_subdirectory(python)
 endif()
 
+if(MYLIB_BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 
-include(CMakePackageConfigHelpers)
-include(GNUInstallDirs)
 
 install(
     EXPORT mylib-targets

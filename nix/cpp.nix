@@ -1,14 +1,15 @@
 { pkgs }:
 let
   mylib = pkgs.callPackage ../default.nix { };
-  mylibWithExamples = mylib.override {
-    buildExamples = true;
+  mylibWithApps = mylib.override {
+    buildApps = true;
   };
-  mylibWithTestsAndChecks = mylibWithExamples.override {
+  mylibWithTestsAndChecks = mylibWithApps.override {
+    buildExamples = true;
     buildTests = true;
     enableClangTidy = true;
   };
 in {
-  inherit mylib mylibWithExamples mylibWithTestsAndChecks;
+  inherit mylib mylibWithApps mylibWithTestsAndChecks;
 }
 
