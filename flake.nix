@@ -46,8 +46,8 @@
         default = cpp.mylib;
         mylib = cpp.mylib;
         mylib-apps = mylibWithApps;
-        python-apps = pythonModules.mylibApps;
-        python-app = pythonModules.mylibApps;
+        python-apps = pythonModules.mylibApplication;
+        python-app = pythonModules.mylibApplication;
       };
 
       # Expose runnable apps
@@ -63,14 +63,14 @@
         # Python CLI from [project.scripts]
         mylib-plot = {
           type = "app";
-          program = "${pythonModules.mylibApps}/bin/mylib-plot";
+          program = "${pythonModules.mylibApplication}/bin/mylib-plot";
           meta = {
             description = "Run the packaged plotting CLI for the mylib template.";
           };
         };
         mylib-dump = {
           type = "app";
-          program = "${pythonModules.mylibApps}/bin/mylib-dump";
+          program = "${pythonModules.mylibApplication}/bin/mylib-dump";
           meta = {
             description = "Run the packaged CSV dump CLI for the mylib template.";
           };

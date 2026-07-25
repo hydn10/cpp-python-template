@@ -15,6 +15,7 @@ let
   };
 
   hacks = pkgs.callPackage pyproject-nix.build.hacks { };
+  inherit (pkgs.callPackages pyproject-nix.build.util { }) mkApplication;
 
   pythonSet =
     (pkgs.callPackage pyproject-nix.build.packages { inherit python; }).overrideScope
@@ -46,15 +47,20 @@ let
           })
       ]);
 
-  mylibApps = pythonSet.mkVirtualEnv "mylib-tools-env" (
+  mylibVenv = pythonSet.mkVirtualEnv "mylib-tools-env" (
     workspace.deps.default
     // {
       tkinter = [ ];
     }
   );
 
+  mylibApplication = mkApplication {
+    venv = mylibVenv;
+    package = pythonSet."mylib-tools";
+  };
+
 in {
-  inherit python pythonSet mylibApps;
+  inherit python pythonSet mylibApplication;
 
   shellPackages = [
     pkgs.uv

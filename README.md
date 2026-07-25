@@ -301,17 +301,19 @@ This repo includes a Nix flake targeting `x86_64-linux`.
   - `nix run .#mylib-plot`
 - Run the Python CSV dump app:
   - `nix run .#mylib-dump`
-- Build the packaged Python apps environment:
+- Build the packaged Python application:
   - `nix build .#python-apps`
 - Enter a development shell with C++, Python, uv, and Just available:
   - `nix develop`
 
 Notes:
 
-- The Python apps are built using uv2nix from `uv.lock` and `pyproject.toml`.
+- The Python application is built using uv2nix from `uv.lock` and
+  `pyproject.toml`. Its package output uses pyproject-nix's `mkApplication` so
+  the virtual environment remains an internal implementation detail.
 - The dev shell is uv-first: it provides the C++ toolchain, Eigen, LLVM 22
   tools, `uv`, Just, and a pinned Nix Python interpreter, but it does not put
-  the packaged Python apps environment on `PATH`. Inside `nix develop`, use
+  the packaged Python application on `PATH`. Inside `nix develop`, use
   `just py sync` (or raw `uv sync --locked`) and normal `just py plot` /
   `just py dump` commands. The shell also exposes Nix-provided `tkinter` plus the
   X11/Wayland client libraries so uv-managed `matplotlib` can open interactive
