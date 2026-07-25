@@ -42,6 +42,7 @@ Ordinary CMake workflows build and test the native project only.
 - LLVM/clang-tidy 22 when static analysis is enabled
 - [vcpkg](https://learn.microsoft.com/vcpkg/) with `VCPKG_ROOT` set when configuring outside Nix; the presets use it to provide the repo's manifest dependencies (currently `Eigen3`)
 - Python 3.9+ and [uv](https://docs.astral.sh/uv/)
+- Optionally, [Just](https://just.systems/) for the developer workflow façade (also provided by `nix develop`)
 
 Outside Nix, the presets in `CMakePresets.json` route CMake through the vcpkg toolchain via `VCPKG_ROOT`, so the existing configure/build/test/workflow presets will pick up manifest dependencies automatically. If you run `cmake -S` manually instead of using a preset, pass the toolchain file explicitly:
 
@@ -58,6 +59,82 @@ The native target categories have independent CMake options:
 - `MYLIB_BUILD_TESTING` builds and registers native tests.
 
 All three default to enabled for a top-level CMake build and disabled when `mylib` is included as a subproject.
+
+## Developer workflows with Just
+
+The root `justfile` is an optional façade over CMake, CTest, uv, and the
+project's installed console scripts. It does not define sources, dependencies,
+compiler policy, or a separate build graph. Run `just help` (or `just --list`)
+to see the recipes:
+
+| Recipe | Delegated operation |
+| --- | --- |
+| `help` | List recipes and their descriptions |
+| `cpp-configure [preset]` | Configure with a CMake configure preset |
+| `cpp-build [preset]` | Build with the matching CMake build preset |
+| `cpp-test [preset]` | Test with the matching CTest preset |
+| `cpp-check [preset]` | Configure, build, and test |
+| `py-sync` | Synchronize the environment from `uv.lock` |
+| `py-rebuild` | Force rebuilding and reinstalling the native extension |
+| `plot [arguments]` | Run `mylib-plot` in the locked environment |
+| `dump [arguments]` | Run `mylib-dump` in the locked environment |
+| `check [preset]` | Run `cpp-check` and `py-sync` |
+
+The default C++ preset is `dev-linux-debug` on Linux and
+`dev-x64-win-debug` on Windows. Pass another complete preset name as the first
+argument when needed, for example:
+
+```bash
+just cpp-check dev-linux-release
+```
+
+```powershell
+just cpp-check dev-x64-win-release
+```
+
+CLI options are passed through to the underlying application:
+
+```bash
+just plot --save plot.png
+just dump --points 5 --output values.csv
+```
+
+Just is not required. These are the underlying commands for the same
+operations (replace the preset with the matching Windows preset where
+appropriate):
+
+```bash
+# discover the available native presets and command options
+cmake --list-presets
+cmake --workflow --list-presets
+uv run --locked mylib-plot --help
+uv run --locked mylib-dump --help
+
+# cpp-configure
+cmake --preset dev-linux-debug
+
+# cpp-build
+cmake --build --preset dev-linux-debug
+
+# cpp-test
+ctest --preset dev-linux-debug
+
+# cpp-check (run the three CMake/CTest commands above in order)
+
+# py-sync
+uv sync --locked
+
+# py-rebuild after C++ sources, headers, bindings, or relevant CMake files change
+uv sync --locked --reinstall-package mylib-tools
+
+# plot
+uv run --locked mylib-plot --save plot.png
+
+# dump
+uv run --locked mylib-dump --points 5 --output values.csv
+
+# check (run cpp-check, then py-sync)
+```
 
 ## Build and run the native application and example
 
@@ -144,13 +221,13 @@ This repo includes a Nix flake targeting `x86_64-linux`.
   - `nix run .#mylib-dump`
 - Build the packaged Python apps environment:
   - `nix build .#python-apps`
-- Enter a development shell with C++ and Python tools + deps available:
+- Enter a development shell with C++, Python, uv, and Just available:
   - `nix develop`
 
 Notes:
 
 - The Python apps are built using uv2nix from `uv.lock` and `pyproject.toml`.
-- The dev shell is uv-first: it provides the C++ toolchain, LLVM 22 tools, `uv`, and a pinned Nix Python interpreter, but it does not put the packaged Python apps environment on `PATH`. Inside `nix develop`, use `uv sync` to create/update `.venv` and `uv run ...` to execute project Python commands. The shell also exposes Nix-provided `tkinter` plus the X11/Wayland client libraries so uv-managed `matplotlib` can open interactive windows on Nix.
+- The dev shell is uv-first: it provides the C++ toolchain, LLVM 22 tools, `uv`, Just, and a pinned Nix Python interpreter, but it does not put the packaged Python apps environment on `PATH`. Inside `nix develop`, use `uv sync --locked` to create/update `.venv` and `uv run --locked ...` to execute project Python commands. The shell also exposes Nix-provided `tkinter` plus the X11/Wayland client libraries so uv-managed `matplotlib` can open interactive windows on Nix.
 - If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
 
 ## Python apps with UV (locked env)
@@ -182,10 +259,10 @@ uv run --locked python -c "import mylib_tools._core as m; print(m.compute_values
 
 Notes:
 
-- `uv sync` installs the project in editable mode, so there is no separate `uv pip install -e .` step.
-- After C++ source changes, run `uv sync` again to rebuild the extension in the project environment.
+- `uv sync --locked` installs the project in editable mode, so there is no separate `uv pip install -e .` step.
+- After changes to C++ sources, headers, bindings, or relevant CMake files, force the native extension rebuild with `uv sync --locked --reinstall-package mylib-tools` (or `just py-rebuild`).
 - The Python build requires `pybind11` and will be provided automatically from `pyproject.toml`.
-- Outside Nix, Python packaging builds also need Eigen to be discoverable by CMake; exporting `CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"` before `uv sync` is the simplest way to match the preset-based C++ builds.
+- Outside Nix, Python packaging builds also need Eigen to be discoverable by CMake; exporting `CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"` before `uv sync --locked` or `uv sync --locked --reinstall-package mylib-tools` is the simplest way to match the preset-based C++ builds.
 - The project version used by the C++ build and Python distribution metadata is read from `vcpkg.json`.
 - The console app runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
 

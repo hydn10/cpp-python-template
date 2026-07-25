@@ -85,6 +85,7 @@
           [
             pkgs.llvmPackages_22.clang-tools
             pkgs.cmake
+            pkgs.just
             pkgs.ninja
             pkgs.pkg-config
           ]
@@ -92,8 +93,9 @@
         env = pythonModules.shellEnv;
         shellHook = ''
           echo "Dev shell ready"
-          echo "- C++: cmake + ninja available; build dir suggestion: out/build"
-          echo "- Python: run 'uv sync' to create/update .venv, then use 'uv run ...'"
+          echo "- Workflows: run 'just help' to list the optional developer commands"
+          echo "- C++: cmake + ninja available; presets write under out/build"
+          echo "- Python: run 'uv sync --locked' to create/update .venv"
         '';
       };
 
