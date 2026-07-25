@@ -36,20 +36,34 @@ Ordinary CMake workflows build and test the native project only.
 
 ## Prereqs
 
-- CMake >= 3.26
+- CMake >= 3.27
+- Ninja
 - C++23-capable compiler to build this repo's examples/tests
 - C++17 is sufficient for downstream consumers of the installed `mylib` library target
-- LLVM/clang-tidy 22 when static analysis is enabled
-- [vcpkg](https://learn.microsoft.com/vcpkg/) with `VCPKG_ROOT` set when configuring outside Nix; the presets use it to provide the repo's manifest dependencies (currently `Eigen3`)
+- LLVM/clang-tidy 22 when using the `debug` preset or otherwise enabling static analysis
+- A provider for the native dependencies (currently Eigen3), such as Nix, a
+  system package manager, or [vcpkg](https://learn.microsoft.com/vcpkg/)
 - Python 3.9+ and [uv](https://docs.astral.sh/uv/)
 - Optionally, [Just](https://just.systems/) for the developer workflow façade (also provided by `nix develop`)
 
-Outside Nix, the presets in `CMakePresets.json` route CMake through the vcpkg toolchain via `VCPKG_ROOT`, so the existing configure/build/test/workflow presets will pick up manifest dependencies automatically. If you run `cmake -S` manually instead of using a preset, pass the toolchain file explicitly:
+The checked-in configure presets do not select a dependency provider, compiler,
+or machine-local path. In a Nix development shell, use them directly:
 
 ```bash
-cmake -S . -B build \
-  -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
-  -DCMAKE_BUILD_TYPE=Release
+cmake --preset debug
+```
+
+For direct vcpkg use, set `VCPKG_ROOT` and supply its toolchain on the command
+line:
+
+```bash
+cmake --preset <preset> \
+  --toolchain "$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+```
+
+```powershell
+cmake --preset <preset> `
+  --toolchain "$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
 ```
 
 The native target categories have independent CMake options:
@@ -60,150 +74,181 @@ The native target categories have independent CMake options:
 
 All three default to enabled for a top-level CMake build and disabled when `mylib` is included as a subproject.
 
+## Native presets and dependency providers
+
+There are three cross-platform configure presets:
+
+| Preset | Build type | Linkage | Static analysis |
+| --- | --- | --- | --- |
+| `debug` | Debug | Static | clang-tidy |
+| `release` | Release | Static | Off |
+| `shared-release` | Release | Shared | Off |
+
+All three build the native applications, examples, and tests. They explicitly
+leave the Python extension off; Python packaging owns that build.
+
+A CMake preset cannot turn an arbitrary command-line toolchain path into a
+short, safe `binaryDir` component. Reusing one CMake cache after changing
+dependency providers, compilers, or toolchains is unsafe. The repository keeps
+the checked-in presets and Just recipes provider-neutral and adopts a simple
+rule: clean the affected native and Python build trees before making such a
+change.
+
+| Design considered | Decision |
+| --- | --- |
+| Provider-specific directories selected by Just | Rejected: provider routing does not belong in the task runner. |
+| Clean before switching provider/toolchain | Adopted: explicit, portable, and no hidden state. |
+| Provider-specific `CMakeUserPresets.json` entries | Optional for users who switch frequently, but not required. |
+| Derive a directory suffix in checked-in presets | Rejected: preset macros cannot safely normalize or hash arbitrary toolchain paths. |
+
+For example, before changing the environment used by `debug`:
+
+```bash
+just cpp clean debug
+cmake -E remove_directory out/_skbuild
+```
+
+The second command discards scikit-build-core's persistent native build cache.
+If Just is unavailable, remove `out/build/debug` and `out/install/debug`
+directly. Then activate or enter the new dependency environment and configure
+again.
+
+Each configure preset has a matching build and test preset. This keeps the
+build-directory association and test failure policy in CMake instead of
+duplicating them in Just. Workflow presets remain intentionally absent: they
+would repeat the same three-step sequence for every configuration, while Just
+already composes it and the underlying commands remain ordinary CMake and
+CTest:
+
+```bash
+cmake --preset debug
+cmake --build --preset debug
+ctest --preset debug
+```
+
+Use `release` in those commands for a static Release check, or
+`shared-release` for shared-library verification.
+
 ## Developer workflows with Just
 
 The root `justfile` is an optional façade over CMake, CTest, uv, and the
-project's installed console scripts. It does not define sources, dependencies,
-compiler policy, or a separate build graph. Run `just help` (or `just --list`)
-to see the recipes:
+project's console scripts. It does not select a dependency provider: every
+recipe uses the current shell environment, just like its raw command.
 
 | Recipe | Delegated operation |
 | --- | --- |
-| `help` | List recipes and their descriptions |
-| `cpp-configure [preset]` | Configure with a CMake configure preset |
-| `cpp-build [preset]` | Build with the matching CMake build preset |
-| `cpp-test [preset]` | Test with the matching CTest preset |
-| `cpp-check [preset]` | Configure, build, and test |
-| `py-sync` | Synchronize the environment from `uv.lock` |
-| `py-rebuild` | Force rebuilding and reinstalling the native extension |
-| `plot [arguments]` | Run `mylib-plot` in the locked environment |
-| `dump [arguments]` | Run `mylib-dump` in the locked environment |
-| `check [preset]` | Run `cpp-check` and `py-sync` |
+| `cpp configure [preset]` | Configure the preset |
+| `cpp build [preset]` | Build its native tree |
+| `cpp test [preset]` | Run its native tests |
+| `cpp check [preset]` | Configure, build, and test |
+| `cpp clean [preset]` | Remove that preset's build and install trees |
+| `py sync` | Create or synchronize the locked Python environment |
+| `py rebuild` | Incrementally rebuild and reinstall the extension |
+| `py plot [arguments]` / `py dump [arguments]` | Run a locked Python CLI |
+| `check [preset]` | Check native C++ and rebuild the Python extension |
 
-The default C++ preset is `dev-linux-debug` on Linux and
-`dev-x64-win-debug` on Windows. Pass another complete preset name as the first
-argument when needed, for example:
+`py sync` is primarily an environment bootstrap and repair command. It creates
+`.venv` when necessary, installs the versions from `uv.lock`, removes
+undeclared packages, and installs this project editably. Normal `uv run`
+commands already check and synchronize the environment, so `py sync` is not a
+required prelude to every application run.
+
+Editable installation makes Python-source changes visible immediately, but it
+does not automatically recompile the C++ extension. After changing native
+sources, headers, bindings, or relevant CMake files, run `py rebuild`; it
+forces reinstallation of this project while reusing scikit-build-core's
+persistent native build tree.
+
+Inside the Nix development environment, Nix provides the dependencies and
+tools, while Just provides the same command vocabulary used elsewhere:
 
 ```bash
-just cpp-check dev-linux-release
+nix develop
+just cpp check
+just py rebuild
+```
+
+For a vcpkg-backed shell, set `VCPKG_ROOT` and source the small activation
+helper once. It exports CMake's standard `CMAKE_TOOLCHAIN_FILE`, so raw CMake,
+uv/scikit-build-core, and Just all see the same provider:
+
+```bash
+source tools/activate-vcpkg.sh
+just cpp check
+just py rebuild
 ```
 
 ```powershell
-just cpp-check dev-x64-win-release
+. .\tools\Activate-Vcpkg.ps1
+just cpp check
+just cpp check release
+just cpp check shared-release
+just py rebuild
 ```
 
-CLI options are passed through to the underlying application:
+The helpers must be sourced (or dot-sourced), not executed as child processes.
+They are vcpkg conveniences, not requirements of Just. Other providers can
+prepare an environment in their native way; for example, a generated Conan
+CMake toolchain can be exposed through the same standard CMake variable.
+
+CLI options are passed through:
 
 ```bash
-just plot --save plot.png
-just dump --points 5 --output values.csv
-```
-
-Just is not required. These are the underlying commands for the same
-operations (replace the preset with the matching Windows preset where
-appropriate):
-
-```bash
-# discover the available native presets and command options
-cmake --list-presets
-cmake --workflow --list-presets
-uv run --locked mylib-plot --help
-uv run --locked mylib-dump --help
-
-# cpp-configure
-cmake --preset dev-linux-debug
-
-# cpp-build
-cmake --build --preset dev-linux-debug
-
-# cpp-test
-ctest --preset dev-linux-debug
-
-# cpp-check (run the three CMake/CTest commands above in order)
-
-# py-sync
-uv sync --locked
-
-# py-rebuild after C++ sources, headers, bindings, or relevant CMake files change
-uv sync --locked --reinstall-package mylib-tools
-
-# plot
-uv run --locked mylib-plot --save plot.png
-
-# dump
-uv run --locked mylib-dump --points 5 --output values.csv
-
-# check (run cpp-check, then py-sync)
+just py plot --save plot.png
+just py dump --points 5 --output values.csv
 ```
 
 ## Build and run the native application and example
 
-With development workflow presets:
+After configuring and building one of the raw preset trees:
 
 ```bash
-cmake --workflow --preset dev-linux-debug-all
-cmake --workflow --preset dev-linux-release-all
+./out/build/debug/apps/mylib-sample
+./out/build/debug/examples/mylib-basic-usage-example
 ```
 
-```powershell
-cmake --workflow --preset dev-x64-win-debug-all
-cmake --workflow --preset dev-x64-win-release-all
-```
-
-Single-config generators (Linux/macOS, Ninja, Unix Makefiles):
+With Just, the path is unchanged:
 
 ```bash
-cmake -S . -B build \
-  -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DMYLIB_BUILD_APPS=ON \
-  -DMYLIB_BUILD_EXAMPLES=ON \
-  -DMYLIB_BUILD_TESTING=OFF
-cmake --build build
-./build/apps/mylib-sample
-./build/examples/mylib-basic-usage-example
+./out/build/debug/apps/mylib-sample
 ```
 
-Multi-config generators (Visual Studio on Windows):
-
-```powershell
-cmake -S . -B build `
-  -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
-  -DMYLIB_BUILD_APPS=ON `
-  -DMYLIB_BUILD_EXAMPLES=ON `
-  -DMYLIB_BUILD_TESTING=OFF
-cmake --build build --config Release
-./build/apps/Release/mylib-sample.exe
-./build/examples/Release/mylib-basic-usage-example.exe
-```
+On Windows the corresponding executables end in `.exe`.
 
 ## Testing
 
-- With CMake workflow presets:
-  - Linux dev: `cmake --workflow --preset dev-linux-debug-all` or `cmake --workflow --preset dev-linux-release-all`
-  - Linux: `cmake --workflow --preset ci-linux-all`
-  - Windows dev: `cmake --workflow --preset dev-x64-win-debug-all` or `cmake --workflow --preset dev-x64-win-release-all`
-  - Windows: `cmake --workflow --preset ci-windows-all`
-- Just run tests via test presets:
-  - Linux dev: `ctest --preset dev-linux-debug` or `ctest --preset dev-linux-release`
-  - Linux: `ctest --preset ci-linux`
-  - Windows dev: `ctest --preset dev-x64-win-debug -C Debug` or `ctest --preset dev-x64-win-release -C Release`
-  - Windows: `ctest --preset ci-windows -C Release`
+Run `just cpp check [preset]`, or use the raw configure, build, and
+CTest commands shown above. Static Debug, static Release, and shared Release
+checks are all local workflows; broader compiler and platform combinations
+remain CI concerns.
 
 ## Static Analysis (clang-tidy 22)
 
 - LLVM 22 is required; configuration lives in `.clang-tidy` (tweak checks as needed).
-- Run automatically during build by setting the standard CMake launcher variable:
-  - Linux/macOS (Ninja/Makefiles):
-    - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DCMAKE_CXX_CLANG_TIDY='clang-tidy;--warnings-as-errors=*' -DCMAKE_BUILD_TYPE=Debug`
-    - `cmake --build build`
-  - Windows (MSVC generator):
-    - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DCMAKE_CXX_CLANG_TIDY='clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc'`
-    - `cmake --build build --config Debug`
-- Alternatively, run manually using compile commands:
-  - `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON`
-  - `clang-tidy -p build lib/src/mylib.cpp apps/sample.cpp examples/basic_usage.cpp`
-  - Or `run-clang-tidy` if available.
+- The `debug` preset enables clang-tidy automatically and treats all findings
+  as errors, so normal incremental developer builds run static analysis:
+
+  ```bash
+  cmake --preset debug
+  cmake --build --preset debug
+  ```
+
+- Static analysis remains caller policy and can be enabled for another preset
+  when needed:
+
+  ```bash
+  cmake --preset release \
+    -DCMAKE_CXX_CLANG_TIDY='clang-tidy;--warnings-as-errors=*' \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+  cmake --build --preset release
+  ```
+
+- Add the documented `--toolchain` argument when vcpkg is the dependency
+  provider. The `debug` preset adds `--extra-arg=/EHsc` automatically when
+  the C++ compiler is MSVC. When enabling clang-tidy manually for an MSVC
+  build, append that argument to `CMAKE_CXX_CLANG_TIDY` as well.
+- To invoke it manually, use `clang-tidy -p out/build/debug ...` or
+  `run-clang-tidy -p out/build/debug`.
 
 ## Nix (flake)
 
@@ -227,7 +272,13 @@ This repo includes a Nix flake targeting `x86_64-linux`.
 Notes:
 
 - The Python apps are built using uv2nix from `uv.lock` and `pyproject.toml`.
-- The dev shell is uv-first: it provides the C++ toolchain, LLVM 22 tools, `uv`, Just, and a pinned Nix Python interpreter, but it does not put the packaged Python apps environment on `PATH`. Inside `nix develop`, use `uv sync --locked` to create/update `.venv` and `uv run --locked ...` to execute project Python commands. The shell also exposes Nix-provided `tkinter` plus the X11/Wayland client libraries so uv-managed `matplotlib` can open interactive windows on Nix.
+- The dev shell is uv-first: it provides the C++ toolchain, Eigen, LLVM 22
+  tools, `uv`, Just, and a pinned Nix Python interpreter, but it does not put
+  the packaged Python apps environment on `PATH`. Inside `nix develop`, use
+  `just py sync` (or raw `uv sync --locked`) and normal `just py plot` /
+  `just py dump` commands. The shell also exposes Nix-provided `tkinter` plus the
+  X11/Wayland client libraries so uv-managed `matplotlib` can open interactive
+  windows on Nix.
 - If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
 
 ## Python apps with UV (locked env)
@@ -260,15 +311,30 @@ uv run --locked python -c "import mylib_tools._core as m; print(m.compute_values
 Notes:
 
 - `uv sync --locked` installs the project in editable mode, so there is no separate `uv pip install -e .` step.
-- After changes to C++ sources, headers, bindings, or relevant CMake files, force the native extension rebuild with `uv sync --locked --reinstall-package mylib-tools` (or `just py-rebuild`).
+- After changes to C++ sources, headers, bindings, or relevant CMake files,
+  run `just py rebuild`, or its raw equivalent:
+
+  ```bash
+  uv sync --locked --reinstall-package mylib-tools
+  ```
+
+  scikit-build-core keeps its intermediate CMake/Ninja tree under
+  `out/_skbuild/{wheel_tag}`. Reinstalling therefore performs an incremental
+  native build instead of starting from scratch; the wheel tag separates
+  Python ABI and platform combinations.
 - The Python build requires `pybind11` and will be provided automatically from `pyproject.toml`.
-- Outside Nix, Python packaging builds also need Eigen to be discoverable by CMake; exporting `CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"` before `uv sync --locked` or `uv sync --locked --reinstall-package mylib-tools` is the simplest way to match the preset-based C++ builds.
+- Eigen is a native project dependency, not a Python build requirement. In a
+  Nix shell, CMake discovers the Nix-provided package. With vcpkg, source the
+  activation helper before running either raw uv or Just commands.
+- Clean `out/_skbuild` before switching dependency provider, compiler,
+  toolchain, or another incompatible native environment. This explicit
+  cleanup is the Python counterpart of cleaning a native preset tree.
 - The project version used by the C++ build and Python distribution metadata is read from `vcpkg.json`.
 - The console app runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
 
 ## Using the C++ library from another CMake project
 
-After installing this project (`cmake --install build --config Release`), you can
+After installing this project (`cmake --install out/build/release`), you can
 
 ```
 find_package(mylib CONFIG REQUIRED)

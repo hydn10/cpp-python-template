@@ -1,450 +1,98 @@
 {
-  "version":6,
-  "cmakeMinimumRequired":{
-    "major":3,
-    "minor":26,
-    "patch":0
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 27,
+    "patch": 0
   },
   "configurePresets": [
     {
-      "name": "build-apps",
+      "name": "native",
       "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
       "cacheVariables": {
-        "MYLIB_BUILD_APPS": "ON"
-      }
-    },
-    {
-      "name": "build-examples",
-      "hidden": true,
-      "cacheVariables": {
-        "MYLIB_BUILD_EXAMPLES": "ON"
-      }
-    },
-    {
-      "name": "build-testing",
-      "hidden": true,
-      "cacheVariables": {
+        "MYLIB_BUILD_APPS": "ON",
+        "MYLIB_BUILD_EXAMPLES": "ON",
+        "MYLIB_BUILD_PYTHON": "OFF",
         "MYLIB_BUILD_TESTING": "ON"
       }
     },
     {
-      "name": "build-shared",
-      "hidden": true,
+      "name": "debug",
+      "displayName": "debug",
+      "inherits": "native",
       "cacheVariables": {
-        "BUILD_SHARED_LIBS": "ON"
-      }
-    },
-    {
-      "name": "use-vcpkg",
-      "hidden": true,
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-    },
-    {
-      "name": "enable-clang-tidy",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--warnings-as-errors=*",
+        "BUILD_SHARED_LIBS": "OFF",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--warnings-as-errors=*;$<$<CXX_COMPILER_ID:MSVC>:--extra-arg=/EHsc>",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
-      "name": "enable-clang-tidy-windows",
-      "hidden": true,
-      "inherits": [
-        "enable-clang-tidy"
-      ],
-      "cacheVariables": {
-        "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc"
-      }
-    },
-    {
-      "name": "windows-cl-base",
-      "hidden": true,
-      "inherits": [
-        "use-vcpkg"
-      ],
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "installDir": "${sourceDir}/out/install/${presetName}",
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "cl.exe"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      }
-    },
-    {
-      "name": "windows-clang-base",
-      "hidden": true,
-      "inherits": [
-        "use-vcpkg"
-      ],
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "installDir": "${sourceDir}/out/install/${presetName}",
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "clang-cl.exe"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      }
-    },
-    {
-      "name": "linux-base",
-      "hidden": true,
-      "inherits": [
-        "use-vcpkg"
-      ],
-      "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "installDir": "${sourceDir}/out/install/${presetName}",
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    },
-    {
-      "name": "x64",
-      "hidden": true,
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      }
-    },
-    {
-      "name": "debug",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
       "name": "release",
-      "hidden": true,
+      "displayName": "release",
+      "inherits": "native",
       "cacheVariables": {
+        "BUILD_SHARED_LIBS": "OFF",
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "profile",
-      "hidden": true,
+      "name": "shared-release",
+      "displayName": "shared-release",
+      "inherits": "native",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        "BUILD_SHARED_LIBS": "ON",
+        "CMAKE_BUILD_TYPE": "Release"
       }
-    },
-    {
-      "name": "dev-linux-debug",
-      "displayName": "Linux Debug",
-      "inherits": [
-        "linux-base",
-        "x64",
-        "debug",
-        "build-testing",
-        "build-apps",
-        "build-examples",
-        "enable-clang-tidy"
-      ]
-    },
-    {
-      "name": "dev-linux-release",
-      "displayName": "Linux Release",
-      "inherits": [
-        "linux-base",
-        "x64",
-        "release",
-        "build-testing",
-        "build-apps",
-        "build-examples"
-      ]
-    },
-    {
-      "name": "dev-x64-win-debug",
-      "displayName": "x64 Debug (cl)",
-      "inherits": [
-        "x64",
-        "windows-cl-base",
-        "debug",
-        "build-testing",
-        "build-apps",
-        "build-examples",
-        "enable-clang-tidy-windows"
-      ]
-    },
-    {
-      "name": "dev-x64-win-release",
-      "displayName": "x64 Release (cl)",
-      "inherits": [
-        "x64",
-        "windows-cl-base",
-        "release",
-        "build-testing",
-        "build-apps",
-        "build-examples"
-      ]
-    },
-    {
-      "name": "ci-linux",
-      "displayName": "CI Linux",
-      "inherits": [
-        "linux-base",
-        "x64",
-        "release",
-        "build-testing",
-        "build-apps",
-        "build-examples",
-        "enable-clang-tidy"
-      ]
-    },
-    {
-      "name": "ci-linux-shared",
-      "displayName": "CI Linux Shared",
-      "inherits": [
-        "linux-base",
-        "x64",
-        "release",
-        "build-testing",
-        "build-apps",
-        "build-examples",
-        "build-shared"
-      ]
-    },
-    {
-      "name": "ci-windows",
-      "displayName": "CI Windows",
-      "inherits": [
-        "windows-cl-base",
-        "x64",
-        "release",
-        "build-testing",
-        "build-apps",
-        "build-examples",
-        "enable-clang-tidy-windows"
-      ]
-    },
-    {
-      "name": "ci-windows-shared",
-      "displayName": "CI Windows Shared",
-      "inherits": [
-        "windows-cl-base",
-        "x64",
-        "release",
-        "build-testing",
-        "build-apps",
-        "build-examples",
-        "build-shared"
-      ]
     }
   ],
-  "buildPresets":[
+  "buildPresets": [
     {
-      "name":"dev-linux-debug",
-      "configurePreset":"dev-linux-debug"
+      "name": "debug",
+      "configurePreset": "debug"
     },
     {
-      "name":"dev-linux-release",
-      "configurePreset":"dev-linux-release"
+      "name": "release",
+      "configurePreset": "release"
     },
     {
-      "name":"dev-x64-win-debug",
-      "configurePreset":"dev-x64-win-debug"
-    },
-    {
-      "name":"dev-x64-win-release",
-      "configurePreset":"dev-x64-win-release"
-    },
-    {
-      "name": "ci-linux",
-      "configurePreset": "ci-linux"
-    },
-    {
-      "name": "ci-linux-shared",
-      "configurePreset": "ci-linux-shared"
-    },
-    {
-      "name": "ci-linux-verify-headers",
-      "configurePreset": "ci-linux",
-      "targets": [
-        "all_verify_interface_header_sets"
-      ]
-    },
-    {
-      "name": "ci-windows",
-      "configurePreset": "ci-windows",
-      "configuration": "Release"
-    },
-    {
-      "name": "ci-windows-shared",
-      "configurePreset": "ci-windows-shared",
-      "configuration": "Release"
-    },
-    {
-      "name": "ci-windows-verify-headers",
-      "configurePreset": "ci-windows",
-      "configuration": "Release",
-      "targets": [
-        "all_verify_interface_header_sets"
-      ]
+      "name": "shared-release",
+      "configurePreset": "shared-release"
     }
   ],
-  "testPresets":[
+  "testPresets": [
     {
-      "name":"dev-linux-debug",
-      "configurePreset":"dev-linux-debug",
-      "output":{
-        "verbosity":"verbose"
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
       }
     },
     {
-      "name":"dev-linux-release",
-      "configurePreset":"dev-linux-release",
-      "output":{
-        "verbosity":"verbose"
+      "name": "release",
+      "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
       }
     },
     {
-      "name":"dev-x64-win-debug",
-      "configurePreset":"dev-x64-win-debug",
-      "output":{
-        "verbosity":"verbose"
+      "name": "shared-release",
+      "configurePreset": "shared-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
       }
-    },
-    {
-      "name":"dev-x64-win-release",
-      "configurePreset":"dev-x64-win-release",
-      "output":{
-        "verbosity":"verbose"
-      }
-    },
-    {
-      "name": "ci-linux",
-      "configurePreset": "ci-linux",
-      "output": { "verbosity": "verbose" }
-    },
-    {
-      "name": "ci-linux-shared",
-      "configurePreset": "ci-linux-shared",
-      "output": { "verbosity": "verbose" }
-    },
-    {
-      "name": "ci-windows",
-      "configurePreset": "ci-windows",
-      "configuration": "Release",
-      "output": { "verbosity": "verbose" }
-    },
-    {
-      "name": "ci-windows-shared",
-      "configurePreset": "ci-windows-shared",
-      "configuration": "Release",
-      "output": { "verbosity": "verbose" }
-    }
-  ],
-  "workflowPresets":[
-    {
-      "name":"dev-linux-debug-all",
-      "steps":[
-        {
-          "type":"configure",
-          "name":"dev-linux-debug"
-        },
-        {
-          "type":"build",
-          "name":"dev-linux-debug"
-        },
-        {
-          "type":"test",
-          "name":"dev-linux-debug"
-        }
-      ]
-    },
-    {
-      "name":"dev-linux-release-all",
-      "steps":[
-        {
-          "type":"configure",
-          "name":"dev-linux-release"
-        },
-        {
-          "type":"build",
-          "name":"dev-linux-release"
-        },
-        {
-          "type":"test",
-          "name":"dev-linux-release"
-        }
-      ]
-    },
-    {
-      "name":"dev-x64-win-debug-all",
-      "steps":[
-        {
-          "type":"configure",
-          "name":"dev-x64-win-debug"
-        },
-        {
-          "type":"build",
-          "name":"dev-x64-win-debug"
-        },
-        {
-          "type":"test",
-          "name":"dev-x64-win-debug"
-        }
-      ]
-    },
-    {
-      "name":"dev-x64-win-release-all",
-      "steps":[
-        {
-          "type":"configure",
-          "name":"dev-x64-win-release"
-        },
-        {
-          "type":"build",
-          "name":"dev-x64-win-release"
-        },
-        {
-          "type":"test",
-          "name":"dev-x64-win-release"
-        }
-      ]
-    },
-    {
-      "name": "ci-linux-all",
-      "steps": [
-        { "type": "configure", "name": "ci-linux" },
-        { "type": "build", "name": "ci-linux" },
-        { "type": "build", "name": "ci-linux-verify-headers" },
-        { "type": "test", "name": "ci-linux" }
-      ]
-    },
-    {
-      "name": "ci-linux-shared-all",
-      "steps": [
-        { "type": "configure", "name": "ci-linux-shared" },
-        { "type": "build", "name": "ci-linux-shared" },
-        { "type": "test", "name": "ci-linux-shared" }
-      ]
-    },
-    {
-      "name": "ci-windows-all",
-      "steps": [
-        { "type": "configure", "name": "ci-windows" },
-        { "type": "build", "name": "ci-windows" },
-        { "type": "build", "name": "ci-windows-verify-headers" },
-        { "type": "test", "name": "ci-windows" }
-      ]
-    },
-    {
-      "name": "ci-windows-shared-all",
-      "steps": [
-        { "type": "configure", "name": "ci-windows-shared" },
-        { "type": "build", "name": "ci-windows-shared" },
-        { "type": "test", "name": "ci-windows-shared" }
-      ]
     }
   ]
 }

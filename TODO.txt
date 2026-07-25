@@ -1,0 +1,2 @@
+- Recheck pyproject-nix/build-system-pkgs' uv.lock (currently scikit-build-core 0.12.2); when it supports 1.x, revisit our <1 cap and metadata syntax.
+- When scikit-build-core editable rebuild is no longer experimental, consider enabling it.

@@ -9,11 +9,12 @@ permissions:
 
 jobs:
   cmake-linux:
-    name: Linux C++ (CMake CI Workflow)
+    name: Linux C++ (static and shared)
     runs-on: ubuntu-latest
     env:
       CC: gcc-14
       CXX: g++-14
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -33,21 +34,30 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-14 g++-14
 
-      - name: Run CMake workflow preset
-        run: cmake --workflow --preset ci-linux-all
+      - name: Configure static Release
+        run: >
+          cmake --preset release
+          "-DCMAKE_CXX_CLANG_TIDY=clang-tidy;--warnings-as-errors=*"
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Build and verify static Release
+        run: |
+          cmake --build --preset release
+          cmake --build --preset release --target all_verify_interface_header_sets
+          ctest --preset release
 
       - name: Run native application
         shell: bash
         run: |
-          "out/build/ci-linux/apps/mylib-sample"
+          "out/build/release/apps/mylib-sample"
 
       - name: Install package
-        run: cmake --install out/build/ci-linux
+        run: cmake --install out/build/release
 
       - name: Configure consumer package smoke test
         run: >
           cmake -S tests/consumer-cmake -B out/build/consumer-cmake-linux
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/ci-linux"
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/release"
 
       - name: Build consumer package smoke test
         run: cmake --build out/build/consumer-cmake-linux
@@ -55,16 +65,19 @@ jobs:
       - name: Run consumer package smoke test
         run: ./out/build/consumer-cmake-linux/mylib-consumer-smoke
 
-      - name: Run shared CMake workflow preset
-        run: cmake --workflow --preset ci-linux-shared-all
+      - name: Configure, build, and test shared Release
+        run: |
+          cmake --preset shared-release
+          cmake --build --preset shared-release
+          ctest --preset shared-release
 
       - name: Install shared package
-        run: cmake --install out/build/ci-linux-shared
+        run: cmake --install out/build/shared-release
 
       - name: Configure shared consumer package smoke test
         run: >
           cmake -S tests/consumer-cmake -B out/build/consumer-cmake-linux-shared
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/ci-linux-shared"
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/shared-release"
 
       - name: Build shared consumer package smoke test
         run: cmake --build out/build/consumer-cmake-linux-shared
@@ -72,7 +85,7 @@ jobs:
       - name: Run shared consumer package smoke test
         shell: bash
         run: |
-          export LD_LIBRARY_PATH="${{ github.workspace }}/out/install/ci-linux-shared/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+          export LD_LIBRARY_PATH="${{ github.workspace }}/out/install/shared-release/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
           ./out/build/consumer-cmake-linux-shared/mylib-consumer-smoke
 
   python-linux:
@@ -119,8 +132,11 @@ jobs:
         run: uv run --locked mylib-dump --points 5 --output out/ci-values.csv
 
   cmake-windows:
-    name: Windows C++ (CMake CI Workflow)
+    name: Windows C++ (static and shared)
     runs-on: windows-latest
+    env:
+      CXX: cl.exe
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -145,23 +161,34 @@ jobs:
           # Update the current environment:
           Get-ChildItem 'env:' | %{ echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
 
-      - name: Run CMake workflow preset
-        run: cmake --workflow --preset ci-windows-all
+      - name: Configure static Release
+        shell: pwsh
+        run: >
+          cmake --preset release
+          "-DCMAKE_CXX_CLANG_TIDY=clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc"
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Build and verify static Release
+        shell: pwsh
+        run: |
+          cmake --build --preset release
+          cmake --build --preset release --target all_verify_interface_header_sets
+          ctest --preset release
 
       - name: Run native application
         shell: pwsh
         run: |
-          ./out/build/ci-windows/apps/mylib-sample.exe
+          ./out/build/release/apps/mylib-sample.exe
 
       - name: Install package
         shell: pwsh
-        run: cmake --install out/build/ci-windows --config Release
+        run: cmake --install out/build/release
 
       - name: Configure consumer package smoke test
         shell: pwsh
         run: >
           cmake -S tests/consumer-cmake -B out/build/consumer-cmake-windows
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/ci-windows"
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/release"
 
       - name: Build consumer package smoke test
         shell: pwsh
@@ -171,19 +198,22 @@ jobs:
         shell: pwsh
         run: ./out/build/consumer-cmake-windows/Release/mylib-consumer-smoke.exe
 
-      - name: Run shared CMake workflow preset
+      - name: Configure, build, and test shared Release
         shell: pwsh
-        run: cmake --workflow --preset ci-windows-shared-all
+        run: |
+          cmake --preset shared-release
+          cmake --build --preset shared-release
+          ctest --preset shared-release
 
       - name: Install shared package
         shell: pwsh
-        run: cmake --install out/build/ci-windows-shared --config Release
+        run: cmake --install out/build/shared-release
 
       - name: Configure shared consumer package smoke test
         shell: pwsh
         run: >
           cmake -S tests/consumer-cmake -B out/build/consumer-cmake-windows-shared
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/ci-windows-shared"
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/shared-release"
 
       - name: Build shared consumer package smoke test
         shell: pwsh
@@ -192,7 +222,7 @@ jobs:
       - name: Run shared consumer package smoke test
         shell: pwsh
         run: |
-          $env:PATH = "${{ github.workspace }}\out\install\ci-windows-shared\bin;$env:PATH"
+          $env:PATH = "${{ github.workspace }}\out\install\shared-release\bin;$env:PATH"
           ./out/build/consumer-cmake-windows-shared/Release/mylib-consumer-smoke.exe
 
   python-windows:
