@@ -286,7 +286,8 @@ workflow.
 
 ## Nix (flake)
 
-This repo includes a Nix flake targeting `x86_64-linux`.
+This repo includes a per-system Nix flake currently supporting
+`x86_64-linux`.
 
 - Build the C++ library (default package):
   - `nix build` → result is the installed library in `result/`

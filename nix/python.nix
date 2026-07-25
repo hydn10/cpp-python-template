@@ -67,16 +67,19 @@ in {
     python
   ];
 
-  shellEnv = {
-    UV_PYTHON_DOWNLOADS = "never";
-    UV_PYTHON = python.interpreter;
-    # uv manages .venv in the dev shell, but Tk is still supplied by nixpkgs.
-    PYTHONPATH = "${python.pkgs.tkinter}/${python.sitePackages}";
-    # PyPI wheels used by uv need GUI/runtime libraries visible on Nix.
-    LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
-      pkgs.stdenv.cc.cc.lib
-      pkgs.libx11
-      pkgs.wayland
-    ];
-  };
+  shellEnv =
+    {
+      UV_PYTHON_DOWNLOADS = "never";
+      UV_PYTHON = python.interpreter;
+      # uv manages .venv in the dev shell, but Tk is still supplied by nixpkgs.
+      PYTHONPATH = "${python.pkgs.tkinter}/${python.sitePackages}";
+    }
+    // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+      # PyPI wheels used by uv need GUI/runtime libraries visible on Nix.
+      LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+        pkgs.stdenv.cc.cc.lib
+        pkgs.libx11
+        pkgs.wayland
+      ];
+    };
 }
