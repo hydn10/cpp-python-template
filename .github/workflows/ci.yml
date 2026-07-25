@@ -111,21 +111,19 @@ jobs:
           "CXX=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
 
       - name: Set up Python
-        if: matrix.comprehensive
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        if: matrix.comprehensive
         uses: astral-sh/setup-uv@v7
 
       - name: Check native Debug with clang-tidy
         if: matrix.comprehensive
         run: just cpp check debug
 
-      - name: Check native static Release
-        run: just cpp check release
+      - name: Check static Release and Python applications
+        run: just check release
 
       - name: Check installed static CMake package
         run: just cpp ci check-installed release
@@ -135,10 +133,6 @@ jobs:
 
       - name: Check installed shared CMake package
         run: just cpp ci check-installed shared-release
-
-      - name: Smoke-test Python applications
-        if: matrix.comprehensive
-        run: just py ci smoke
 
   nix:
     name: Nix
@@ -154,6 +148,9 @@ jobs:
 
       - name: Check the flake
         run: nix flake check -L
+
+      - name: Smoke-test the development workflow
+        run: nix develop --command just check
 
       - name: Create smoke-test output directory
         run: mkdir -p out/smoke/nix
