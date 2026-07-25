@@ -41,7 +41,6 @@ let
               buildInputs = (old.buildInputs or [ ]) ++ (mylib.buildInputs or [ ]);
               env = (old.env or { }) // {
                 CMAKE_GENERATOR = "Ninja";
-                CMAKE_BUILD_TYPE = "Release";
               };
             });
           })

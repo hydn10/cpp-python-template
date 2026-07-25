@@ -15,7 +15,7 @@ rebuild:
 # Run the plotting CLI (usage: just py plot --save path).
 plot *args:
     uv run --locked mylib-plot {{ args }}
-    
+
 # Run the CSV dump CLI (usage: just py dump --points 5 --output path).
 dump *args:
     uv run --locked mylib-dump {{ args }}

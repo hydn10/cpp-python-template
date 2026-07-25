@@ -27,8 +27,9 @@ option(
 set(MYLIB_BUILD_PYTHON_DEFAULT OFF)
 option(
     MYLIB_BUILD_PYTHON
-    "Build the optional Python extension module. Default: ${MYLIB_BUILD_PYTHON_DEFAULT}."
+    "Build the Python packaging extension module. Default: ${MYLIB_BUILD_PYTHON_DEFAULT}."
     "${MYLIB_BUILD_PYTHON_DEFAULT}")
+mark_as_advanced(MYLIB_BUILD_PYTHON)
 
 set(MYLIB_BUILD_TESTING_DEFAULT "${PROJECT_IS_TOP_LEVEL}")
 option(

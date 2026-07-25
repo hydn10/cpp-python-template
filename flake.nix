@@ -48,9 +48,8 @@
           packages = {
             default = cpp.mylib;
             mylib = cpp.mylib;
-            mylib-apps = mylibWithApps;
+            mylib-native-apps = mylibWithApps;
             python-apps = pythonModules.mylibApplication;
-            python-app = pythonModules.mylibApplication;
           };
 
           # Expose runnable apps

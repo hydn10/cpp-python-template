@@ -23,6 +23,8 @@ uv
 
 Ordinary CMake workflows build and test the native project only.
 
+See `docs/repo-philosophy.md` for the repository design principles.
+
 ## Layout
 
 - `lib/include/mylib/mylib.hpp` — public C++ header
@@ -38,7 +40,7 @@ Ordinary CMake workflows build and test the native project only.
 
 - CMake >= 3.27
 - Ninja
-- C++23-capable compiler to build this repo's examples/tests
+- C++23-capable compiler to build this repo's applications and native tests
 - C++17 is sufficient for downstream consumers of the installed `mylib` library target
 - LLVM/clang-tidy 22 when using the `debug` preset or otherwise enabling static analysis
 - A provider for the native dependencies (currently Eigen3), such as Nix, a
@@ -123,6 +125,7 @@ CTest:
 ```bash
 cmake --preset debug
 cmake --build --preset debug
+cmake --build --preset debug --target all_verify_interface_header_sets
 ctest --preset debug
 ```
 
@@ -143,7 +146,7 @@ recipe uses the current shell environment, just like its raw command.
 | `cpp verify-headers [preset]` | Verify that each public header is self-contained |
 | `cpp test [preset]` | Run its native tests |
 | `cpp check [preset]` | Configure, build, verify public headers, and test |
-| `cpp ci check-installed [preset]` | Install a native build and build the CMake consumer against it |
+| `cpp ci check-installed [preset]` | Install a native build, then build and run the CMake consumer against it |
 | `cpp rm [preset]` | Remove that preset's native build, install, and consumer trees |
 | `py sync` | Create or synchronize the locked Python environment |
 | `py rebuild` | Incrementally rebuild and reinstall the extension |
@@ -240,21 +243,22 @@ cmake -S tests/consumer-cmake -B out/build/consumer-cmake/release \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_PREFIX_PATH=/path/to/repository/out/install/release
 cmake --build out/build/consumer-cmake/release
+ctest --test-dir out/build/consumer-cmake/release \
+  --output-on-failure \
+  --no-tests=error
 ```
 
 Use `shared-release` in the build and install paths to check the shared
 package. `CMAKE_PREFIX_PATH` must be absolute because CMake interprets relative
-package-search paths from the consumer build tree. This check only verifies
-that the installed package can be found and linked by an ordinary downstream
-CMake project.
+package-search paths from the consumer build tree. On Windows, the consumer
+stages the imported package's runtime DLLs before CTest runs it.
 
-CI expresses native coverage as data-driven toolchain lanes. Comprehensive
-lanes run Debug with clang-tidy and the Python application smoke check in
-addition to static and shared Release. Compatibility lanes run the two Release
-native configurations. Every lane also builds the installed-package consumer
-for both Release configurations. A future toolchain can opt into the
-comprehensive suite by changing its matrix entry rather than duplicating the
-workflow.
+CI expresses coverage as data-driven toolchain lanes. Every ordinary Linux and
+Windows lane runs the locked Python application smoke check, static and shared
+Release native checks, and both installed-package consumer checks.
+Comprehensive lanes additionally run Debug with clang-tidy. A future toolchain
+can opt into the comprehensive suite by changing its matrix entry rather than
+duplicating the workflow.
 
 ## Static Analysis (clang-tidy 22)
 
@@ -292,7 +296,7 @@ This repo includes a per-system Nix flake currently supporting
 - Build the C++ library (default package):
   - `nix build` → result is the installed library in `result/`
 - Build the C++ library and native application:
-  - `nix build .#mylib-apps`
+  - `nix build .#mylib-native-apps`
 - Build all native targets, verify the public headers, and run the registered
   native tests:
   - `nix flake check`
