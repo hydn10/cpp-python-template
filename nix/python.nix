@@ -78,6 +78,7 @@ in {
       # PyPI wheels used by uv need GUI/runtime libraries visible on Nix.
       LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
         pkgs.stdenv.cc.cc.lib
+        pkgs.zlib
         pkgs.libx11
         pkgs.wayland
       ];
