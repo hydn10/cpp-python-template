@@ -10,9 +10,11 @@ mod py 'just/py.just'
 help:
     @just --list --list-submodules
 
+# Delete the entire out/ directory, including every build and generated artifact.
+rm-out:
+    cmake -E remove_directory "out"
+
 default-cpp-preset := "debug"
 
 # Verify both native and Python extension build paths.
-check preset=default-cpp-preset:
-    just cpp check {{ preset }}
-    just py rebuild
+check preset=default-cpp-preset: (cpp::check preset) py::ci::smoke

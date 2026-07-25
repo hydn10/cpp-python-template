@@ -104,7 +104,7 @@ change.
 For example, before changing the environment used by `debug`:
 
 ```bash
-just cpp clean debug
+just cpp rm debug
 cmake -E remove_directory out/_skbuild
 ```
 
@@ -139,13 +139,17 @@ recipe uses the current shell environment, just like its raw command.
 | --- | --- |
 | `cpp configure [preset]` | Configure the preset |
 | `cpp build [preset]` | Build its native tree |
+| `cpp clean [preset]` | Run the configured tree's clean target |
+| `cpp verify-headers [preset]` | Verify that each public header is self-contained |
 | `cpp test [preset]` | Run its native tests |
-| `cpp check [preset]` | Configure, build, and test |
-| `cpp clean [preset]` | Remove that preset's build and install trees |
+| `cpp check [preset]` | Configure, build, verify public headers, and test |
+| `cpp rm [preset]` | Remove that preset's build and install trees |
 | `py sync` | Create or synchronize the locked Python environment |
 | `py rebuild` | Incrementally rebuild and reinstall the extension |
 | `py plot [arguments]` / `py dump [arguments]` | Run a locked Python CLI |
-| `check [preset]` | Check native C++ and rebuild the Python extension |
+| `py ci smoke [output-directory]` | Rebuild and smoke-test both Python console applications |
+| `rm-out` | Delete the entire `out/` directory |
+| `check [preset]` | Check native C++ and smoke-test the rebuilt Python applications |
 
 `py sync` is primarily an environment bootstrap and repair command. It creates
 `.venv` when necessary, installs the versions from `uv.lock`, removes
@@ -217,10 +221,18 @@ On Windows the corresponding executables end in `.exe`.
 
 ## Testing
 
-Run `just cpp check [preset]`, or use the raw configure, build, and
-CTest commands shown above. Static Debug, static Release, and shared Release
-checks are all local workflows; broader compiler and platform combinations
-remain CI concerns.
+Run `just cpp check [preset]`, or use the raw configure, build, public-header
+verification, and CTest commands shown above. The normal build compiles the
+library, applications, examples, and native test executables; CTest runs only
+the explicitly registered native tests. Static Debug, static Release, and
+shared Release checks are all local workflows; broader compiler and platform
+combinations remain CI concerns.
+
+CI expresses native coverage as data-driven toolchain lanes. Comprehensive
+lanes run Debug with clang-tidy and the Python application smoke check in
+addition to static and shared Release. Compatibility lanes run the two Release
+native configurations. A future toolchain can opt into the comprehensive suite
+by changing its matrix entry rather than duplicating the workflow.
 
 ## Static Analysis (clang-tidy 22)
 
@@ -258,6 +270,9 @@ This repo includes a Nix flake targeting `x86_64-linux`.
   - `nix build` → result is the installed library in `result/`
 - Build the C++ library and native application:
   - `nix build .#mylib-apps`
+- Build all native targets, verify the public headers, and run the registered
+  native tests:
+  - `nix flake check`
 - Run the native application:
   - `nix run .#mylib-sample`
 - Run the Python plotting app:

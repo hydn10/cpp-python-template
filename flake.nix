@@ -99,8 +99,13 @@
         '';
       };
 
+      # Build every native category, verify public headers, and let the CMake
+      # check phase run the registered native tests.
       checks.${system}.default = mylibWithTestsAndChecks.overrideAttrs (oldAttrs: {
         doCheck = true;
+        preCheck = (oldAttrs.preCheck or "") + ''
+          cmake --build . --target all_verify_interface_header_sets
+        '';
       });
     };
 }

@@ -8,13 +8,46 @@ permissions:
   contents: read
 
 jobs:
-  cmake-linux:
-    name: Linux C++ (static and shared)
-    runs-on: ubuntu-latest
+  native:
+    name: Native (${{ matrix.name }}${{ matrix.comprehensive && ', full' || '' }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux GCC
+            os: ubuntu-latest
+            compiler: gcc
+            cc: gcc-14
+            cxx: g++-14
+            comprehensive: false
+            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
+          - name: Linux Clang
+            os: ubuntu-latest
+            compiler: clang
+            cc: clang
+            cxx: clang++
+            comprehensive: true
+            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
+          - name: Windows MSVC
+            os: windows-latest
+            compiler: msvc
+            cc: cl.exe
+            cxx: cl.exe
+            comprehensive: false
+            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
+          - name: Windows clang-cl
+            os: windows-latest
+            compiler: clang-cl
+            cc: clang-cl.exe
+            cxx: clang-cl.exe
+            comprehensive: true
+            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
     env:
-      CC: gcc-14
-      CXX: g++-14
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
       CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+      MPLBACKEND: Agg
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -22,263 +55,90 @@ jobs:
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
 
+      - name: Set up Just
+        uses: extractions/setup-just@v4
+
+      - name: Install GCC 14
+        if: matrix.compiler == 'gcc'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-14 g++-14
+
       - name: Install LLVM 22
+        if: matrix.comprehensive
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: "22.1.6"
-          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
+          force-url: ${{ matrix.llvm_url }}
           env: false
 
-      - name: Install GCC 14
+      - name: Set up the Visual Studio environment
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-14 g++-14
+          $info = vswhere -latest -format json | ConvertFrom-Json
+          $moduleName = 'Microsoft.VisualStudio.DevShell.dll'
+          $modulePath = Join-Path $info.installationPath 'Common7' 'Tools' $moduleName
+          Import-Module $modulePath
+          Enter-VsDevShell `
+            -VsInstanceId $info.instanceId `
+            -SkipAutomaticLocation `
+            -DevCmdArguments "-arch=x64 -no_logo"
+          Get-ChildItem 'env:' | ForEach-Object {
+            "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV
+          }
 
-      - name: Configure static Release
-        run: >
-          cmake --preset release
-          "-DCMAKE_CXX_CLANG_TIDY=clang-tidy;--warnings-as-errors=*"
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-
-      - name: Build and verify static Release
-        run: |
-          cmake --build --preset release
-          cmake --build --preset release --target all_verify_interface_header_sets
-          ctest --preset release
-
-      - name: Run native application
+      - name: Select the installed Linux Clang compiler
+        if: matrix.compiler == 'clang'
         shell: bash
         run: |
-          "out/build/release/apps/mylib-sample"
+          echo "CC=${LLVM_PATH}/bin/clang" >> "$GITHUB_ENV"
+          echo "CXX=${LLVM_PATH}/bin/clang++" >> "$GITHUB_ENV"
 
-      - name: Install package
-        run: cmake --install out/build/release
-
-      - name: Configure consumer package smoke test
-        run: >
-          cmake -S tests/consumer-cmake -B out/build/consumer-cmake-linux
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/release"
-
-      - name: Build consumer package smoke test
-        run: cmake --build out/build/consumer-cmake-linux
-
-      - name: Run consumer package smoke test
-        run: ./out/build/consumer-cmake-linux/mylib-consumer-smoke
-
-      - name: Configure, build, and test shared Release
+      - name: Prioritize the installed LLVM tools on Windows
+        if: matrix.comprehensive && runner.os == 'Windows'
+        shell: pwsh
         run: |
-          cmake --preset shared-release
-          cmake --build --preset shared-release
-          ctest --preset shared-release
+          Join-Path $env:LLVM_PATH 'bin' >> $env:GITHUB_PATH
 
-      - name: Install shared package
-        run: cmake --install out/build/shared-release
-
-      - name: Configure shared consumer package smoke test
-        run: >
-          cmake -S tests/consumer-cmake -B out/build/consumer-cmake-linux-shared
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/shared-release"
-
-      - name: Build shared consumer package smoke test
-        run: cmake --build out/build/consumer-cmake-linux-shared
-
-      - name: Run shared consumer package smoke test
-        shell: bash
+      - name: Select the installed Windows clang-cl compiler
+        if: matrix.compiler == 'clang-cl'
+        shell: pwsh
         run: |
-          export LD_LIBRARY_PATH="${{ github.workspace }}/out/install/shared-release/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-          ./out/build/consumer-cmake-linux-shared/mylib-consumer-smoke
-
-  python-linux:
-    name: Linux Python (uv + scikit-build-core)
-    runs-on: ubuntu-latest
-    env:
-      CC: gcc-14
-      CXX: g++-14
-      MPLBACKEND: Agg
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
-
-      - name: Install GCC 14
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-14 g++-14
+          $llvmBin = Join-Path $env:LLVM_PATH 'bin'
+          "CC=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
+          "CXX=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
 
       - name: Set up Python
+        if: matrix.comprehensive
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Set up uv
+        if: matrix.comprehensive
         uses: astral-sh/setup-uv@v7
 
-      - name: Sync project
-        run: uv sync --locked
+      - name: Check native Debug with clang-tidy
+        if: matrix.comprehensive
+        run: just cpp check debug
 
-      - name: Import extension
-        run: uv run --locked python -c "import mylib_tools._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
+      - name: Check native static Release
+        run: just cpp check release
 
-      - name: Create output directory
-        run: mkdir -p out
+      - name: Check native shared Release
+        run: just cpp check shared-release
 
-      - name: Run plotting CLI
-        run: uv run --locked mylib-plot --save out/ci-plot.png
-
-      - name: Run dump CLI
-        run: uv run --locked mylib-dump --points 5 --output out/ci-values.csv
-
-  cmake-windows:
-    name: Windows C++ (static and shared)
-    runs-on: windows-latest
-    env:
-      CXX: cl.exe
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
-
-      - name: Install LLVM 22
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "22.1.6"
-          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
-          env: false
-
-      - name: Set up environment
-        run: |
-          $info = vswhere -latest -format json | ConvertFrom-Json
-          $module_name = 'Microsoft.VisualStudio.DevShell.dll'
-          $module_path = Join-Path $info.installationPath 'Common7' 'Tools' $module_name
-          Import-Module $module_path
-          Enter-VsDevShell -VsInstanceId $info.instanceId -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -no_logo"
-          # Update the current environment:
-          Get-ChildItem 'env:' | %{ echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
-
-      - name: Configure static Release
-        shell: pwsh
-        run: >
-          cmake --preset release
-          "-DCMAKE_CXX_CLANG_TIDY=clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc"
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-
-      - name: Build and verify static Release
-        shell: pwsh
-        run: |
-          cmake --build --preset release
-          cmake --build --preset release --target all_verify_interface_header_sets
-          ctest --preset release
-
-      - name: Run native application
-        shell: pwsh
-        run: |
-          ./out/build/release/apps/mylib-sample.exe
-
-      - name: Install package
-        shell: pwsh
-        run: cmake --install out/build/release
-
-      - name: Configure consumer package smoke test
-        shell: pwsh
-        run: >
-          cmake -S tests/consumer-cmake -B out/build/consumer-cmake-windows
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/release"
-
-      - name: Build consumer package smoke test
-        shell: pwsh
-        run: cmake --build out/build/consumer-cmake-windows --config Release
-
-      - name: Run consumer package smoke test
-        shell: pwsh
-        run: ./out/build/consumer-cmake-windows/Release/mylib-consumer-smoke.exe
-
-      - name: Configure, build, and test shared Release
-        shell: pwsh
-        run: |
-          cmake --preset shared-release
-          cmake --build --preset shared-release
-          ctest --preset shared-release
-
-      - name: Install shared package
-        shell: pwsh
-        run: cmake --install out/build/shared-release
-
-      - name: Configure shared consumer package smoke test
-        shell: pwsh
-        run: >
-          cmake -S tests/consumer-cmake -B out/build/consumer-cmake-windows-shared
-          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/out/install/shared-release"
-
-      - name: Build shared consumer package smoke test
-        shell: pwsh
-        run: cmake --build out/build/consumer-cmake-windows-shared --config Release
-
-      - name: Run shared consumer package smoke test
-        shell: pwsh
-        run: |
-          $env:PATH = "${{ github.workspace }}\out\install\shared-release\bin;$env:PATH"
-          ./out/build/consumer-cmake-windows-shared/Release/mylib-consumer-smoke.exe
-
-  python-windows:
-    name: Windows Python (uv + scikit-build-core)
-    runs-on: windows-latest
-    env:
-      MPLBACKEND: Agg
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Set up MSVC environment
-        shell: pwsh
-        run: |
-          $info = vswhere -latest -format json | ConvertFrom-Json
-          $module_name = 'Microsoft.VisualStudio.DevShell.dll'
-          $module_path = Join-Path $info.installationPath 'Common7' 'Tools' $module_name
-          Import-Module $module_path
-          Enter-VsDevShell -VsInstanceId $info.instanceId -SkipAutomaticLocation -DevCmdArguments "-arch=x64 -no_logo"
-          Get-ChildItem 'env:' | ForEach-Object { echo "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV }
-
-      - name: Sync project
-        shell: pwsh
-        run: uv sync --locked
-
-      - name: Import extension
-        shell: pwsh
-        run: uv run --locked python -c "import mylib_tools._core as m; print(m.compute_value(3.0)); print(m.compute_values(-1.0, 1.0, 3))"
-
-      - name: Create output directory
-        shell: pwsh
-        run: New-Item -ItemType Directory -Path out -Force | Out-Null
-
-      - name: Run plotting CLI
-        shell: pwsh
-        run: uv run --locked mylib-plot --save out/ci-plot.png
-
-      - name: Run dump CLI
-        shell: pwsh
-        run: uv run --locked mylib-dump --points 5 --output out/ci-values.csv
+      - name: Smoke-test Python applications
+        if: matrix.comprehensive
+        run: just py ci smoke
 
   nix:
-    name: Nix (flake)
+    name: Nix
     runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -286,27 +146,14 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
 
-      - name: Nix flake show
-        run: nix flake show
-
-      - name: Build default package (C++ library)
-        run: nix build .#default -L
-
-      - name: Nix flake check
+      - name: Check the flake
         run: nix flake check -L
 
-      - name: Run native application via flake app
-        run: nix run .#mylib-sample
+      - name: Create smoke-test output directory
+        run: mkdir -p out/smoke/nix
 
-      - name: Run Python plotting app via flake app
-        run: |
-          mkdir -p out
-          nix run .#mylib-plot -- --save out/ci-plot.png
+      - name: Smoke-test packaged plotting application
+        run: nix run .#mylib-plot -- --points 3 --save out/smoke/nix/plot.png
 
-      - name: Run Python dump app via flake app
-        run: |
-          mkdir -p out
-          nix run .#mylib-dump -- --points 5 --output out/ci-values.csv
-
-      - name: Build python-apps env
-        run: nix build .#python-apps -L
+      - name: Smoke-test packaged CSV application
+        run: nix run .#mylib-dump -- --points 3 --output out/smoke/nix/values.csv

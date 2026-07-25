@@ -1,6 +1,9 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 set working-directory := ".."
 
+# Python checks used by continuous integration.
+mod ci 'py/ci.just'
+
 # Create or synchronize the locked Python environment.
 sync:
     uv sync --locked
