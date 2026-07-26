@@ -175,6 +175,7 @@ recipe uses the current shell environment, just like its raw command.
 | `py ci smoke [output-directory]` | Rebuild and smoke-test both Python console applications |
 | `py ci wheel [work-directory]` | Build a wheel and smoke-test it in a fresh environment |
 | `rm-out` | Delete the entire `out/` directory |
+| `purge` | Delete disposable build state, environments, caches, and package outputs |
 | `check [preset]` | Run the native and Python developer checks |
 
 `py sync` is primarily an environment bootstrap and repair command. It creates
