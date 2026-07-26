@@ -207,7 +207,11 @@ jobs:
           python-version: "3.12"
 
       - name: Check native Python development configuration
-        run: just cpp check python-dev
+        run: |
+          # Just cannot forward CMake options; its check reuses this cache entry.
+          # Cleanup keeps vcpkg's Python build within the runner disk limit.
+          cmake --preset python-dev -DVCPKG_INSTALL_OPTIONS=--clean-after-build
+          just cpp check python-dev
 
   python-apps:
     name: Python apps (${{ matrix.platform.name }}, Python ${{ matrix.python }})
