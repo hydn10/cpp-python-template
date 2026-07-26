@@ -375,6 +375,8 @@ Notes:
   cleanup is the Python counterpart of cleaning a native preset tree.
 - The project version used by the C++ build and Python distribution metadata is read from `vcpkg.json`.
 - The console app runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
+- `just py ci wheel [work-dir]` builds and checks a normal wheel in a fresh
+  environment under `out/smoke/wheel` by default.
 
 ## Using the C++ library from another CMake project
 

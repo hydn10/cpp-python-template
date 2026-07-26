@@ -134,6 +134,57 @@ jobs:
       - name: Check installed shared CMake package
         run: just cpp ci check-installed shared-release
 
+  wheel:
+    name: Wheel (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-latest
+          - name: Windows
+            os: windows-latest
+    env:
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+      MPLBACKEND: Agg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Set up Just
+        uses: extractions/setup-just@v4
+
+      - name: Set up the Visual Studio environment
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $info = vswhere -latest -format json | ConvertFrom-Json
+          $moduleName = 'Microsoft.VisualStudio.DevShell.dll'
+          $modulePath = Join-Path $info.installationPath 'Common7' 'Tools' $moduleName
+          Import-Module $modulePath
+          Enter-VsDevShell `
+            -VsInstanceId $info.instanceId `
+            -SkipAutomaticLocation `
+            -DevCmdArguments "-arch=x64 -no_logo"
+          Get-ChildItem 'env:' | ForEach-Object {
+            "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV
+          }
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Build and smoke-test the wheel
+        run: just py ci wheel
+
   nix:
     name: Nix
     runs-on: ubuntu-latest

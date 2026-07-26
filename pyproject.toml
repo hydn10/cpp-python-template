@@ -43,6 +43,7 @@ minimum-version = "build-system.requires"
 wheel.packages = [
   "python/src/mylib_tools",
 ]
+install.components = ["python"]
 build-dir = "out/_skbuild/{wheel_tag}"
 build.verbose = false
 cmake.build-type = "Release"
@@ -54,6 +55,7 @@ input = "vcpkg.json"
 regex = '''"version"\s*:\s*"(?P<value>[^"]+)"'''
 
 [tool.scikit-build.cmake.define]
+BUILD_SHARED_LIBS = false
 MYLIB_BUILD_APPS = false
 MYLIB_BUILD_EXAMPLES = false
 MYLIB_BUILD_TESTING = false
