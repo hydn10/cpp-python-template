@@ -9,51 +9,39 @@ permissions:
 
 jobs:
   native:
-    name: Native (${{ matrix.platform.name }}, Python ${{ matrix.python.version }}${{ matrix.platform.comprehensive && ', full' || '' }})
+    name: Native package (${{ matrix.platform.name }})
     runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
-        python: &python-lines
-          - version: "3.12"
-            role: baseline
-          - version: "3.14"
-            role: highest
         platform:
           - name: Linux GCC
             os: ubuntu-latest
             compiler: gcc
             cc: gcc-14
             cxx: g++-14
-            comprehensive: false
-            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
           - name: Linux Clang
             os: ubuntu-latest
             compiler: clang
             cc: clang
             cxx: clang++
-            comprehensive: true
             llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
           - name: Windows MSVC
             os: windows-latest
             compiler: msvc
             cc: cl.exe
             cxx: cl.exe
-            comprehensive: false
-            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
           - name: Windows clang-cl
             os: windows-latest
             compiler: clang-cl
             cc: clang-cl.exe
             cxx: clang-cl.exe
-            comprehensive: true
             llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
     env:
       CC: ${{ matrix.platform.cc }}
       CXX: ${{ matrix.platform.cxx }}
       CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
-      MPLBACKEND: Agg
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -72,7 +60,7 @@ jobs:
           sudo apt-get install -y gcc-14 g++-14
 
       - name: Install LLVM 22
-        if: matrix.platform.comprehensive
+        if: matrix.platform.compiler == 'clang' || matrix.platform.compiler == 'clang-cl'
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: "22.1.6"
@@ -103,7 +91,104 @@ jobs:
           echo "CXX=${LLVM_PATH}/bin/clang++" >> "$GITHUB_ENV"
 
       - name: Prioritize the installed LLVM tools on Windows
-        if: matrix.platform.comprehensive && runner.os == 'Windows'
+        if: matrix.platform.compiler == 'clang-cl'
+        shell: pwsh
+        run: |
+          Join-Path $env:LLVM_PATH 'bin' >> $env:GITHUB_PATH
+
+      - name: Select the installed Windows clang-cl compiler
+        if: matrix.platform.compiler == 'clang-cl'
+        shell: pwsh
+        run: |
+          $llvmBin = Join-Path $env:LLVM_PATH 'bin'
+          "CC=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
+          "CXX=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
+
+      - name: Check native static Release
+        run: just cpp check release
+
+      - name: Check installed static CMake package
+        run: just cpp ci check-installed release
+
+      - name: Check native shared Release
+        run: just cpp check shared-release
+
+      - name: Check installed shared CMake package
+        run: just cpp ci check-installed shared-release
+
+  quality:
+    name: Native quality (${{ matrix.platform.name }}, Python 3.12)
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - name: Linux Clang
+            os: ubuntu-latest
+            compiler: clang
+            cc: clang
+            cxx: clang++
+            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
+          - name: Windows clang-cl
+            os: windows-latest
+            compiler: clang-cl
+            cc: clang-cl.exe
+            cxx: clang-cl.exe
+            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
+    env:
+      CC: ${{ matrix.platform.cc }}
+      CXX: ${{ matrix.platform.cxx }}
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Set up Just
+        uses: extractions/setup-just@v4
+
+      - name: Install Linux build prerequisites
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf autoconf-archive automake libtool
+
+      - name: Install LLVM 22
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "22.1.6"
+          force-url: ${{ matrix.platform.llvm_url }}
+          env: false
+
+      - name: Set up the Visual Studio environment
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $info = vswhere -latest -format json | ConvertFrom-Json
+          $moduleName = 'Microsoft.VisualStudio.DevShell.dll'
+          $modulePath = Join-Path $info.installationPath 'Common7' 'Tools' $moduleName
+          Import-Module $modulePath
+          Enter-VsDevShell `
+            -VsInstanceId $info.instanceId `
+            -SkipAutomaticLocation `
+            -DevCmdArguments "-arch=x64 -no_logo"
+          Get-ChildItem 'env:' | ForEach-Object {
+            "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV
+          }
+
+      - name: Select the installed Linux Clang compiler
+        if: matrix.platform.compiler == 'clang'
+        shell: bash
+        run: |
+          echo "CC=${LLVM_PATH}/bin/clang" >> "$GITHUB_ENV"
+          echo "CXX=${LLVM_PATH}/bin/clang++" >> "$GITHUB_ENV"
+
+      - name: Prioritize the installed LLVM tools on Windows
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           Join-Path $env:LLVM_PATH 'bin' >> $env:GITHUB_PATH
@@ -119,36 +204,68 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python.version }}
+          python-version: "3.12"
+
+      - name: Check native Python development configuration
+        run: just cpp check python-dev
+
+  python-apps:
+    name: Python apps (${{ matrix.platform.name }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: &python-lines
+          - "3.12"
+          - "3.14"
+        platform:
+          - name: Linux
+            os: ubuntu-latest
+          - name: Windows
+            os: windows-latest
+    env:
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      MPLBACKEND: Agg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Set up Just
+        uses: extractions/setup-just@v4
+
+      - name: Set up the Visual Studio environment
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $info = vswhere -latest -format json | ConvertFrom-Json
+          $moduleName = 'Microsoft.VisualStudio.DevShell.dll'
+          $modulePath = Join-Path $info.installationPath 'Common7' 'Tools' $moduleName
+          Import-Module $modulePath
+          Enter-VsDevShell `
+            -VsInstanceId $info.instanceId `
+            -SkipAutomaticLocation `
+            -DevCmdArguments "-arch=x64 -no_logo"
+          Get-ChildItem 'env:' | ForEach-Object {
+            "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV
+          }
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Check native Python development configuration
-        if: matrix.python.role == 'baseline' && matrix.platform.comprehensive
-        run: just cpp check python-dev
-
-      - name: Check native static Release
-        if: matrix.python.role == 'baseline'
-        run: just cpp check release
-
       - name: Check Python applications
         run: just py ci smoke
 
-      - name: Check installed static CMake package
-        if: matrix.python.role == 'baseline'
-        run: just cpp ci check-installed release
-
-      - name: Check native shared Release
-        if: matrix.python.role == 'baseline'
-        run: just cpp check shared-release
-
-      - name: Check installed shared CMake package
-        if: matrix.python.role == 'baseline'
-        run: just cpp ci check-installed shared-release
-
   wheel:
-    name: Wheel (${{ matrix.platform.name }}, Python ${{ matrix.python.version }})
+    name: Wheel (${{ matrix.platform.name }}, Python ${{ matrix.python }})
     runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
@@ -192,7 +309,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python.version }}
+          python-version: ${{ matrix.python }}
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
