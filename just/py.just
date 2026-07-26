@@ -12,6 +12,9 @@ sync:
 rebuild:
     uv sync --locked --reinstall-package mylib-tools
 
+# Rebuild and smoke-test the development install and a distributable wheel.
+check: ci::smoke ci::wheel
+
 # Run the plotting CLI (usage: just py plot --save path).
 plot *args:
     uv run --locked mylib-plot {{ args }}

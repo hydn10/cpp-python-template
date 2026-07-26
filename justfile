@@ -16,5 +16,5 @@ rm-out:
 
 default-cpp-preset := "debug"
 
-# Verify both native and Python extension build paths.
-check preset=default-cpp-preset: (cpp::check preset) py::ci::smoke
+# Run the native and Python developer checks.
+check preset=default-cpp-preset: (cpp::check preset) py::check

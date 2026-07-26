@@ -150,16 +150,23 @@ recipe uses the current shell environment, just like its raw command.
 | `cpp rm [preset]` | Remove that preset's native build, install, and consumer trees |
 | `py sync` | Create or synchronize the locked Python environment |
 | `py rebuild` | Incrementally rebuild and reinstall the extension |
+| `py check` | Check the rebuilt development install and a distributable wheel |
 | `py plot [arguments]` / `py dump [arguments]` | Run a locked Python CLI |
 | `py ci smoke [output-directory]` | Rebuild and smoke-test both Python console applications |
+| `py ci wheel [work-directory]` | Build a wheel and smoke-test it in a fresh environment |
 | `rm-out` | Delete the entire `out/` directory |
-| `check [preset]` | Check native C++ and smoke-test the rebuilt Python applications |
+| `check [preset]` | Run the native and Python developer checks |
 
 `py sync` is primarily an environment bootstrap and repair command. It creates
 `.venv` when necessary, installs the versions from `uv.lock`, removes
 undeclared packages, and installs this project editably. Normal `uv run`
 commands already check and synchronize the environment, so `py sync` is not a
 required prelude to every application run.
+
+`just check [preset]` is the convenient local approximation of the repository's
+CI checks: it runs the native checks, rebuilds and smoke-tests the locked Python
+development install, and builds and smoke-tests a wheel in a fresh environment.
+CI invokes the underlying recipes separately where its platform matrices differ.
 
 Editable installation makes Python-source changes visible immediately, but it
 does not automatically recompile the C++ extension. After changing native

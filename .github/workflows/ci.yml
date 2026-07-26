@@ -123,7 +123,9 @@ jobs:
         run: just cpp check debug
 
       - name: Check static Release and Python applications
-        run: just check release
+        run: |
+          just cpp check release
+          just py ci smoke
 
       - name: Check installed static CMake package
         run: just cpp ci check-installed release
