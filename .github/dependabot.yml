@@ -1,0 +1,7 @@
+version: 2
+
+updates:
+  - package-ecosystem: "vcpkg"
+    directory: "/"
+    schedule:
+      interval: "weekly"
