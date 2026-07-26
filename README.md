@@ -169,6 +169,7 @@ recipe uses the current shell environment, just like its raw command.
 | `cpp ci check-installed [preset]` | Install a native build, then build and run the CMake consumer against it |
 | `cpp rm [preset]` | Remove that preset's native build, install, and consumer trees |
 | `py sync` | Create or synchronize the locked Python environment |
+| `py update` | Update `uv.lock` to the newest dependency versions allowed by the project |
 | `py rebuild` | Incrementally rebuild and reinstall the extension |
 | `py check` | Check the rebuilt development install and a distributable wheel |
 | `py plot [arguments]` / `py dump [arguments]` | Run a locked Python CLI |

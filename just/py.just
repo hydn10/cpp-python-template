@@ -8,6 +8,10 @@ mod ci 'py/ci.just'
 sync:
     uv sync --locked
 
+# Update the lockfile to the newest dependency versions allowed by the project.
+upgrade:
+    uv lock --upgrade
+
 # Incrementally rebuild and reinstall the native Python extension.
 rebuild:
     uv sync --locked --reinstall-package mylib-tools
