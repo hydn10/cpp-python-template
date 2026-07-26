@@ -10,7 +10,7 @@ name = "mylib-tools"
 dynamic = ["version"]
 description = "Console apps for a C++ library, backed by a shared pybind11 extension"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 authors = [{ name = "Your Name" }]
 license = { text = "Proprietary" }
 classifiers = [

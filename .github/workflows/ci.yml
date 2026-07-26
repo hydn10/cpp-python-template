@@ -9,12 +9,17 @@ permissions:
 
 jobs:
   native:
-    name: Native (${{ matrix.name }}${{ matrix.comprehensive && ', full' || '' }})
-    runs-on: ${{ matrix.os }}
+    name: Native (${{ matrix.platform.name }}, Python ${{ matrix.python.version }}${{ matrix.platform.comprehensive && ', full' || '' }})
+    runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
+        python: &python-lines
+          - version: "3.12"
+            role: baseline
+          - version: "3.14"
+            role: highest
+        platform:
           - name: Linux GCC
             os: ubuntu-latest
             compiler: gcc
@@ -44,8 +49,8 @@ jobs:
             comprehensive: true
             llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
     env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
+      CC: ${{ matrix.platform.cc }}
+      CXX: ${{ matrix.platform.cxx }}
       CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
       MPLBACKEND: Agg
     steps:
@@ -59,18 +64,18 @@ jobs:
         uses: extractions/setup-just@v4
 
       - name: Install GCC 14
-        if: matrix.compiler == 'gcc'
+        if: matrix.platform.compiler == 'gcc'
         shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-14 g++-14
 
       - name: Install LLVM 22
-        if: matrix.comprehensive
+        if: matrix.platform.comprehensive
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: "22.1.6"
-          force-url: ${{ matrix.llvm_url }}
+          force-url: ${{ matrix.platform.llvm_url }}
           env: false
 
       - name: Set up the Visual Studio environment
@@ -90,20 +95,20 @@ jobs:
           }
 
       - name: Select the installed Linux Clang compiler
-        if: matrix.compiler == 'clang'
+        if: matrix.platform.compiler == 'clang'
         shell: bash
         run: |
           echo "CC=${LLVM_PATH}/bin/clang" >> "$GITHUB_ENV"
           echo "CXX=${LLVM_PATH}/bin/clang++" >> "$GITHUB_ENV"
 
       - name: Prioritize the installed LLVM tools on Windows
-        if: matrix.comprehensive && runner.os == 'Windows'
+        if: matrix.platform.comprehensive && runner.os == 'Windows'
         shell: pwsh
         run: |
           Join-Path $env:LLVM_PATH 'bin' >> $env:GITHUB_PATH
 
       - name: Select the installed Windows clang-cl compiler
-        if: matrix.compiler == 'clang-cl'
+        if: matrix.platform.compiler == 'clang-cl'
         shell: pwsh
         run: |
           $llvmBin = Join-Path $env:LLVM_PATH 'bin'
@@ -113,36 +118,42 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python.version }}
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
 
       - name: Check native Debug with clang-tidy
-        if: matrix.comprehensive
+        if: matrix.python.role == 'baseline' && matrix.platform.comprehensive
         run: just cpp check debug
 
-      - name: Check static Release and Python applications
-        run: |
-          just cpp check release
-          just py ci smoke
+      - name: Check native static Release
+        if: matrix.python.role == 'baseline'
+        run: just cpp check release
+
+      - name: Check Python applications
+        run: just py ci smoke
 
       - name: Check installed static CMake package
+        if: matrix.python.role == 'baseline'
         run: just cpp ci check-installed release
 
       - name: Check native shared Release
+        if: matrix.python.role == 'baseline'
         run: just cpp check shared-release
 
       - name: Check installed shared CMake package
+        if: matrix.python.role == 'baseline'
         run: just cpp ci check-installed shared-release
 
   wheel:
-    name: Wheel (${{ matrix.name }})
-    runs-on: ${{ matrix.os }}
+    name: Wheel (${{ matrix.platform.name }}, Python ${{ matrix.python.version }})
+    runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
+        python: *python-lines
+        platform:
           - name: Linux
             os: ubuntu-latest
           - name: Windows
@@ -179,7 +190,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python.version }}
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v7

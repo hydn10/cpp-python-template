@@ -45,7 +45,7 @@ See `docs/repo-philosophy.md` for the repository design principles.
 - LLVM/clang-tidy 22 when using the `debug` preset or otherwise enabling static analysis
 - A provider for the native dependencies (currently Eigen3), such as Nix, a
   system package manager, or [vcpkg](https://learn.microsoft.com/vcpkg/)
-- Python 3.9+ and [uv](https://docs.astral.sh/uv/)
+- Python 3.12+ and [uv](https://docs.astral.sh/uv/)
 - Optionally, [Just](https://just.systems/) for the developer workflow façade (also provided by `nix develop`)
 
 The checked-in configure presets do not select a dependency provider, compiler,
