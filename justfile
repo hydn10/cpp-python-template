@@ -14,7 +14,7 @@ help:
 rm-out:
     cmake -E remove_directory "out"
 
-default-cpp-preset := "debug"
+default-cpp-preset := "quality"
 
 # Run the native and Python developer checks.
 check preset=default-cpp-preset: (cpp::check preset) py::check

@@ -64,6 +64,7 @@ in {
   shellPackages = [
     pkgs.uv
     python
+    python.pkgs.pybind11
   ];
 
   shellEnv =

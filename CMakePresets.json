@@ -25,9 +25,25 @@
       "inherits": "native",
       "cacheVariables": {
         "BUILD_SHARED_LIBS": "OFF",
-        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "quality",
+      "displayName": "quality",
+      "inherits": "debug",
+      "cacheVariables": {
         "CMAKE_CXX_CLANG_TIDY": "$<IF:$<PLATFORM_ID:Windows>,clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc,clang-tidy;--warnings-as-errors=*>",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "python-dev",
+      "displayName": "python-dev",
+      "inherits": "quality",
+      "cacheVariables": {
+        "CMAKE_POSITION_INDEPENDENT_CODE": "ON",
+        "MYLIB_BUILD_PYTHON": "ON"
       }
     },
     {
@@ -55,6 +71,14 @@
       "configurePreset": "debug"
     },
     {
+      "name": "quality",
+      "configurePreset": "quality"
+    },
+    {
+      "name": "python-dev",
+      "configurePreset": "python-dev"
+    },
+    {
       "name": "release",
       "configurePreset": "release"
     },
@@ -67,6 +91,26 @@
     {
       "name": "debug",
       "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "quality",
+      "configurePreset": "quality",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "python-dev",
+      "configurePreset": "python-dev",
       "output": {
         "outputOnFailure": true
       },

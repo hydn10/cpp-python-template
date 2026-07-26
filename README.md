@@ -42,9 +42,10 @@ See `docs/repo-philosophy.md` for the repository design principles.
 - Ninja
 - C++23-capable compiler to build this repo's applications and native tests
 - C++17 is sufficient for downstream consumers of the installed `mylib` library target
-- LLVM/clang-tidy 22 when using the `debug` preset or otherwise enabling static analysis
+- LLVM/clang-tidy 22 when using the `quality` preset or otherwise enabling static analysis
 - A provider for the native dependencies (currently Eigen3), such as Nix, a
   system package manager, or [vcpkg](https://learn.microsoft.com/vcpkg/)
+- Python development files and pybind11 when using the `python-dev` preset
 - Python 3.12+ and [uv](https://docs.astral.sh/uv/)
 - Optionally, [Just](https://just.systems/) for the developer workflow façade (also provided by `nix develop`)
 
@@ -55,39 +56,56 @@ or machine-local path. In a Nix development shell, use them directly:
 cmake --preset debug
 ```
 
-For direct vcpkg use, set `VCPKG_ROOT` and supply its toolchain on the command
-line:
+For direct vcpkg use, set `VCPKG_ROOT` and select the repository's adapter
+toolchain. The adapter delegates to vcpkg after translating enabled project
+capabilities into vcpkg manifest features:
 
 ```bash
 cmake --preset <preset> \
-  --toolchain "$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+  --toolchain "$PWD/cmake/toolchains/vcpkg.cmake"
 ```
 
 ```powershell
 cmake --preset <preset> `
-  --toolchain "$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+  --toolchain "$PWD/cmake/toolchains/vcpkg.cmake"
 ```
 
 The native target categories have independent CMake options:
 
 - `MYLIB_BUILD_APPS` builds repository applications, which may be installed and packaged.
 - `MYLIB_BUILD_EXAMPLES` builds consumption examples, which are never installed or exported.
+- `MYLIB_BUILD_PYTHON` builds the Python extension module.
 - `MYLIB_BUILD_TESTING` builds and registers native tests.
 
-All three default to enabled for a top-level CMake build and disabled when `mylib` is included as a subproject.
+The application, example, and testing options default to enabled for a
+top-level CMake build and disabled when `mylib` is included as a subproject.
+The Python extension defaults to disabled in every ordinary CMake build.
 
 ## Native presets and dependency providers
 
-There are three cross-platform configure presets:
+There are five cross-platform configure presets:
 
-| Preset | Build type | Linkage | Static analysis |
-| --- | --- | --- | --- |
-| `debug` | Debug | Static | clang-tidy |
-| `release` | Release | Static | Off |
-| `shared-release` | Release | Shared | Off |
+| Preset | Build type | Linkage | Static analysis | Python extension |
+| --- | --- | --- | --- | --- |
+| `debug` | Debug | Static | Off | Off |
+| `quality` | Debug | Static | clang-tidy | Off |
+| `python-dev` | Debug | Static | clang-tidy | On |
+| `release` | Release | Static | Off | Off |
+| `shared-release` | Release | Shared | Off | Off |
 
-All three build the native applications, examples, and tests. They explicitly
-leave the Python extension off; Python packaging owns that build.
+All five build the native applications, examples, and tests. `python-dev`
+inherits the quality configuration, enables position-independent code, and
+also builds the `_core` extension so its binding source receives clang-tidy
+coverage. It is a direct CMake diagnostic workflow, not a replacement for the
+uv/scikit-build-core installation and wheel workflows.
+
+The checked-in presets express project intent only. When the vcpkg adapter at
+`cmake/toolchains/vcpkg.cmake` is selected by the environment, it maps
+`MYLIB_BUILD_PYTHON=ON` to the `python` feature in `vcpkg.json`. That feature
+adds pybind11 to vcpkg's installation plan; otherwise the normal vcpkg graph
+contains only the core Eigen dependency. Other environments provide Python,
+pybind11, and Eigen directly and use the same presets without loading the
+adapter.
 
 A CMake preset cannot turn an arbitrary command-line toolchain path into a
 short, safe `binaryDir` component. Reusing one CMake cache after changing
@@ -103,15 +121,15 @@ change.
 | Provider-specific `CMakeUserPresets.json` entries | Optional for users who switch frequently, but not required. |
 | Derive a directory suffix in checked-in presets | Rejected: preset macros cannot safely normalize or hash arbitrary toolchain paths. |
 
-For example, before changing the environment used by `debug`:
+For example, before changing the environment used by `quality`:
 
 ```bash
-just cpp rm debug
+just cpp rm quality
 cmake -E remove_directory out/_skbuild
 ```
 
 The second command discards scikit-build-core's persistent native build cache.
-If Just is unavailable, remove `out/build/debug` and `out/install/debug`
+If Just is unavailable, remove `out/build/quality` and `out/install/quality`
 directly. Then activate or enter the new dependency environment and configure
 again.
 
@@ -123,14 +141,16 @@ already composes it and the underlying commands remain ordinary CMake and
 CTest:
 
 ```bash
-cmake --preset debug
-cmake --build --preset debug
-cmake --build --preset debug --target all_verify_interface_header_sets
-ctest --preset debug
+cmake --preset quality
+cmake --build --preset quality
+cmake --build --preset quality --target all_verify_interface_header_sets
+ctest --preset quality
 ```
 
-Use `release` in those commands for a static Release check, or
-`shared-release` for shared-library verification.
+Use `debug` in those commands for a faster Debug check without static analysis,
+`python-dev` to include the Python extension in the quality checks, `release`
+for a static Release check, or `shared-release` for shared-library
+verification.
 
 ## Developer workflows with Just
 
@@ -167,6 +187,9 @@ required prelude to every application run.
 CI checks: it runs the native checks, rebuilds and smoke-tests the locked Python
 development install, and builds and smoke-tests a wheel in a fresh environment.
 CI invokes the underlying recipes separately where its platform matrices differ.
+The native Just recipes default to the `quality` preset, so incremental
+developer builds include static analysis. Pass `debug` explicitly when a faster
+Debug build without clang-tidy is preferable.
 
 Editable installation makes Python-source changes visible immediately, but it
 does not automatically recompile the C++ extension. After changing native
@@ -180,31 +203,38 @@ tools, while Just provides the same command vocabulary used elsewhere:
 ```bash
 nix develop
 just cpp check
+just cpp check python-dev
 just py rebuild
 ```
 
 For a vcpkg-backed shell, set `VCPKG_ROOT` and source the small activation
-helper once. It exports CMake's standard `CMAKE_TOOLCHAIN_FILE`, so raw CMake,
-uv/scikit-build-core, and Just all see the same provider:
+helper once from the repository root. It exports CMake's standard
+`CMAKE_TOOLCHAIN_FILE` pointing to the repository adapter, so raw CMake,
+uv/scikit-build-core, IDEs launched from that shell, and Just all see the same
+provider. The adapter activates vcpkg's optional `python` feature automatically
+when the selected configuration enables `MYLIB_BUILD_PYTHON`:
 
 ```bash
 source tools/activate-vcpkg.sh
 just cpp check
+just cpp check python-dev
 just py rebuild
 ```
 
 ```powershell
 . .\tools\activate-vcpkg.ps1
 just cpp check
+just cpp check python-dev
 just cpp check release
 just cpp check shared-release
 just py rebuild
 ```
 
 The helpers must be sourced (or dot-sourced), not executed as child processes.
-They are vcpkg conveniences, not requirements of Just. Other providers can
-prepare an environment in their native way; for example, a generated Conan
-CMake toolchain can be exposed through the same standard CMake variable.
+They are vcpkg conveniences, not requirements of Just, and they never modify
+the committed presets. Other providers can prepare an environment in their
+native way; for example, a generated Conan CMake toolchain can be exposed
+through the same standard CMake variable.
 
 CLI options are passed through:
 
@@ -235,9 +265,10 @@ On Windows the corresponding executables end in `.exe`.
 Run `just cpp check [preset]`, or use the raw configure, build, public-header
 verification, and CTest commands shown above. The normal build compiles the
 library, applications, examples, and native test executables; CTest runs only
-the explicitly registered native tests. Static Debug, static Release, and
-shared Release checks are all local workflows; broader compiler and platform
-combinations remain CI concerns.
+the explicitly registered native tests. Static Debug with or without the
+quality tooling, quality checks that include the Python extension, static
+Release, and shared Release checks are all local workflows; broader compiler
+and platform combinations remain CI concerns.
 
 The installed CMake package has a separate, minimal consumer check. After
 building a preset, run `just cpp ci check-installed [preset]`, or use the
@@ -263,21 +294,28 @@ stages the imported package's runtime DLLs before CTest runs it.
 CI expresses coverage as data-driven toolchain lanes. Every ordinary Linux and
 Windows lane runs the locked Python application smoke check, static and shared
 Release native checks, and both installed-package consumer checks.
-Comprehensive lanes additionally run Debug with clang-tidy. A future toolchain
-can opt into the comprehensive suite by changing its matrix entry rather than
-duplicating the workflow.
+Comprehensive lanes additionally run the `python-dev` preset. It is a superset
+of `quality`, so those lanes apply clang-tidy to every ordinary native target
+and the Python binding without building the two configurations separately. A
+future toolchain can opt into the comprehensive suite by changing its matrix
+entry rather than duplicating the workflow.
 
 ## Static Analysis (clang-tidy 22)
 
 - LLVM 22 is required; configuration lives in `.clang-tidy` (tweak checks as needed).
-- The `debug` preset enables clang-tidy automatically and treats all findings
+- The `quality` preset enables clang-tidy automatically and treats all findings
   as errors, so normal incremental developer builds run static analysis:
 
   ```bash
-  cmake --preset debug
-  cmake --build --preset debug
+  cmake --preset quality
+  cmake --build --preset quality
   ```
 
+- The `debug` preset uses the same Debug build configuration without static
+  analysis. Pass it explicitly to a Just recipe when a quicker incremental
+  build is more useful than immediate analysis feedback.
+- The `python-dev` preset extends `quality` with the `_core` extension, providing
+  clang-tidy coverage for the pybind11 binding source.
 - Static analysis remains caller policy and can be enabled for another preset
   when needed:
 
@@ -289,11 +327,11 @@ duplicating the workflow.
   ```
 
 - Add the documented `--toolchain` argument when vcpkg is the dependency
-  provider. The `debug` preset adds `--extra-arg=/EHsc` automatically when
-  the C++ compiler is MSVC. When enabling clang-tidy manually for an MSVC
-  build, append that argument to `CMAKE_CXX_CLANG_TIDY` as well.
-- To invoke it manually, use `clang-tidy -p out/build/debug ...` or
-  `run-clang-tidy -p out/build/debug`.
+  provider. The `quality` preset adds `--extra-arg=/EHsc` automatically on
+  Windows. When enabling clang-tidy manually for a Windows build, append that
+  argument to `CMAKE_CXX_CLANG_TIDY` as well.
+- To invoke it manually, use `clang-tidy -p out/build/quality ...` or
+  `run-clang-tidy -p out/build/quality`.
 
 ## Nix (flake)
 
@@ -324,8 +362,8 @@ Notes:
   `pyproject.toml`. Its package output uses pyproject-nix's `mkApplication` so
   the virtual environment remains an internal implementation detail.
 - The dev shell is uv-first: it provides the C++ toolchain, Eigen, LLVM 22
-  tools, `uv`, Just, and a pinned Nix Python interpreter, but it does not put
-  the packaged Python application on `PATH`. Inside `nix develop`, use
+  tools, pybind11, `uv`, Just, and a pinned Nix Python interpreter, but it does
+  not put the packaged Python application on `PATH`. Inside `nix develop`, use
   `just py sync` (or raw `uv sync --locked`) and normal `just py plot` /
   `just py dump` commands. The shell also exposes Nix-provided `tkinter` plus the
   X11/Wayland client libraries so uv-managed `matplotlib` can open interactive
@@ -373,7 +411,11 @@ Notes:
   `out/_skbuild/{wheel_tag}`. Reinstalling therefore performs an incremental
   native build instead of starting from scratch; the wheel tag separates
   Python ABI and platform combinations.
-- The Python build requires `pybind11` and will be provided automatically from `pyproject.toml`.
+- Python packaging declares pybind11 in `pyproject.toml`, so its isolated build
+  environment provides it automatically. A direct `python-dev` CMake build
+  instead uses the active native provider: the vcpkg adapter selects the
+  manifest's `python` feature, while the Nix development shell supplies
+  pybind11 directly.
 - Eigen is a native project dependency, not a Python build requirement. In a
   Nix shell, CMake discovers the Nix-provided package. With vcpkg, source the
   activation helper before running either raw uv or Just commands.

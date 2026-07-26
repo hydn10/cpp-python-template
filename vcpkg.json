@@ -4,5 +4,13 @@
   "builtin-baseline": "40f3c709db80acf154ac4b17a1f83c564ebd022e",
   "dependencies": [
     "eigen3"
-  ]
+  ],
+  "features": {
+    "python": {
+      "description": "Dependencies required to build the Python extension",
+      "dependencies": [
+        "pybind11"
+      ]
+    }
+  }
 }
