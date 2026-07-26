@@ -1,7 +1,7 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 set working-directory := ".."
 
-default-preset := "debug"
+default-preset := "quality"
 
 # Native package checks used by continuous integration.
 mod ci 'cpp/ci.just'

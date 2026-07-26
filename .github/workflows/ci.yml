@@ -51,7 +51,8 @@ jobs:
     env:
       CC: ${{ matrix.platform.cc }}
       CXX: ${{ matrix.platform.cxx }}
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       MPLBACKEND: Agg
     steps:
       - name: Checkout
@@ -123,9 +124,9 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Check native Debug with clang-tidy
+      - name: Check native Python development configuration
         if: matrix.python.role == 'baseline' && matrix.platform.comprehensive
-        run: just cpp check debug
+        run: just cpp check python-dev
 
       - name: Check native static Release
         if: matrix.python.role == 'baseline'
@@ -159,7 +160,8 @@ jobs:
           - name: Windows
             os: windows-latest
     env:
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       MPLBACKEND: Agg
     steps:
       - name: Checkout

@@ -6,6 +6,13 @@ configure_file(vcpkg.json vcpkg.json COPYONLY)
 file(READ "${CMAKE_CURRENT_BINARY_DIR}/vcpkg.json" MYLIB_JSON_STRING)
 string(JSON VERSION_FROM_JSON GET "${MYLIB_JSON_STRING}" version)
 
+set(MYLIB_BUILD_PYTHON_DEFAULT OFF)
+option(
+    MYLIB_BUILD_PYTHON
+    "Build the Python packaging extension module. Default: ${MYLIB_BUILD_PYTHON_DEFAULT}."
+    "${MYLIB_BUILD_PYTHON_DEFAULT}")
+mark_as_advanced(MYLIB_BUILD_PYTHON)
+
 project(mylib LANGUAGES CXX VERSION "${VERSION_FROM_JSON}")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/mylib-windows-runtime.cmake")
@@ -23,13 +30,6 @@ option(
     MYLIB_BUILD_EXAMPLES
     "Build the C++ examples. Default: ${MYLIB_BUILD_EXAMPLES_DEFAULT}."
     "${MYLIB_BUILD_EXAMPLES_DEFAULT}")
-
-set(MYLIB_BUILD_PYTHON_DEFAULT OFF)
-option(
-    MYLIB_BUILD_PYTHON
-    "Build the Python packaging extension module. Default: ${MYLIB_BUILD_PYTHON_DEFAULT}."
-    "${MYLIB_BUILD_PYTHON_DEFAULT}")
-mark_as_advanced(MYLIB_BUILD_PYTHON)
 
 set(MYLIB_BUILD_TESTING_DEFAULT "${PROJECT_IS_TOP_LEVEL}")
 option(
