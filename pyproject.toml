@@ -32,6 +32,12 @@ dependencies = [
 mylib-plot = "mylib_tools.plot:main"
 mylib-dump = "mylib_tools.dump:main"
 
+[tool.uv]
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "vcpkg.json" },
+]
+
 [tool.scikit-build]
 minimum-version = "build-system.requires"
 wheel.packages = [
