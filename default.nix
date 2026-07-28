@@ -1,12 +1,10 @@
 { lib
 , stdenv
 , cmake
-, llvmPackages_22
 , eigen
 , buildTests ? false
 , buildApps ? false
 , buildExamples ? false
-, enableClangTidy ? false
 }:
 let
   pname = "mylib";
@@ -29,9 +27,7 @@ in
 
     src = lib.cleanSource ./.;
 
-    nativeBuildInputs =
-      [ cmake ]
-      ++ (if enableClangTidy then [ llvmPackages_22.clang-tools ] else [ ]);
+    nativeBuildInputs = [ cmake ];
 
     buildInputs = [ eigen ];
 
@@ -39,8 +35,5 @@ in
       "-DMYLIB_BUILD_TESTING=${buildTestsFlag}"
       "-DMYLIB_BUILD_APPS=${buildAppsFlag}"
       "-DMYLIB_BUILD_EXAMPLES=${buildExamplesFlag}"
-    ] ++ lib.optionals enableClangTidy [
-      "-DCMAKE_CXX_CLANG_TIDY=clang-tidy;--warnings-as-errors=*"
-      "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
     ];
   }
