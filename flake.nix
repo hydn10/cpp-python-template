@@ -79,26 +79,19 @@
             };
           };
 
-          # Dev shell that inherits deps from both packages and also provides common tools
+          # Dev shell that inherits deps from the C++ package and adds the Python
+          # development environment and provides common tools.
           devShells.default = pkgs.mkShell {
-            # Pull C++ build deps; include Python env explicitly
             inputsFrom = [ cpp.mylib ];
             packages =
               [
                 pkgs.llvmPackages_22.clang-tools
-                pkgs.cmake
                 pkgs.just
                 pkgs.ninja
                 pkgs.pkg-config
               ]
               ++ pythonModules.shellPackages;
             env = pythonModules.shellEnv;
-            shellHook = ''
-              echo "Dev shell ready"
-              echo "- Workflows: run 'just help' to list the optional developer commands"
-              echo "- C++: cmake + ninja available; presets write under out/build"
-              echo "- Python: run 'uv sync --locked' to create/update .venv"
-            '';
           };
 
           # Build every native category, verify public headers, and let the CMake
