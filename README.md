@@ -124,14 +124,14 @@ change.
 For example, before changing the environment used by `quality`:
 
 ```bash
-just cpp rm quality
-cmake -E remove_directory out/_skbuild
+just purge-out
 ```
 
-The second command discards scikit-build-core's persistent native build cache.
-If Just is unavailable, remove `out/build/quality` and `out/install/quality`
-directly. Then activate or enter the new dependency environment and configure
-again.
+This also discards scikit-build-core's persistent native build cache. For a
+selective cleanup, remove `out/build/quality`, `out/install/quality`, and
+`out/_skbuild` directly. Then activate or enter the new dependency environment
+and configure again. For an ordinary CMake cache reset that does not change
+dependency providers, use `just cpp configure quality --fresh`.
 
 Each configure preset has a matching build and test preset. This keeps the
 build-directory association and test failure policy in CMake instead of
@@ -160,14 +160,13 @@ recipe uses the current shell environment, just like its raw command.
 
 | Recipe | Delegated operation |
 | --- | --- |
-| `cpp configure [preset]` | Configure the preset |
+| `cpp configure [preset] [--fresh]` | Configure the preset, optionally from a fresh CMake cache |
 | `cpp build [preset]` | Build its native tree |
 | `cpp clean [preset]` | Run the configured tree's clean target |
 | `cpp verify-headers [preset]` | Verify that each public header is self-contained |
 | `cpp test [preset]` | Run its native tests |
-| `cpp check [preset]` | Configure, build, verify public headers, and test |
-| `cpp ci check-installed [preset]` | Install a native build, then build and run the CMake consumer against it |
-| `cpp rm [preset]` | Remove that preset's native build, install, and consumer trees |
+| `cpp check [preset]` | Freshly configure, build, verify public headers, and test |
+| `cpp ci check-installed [release\|shared-release]` | Install a Release native build, then build and run the CMake consumer against it |
 | `py sync` | Create or synchronize the locked Python environment |
 | `py update` | Update `uv.lock` to the newest dependency versions allowed by the project |
 | `py rebuild` | Incrementally rebuild and reinstall the extension |
@@ -273,8 +272,9 @@ Release, and shared Release checks are all local workflows; broader compiler
 and platform combinations remain CI concerns.
 
 The installed CMake package has a separate, minimal consumer check. After
-building a preset, run `just cpp ci check-installed [preset]`, or use the
-underlying commands directly:
+building the `release` or `shared-release` preset, run
+`just cpp ci check-installed [release|shared-release]`, or use the underlying
+commands directly:
 
 ```bash
 cmake --install out/build/release

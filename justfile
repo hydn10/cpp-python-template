@@ -14,14 +14,16 @@ help:
 purge-out:
     cmake -E remove_directory "out"
 
-# Delete disposable local build state, environments, caches, and package outputs.
-# Unlike `git clean`, this intentionally preserves ignored user configuration.
-[arg("dry_run", long="dry-run", short="d", value="true")]
+dry-run-help := "Show what would be removed without deleting anything"
+
+# Delete disposable local state, environments and caches. Pass -d/--dry-run to preview.
+[arg("dry_run", long="dry-run", short="d", value="true", help=dry-run-help)]
 [unix]
 purge-all dry_run="false":
     bash "tools/purge-all/purge-all.sh" {{ if dry_run == "true" { "--dry-run" } else { "" } }} "{{ justfile_directory() }}"
 
-[arg("dry_run", long="dry-run", short="d", value="true")]
+# Delete disposable local state, environments and caches. Pass -d/--dry-run to preview.
+[arg("dry_run", long="dry-run", short="d", value="true", help=dry-run-help)]
 [windows]
 purge-all dry_run="false":
     & "tools/purge-all/purge-all.ps1" {{ if dry_run == "true" { "-DryRun" } else { "" } }} -RepositoryRoot "{{ justfile_directory() }}"
