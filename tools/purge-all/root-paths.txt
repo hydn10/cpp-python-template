@@ -1,0 +1,15 @@
+# Files and directories removed only from the repository root.
+out
+.venv
+venv
+build
+_skbuild
+dist
+.eggs
+pip-wheel-metadata
+CMakeFiles
+.nox
+.tox
+CMakeCache.txt
+.coverage
+coverage.xml

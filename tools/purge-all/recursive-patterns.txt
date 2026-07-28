@@ -1,0 +1,8 @@
+# File and directory name patterns removed anywhere in the repository.
+__pycache__
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.hypothesis
+htmlcov
+*.egg-info

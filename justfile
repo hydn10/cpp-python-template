@@ -16,24 +16,15 @@ purge-out:
 
 # Delete disposable local build state, environments, caches, and package outputs.
 # Unlike `git clean`, this intentionally preserves ignored user configuration.
-purge-all: purge-out
-    cmake -E remove_directory ".venv"
-    cmake -E remove_directory "venv"
-    cmake -E remove_directory "build"
-    cmake -E remove_directory "_skbuild"
-    cmake -E remove_directory "dist"
-    cmake -E remove_directory ".eggs"
-    cmake -E remove_directory "pip-wheel-metadata"
-    cmake -E remove_directory "CMakeFiles"
-    cmake -E remove_directory ".pytest_cache"
-    cmake -E remove_directory ".mypy_cache"
-    cmake -E remove_directory ".ruff_cache"
-    cmake -E remove_directory ".hypothesis"
-    cmake -E remove_directory ".nox"
-    cmake -E remove_directory ".tox"
-    cmake -E remove_directory "htmlcov"
-    cmake -E rm -f "CMakeCache.txt" ".coverage" "coverage.xml"
-    Get-ChildItem -LiteralPath "apps", "cmake", "examples", "just", "lib", "nix", "python", "tests", "tools" -Directory -Recurse -Force -ErrorAction SilentlyContinue | Where-Object { $_.Name -in @("__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".hypothesis", "htmlcov") -or $_.Name -like "*.egg-info" } | Sort-Object -Property FullName -Descending | Remove-Item -Recurse -Force
+[arg("dry_run", long="dry-run", short="d", value="true")]
+[unix]
+purge-all dry_run="false":
+    bash "tools/purge-all/purge-all.sh" {{ if dry_run == "true" { "--dry-run" } else { "" } }} "{{ justfile_directory() }}"
+
+[arg("dry_run", long="dry-run", short="d", value="true")]
+[windows]
+purge-all dry_run="false":
+    & "tools/purge-all/purge-all.ps1" {{ if dry_run == "true" { "-DryRun" } else { "" } }} -RepositoryRoot "{{ justfile_directory() }}"
 
 default-cpp-preset := "quality"
 
