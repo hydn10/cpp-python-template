@@ -1,5 +1,6 @@
 { pkgs
-, python ? pkgs.python3
+, python
+, cppPackage
 , uv2nix
 , pyproject-nix
 , pyproject-build-systems
@@ -8,7 +9,7 @@ let
   workspace = uv2nix.lib.workspace.loadWorkspace {
     workspaceRoot = ../.;
   };
-  mylib = pkgs.callPackage ../default.nix { };
+  mylib = cppPackage;
 
   overlay = workspace.mkPyprojectOverlay {
     sourcePreference = "wheel";
@@ -38,7 +39,7 @@ let
                 pkgs.ninja
                 python.pkgs.pybind11
               ];
-              buildInputs = (old.buildInputs or [ ]) ++ (mylib.buildInputs or [ ]);
+              buildInputs = (old.buildInputs or [ ]) ++ (cppPackage.buildInputs or [ ]);
               env = (old.env or { }) // {
                 CMAKE_GENERATOR = "Ninja";
               };

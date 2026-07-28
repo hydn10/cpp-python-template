@@ -40,6 +40,7 @@
           pythonModules = import ./nix/python.nix {
             inherit pkgs uv2nix pyproject-nix pyproject-build-systems;
             python = pkgs.python3;
+            cppPackage = cpp.mylib;
           };
 
           mylibWithApps = cpp.mylibWithApps;
