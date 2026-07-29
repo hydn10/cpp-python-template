@@ -1,10 +1,3 @@
-[build-system]
-requires = [
-  "scikit-build-core>=0.12,<1",
-  "pybind11>=2.11",
-]
-build-backend = "scikit_build_core.build"
-
 [project]
 name = "mylib-tools"
 dynamic = ["version"]
@@ -26,7 +19,19 @@ dependencies = [
   "matplotlib>=3.6",
 ]
 
+[dependency-groups]
+dev = [
+  "ruff>=0.16.0",
+]
+
 ## No Python testing dependencies; Python is only a small set of console apps.
+
+[build-system]
+requires = [
+  "scikit-build-core>=0.12,<1",
+  "pybind11>=2.11",
+]
+build-backend = "scikit_build_core.build"
 
 [project.scripts]
 mylib-plot = "mylib_tools.plot:main"
@@ -69,8 +74,3 @@ extend-exclude = ["out"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F"]
-
-[dependency-groups]
-dev = [
-  "ruff>=0.16.0",
-]

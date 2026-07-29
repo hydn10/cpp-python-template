@@ -13,12 +13,6 @@ option(
     "${MYLIB_BUILD_PYTHON_DEFAULT}")
 mark_as_advanced(MYLIB_BUILD_PYTHON)
 
-project(mylib LANGUAGES CXX VERSION "${VERSION_FROM_JSON}")
-
-include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/mylib-windows-runtime.cmake")
-include(CMakePackageConfigHelpers)
-include(GNUInstallDirs)
-
 set(MYLIB_BUILD_APPS_DEFAULT "${PROJECT_IS_TOP_LEVEL}")
 option(
     MYLIB_BUILD_APPS
@@ -36,6 +30,13 @@ option(
     MYLIB_BUILD_TESTING
     "Build the tests. Default: ${MYLIB_BUILD_TESTING_DEFAULT}."
     "${MYLIB_BUILD_TESTING_DEFAULT}")
+    
+
+project(mylib LANGUAGES CXX VERSION "${VERSION_FROM_JSON}")
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/mylib-windows-runtime.cmake")
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
     
 
 add_subdirectory(lib)
