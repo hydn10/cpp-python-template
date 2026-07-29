@@ -1,0 +1,34 @@
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  "lineWidth": 100,
+  "indentWidth": 2,
+  "useTabs": false,
+  "json": {},
+  "markdown": {},
+  "toml": {},
+  "prettier": {
+    "printWidth": 100,
+    "associations": [
+      "!**/*.json",
+      "!**/*.jsonc",
+      "!**/*.md",
+      "!**/*.markdown",
+      "!**/*.toml",
+      "!**/*.py",
+      "!**/*.pyi"
+    ]
+  },
+  "excludes": [
+    "**/*-lock.json",
+    "**/node_modules",
+    "out",
+    ".venv",
+    "**/__pycache__/"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/json-0.23.0.wasm",
+    "https://plugins.dprint.dev/markdown-0.22.1.wasm",
+    "https://plugins.dprint.dev/toml-0.7.0.wasm",
+    "https://plugins.dprint.dev/prettier-0.72.0.json@6e7af2cb2182a5a11358d3adde9ae0ef3b94b7d2e5dcfdd252e3f7c3916541fe"
+  ]
+}

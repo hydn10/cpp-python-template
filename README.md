@@ -42,12 +42,14 @@ See `docs/repo-philosophy.md` for the repository design principles.
 - Ninja
 - C++23-capable compiler to build this repo's applications and native tests
 - C++17 is sufficient for downstream consumers of the installed `mylib` library target
-- LLVM/clang-tidy 22 when using the `quality` preset or otherwise enabling static analysis
+- LLVM/clang-format and clang-tidy 22 for C++ formatting and static analysis
+- Git for discovering the tracked C++ files passed to clang-format
 - A provider for the native dependencies (currently Eigen3), such as Nix, a
   system package manager, or [vcpkg](https://learn.microsoft.com/vcpkg/)
-- Python development files and pybind11 when using the `python-dev` preset
+- Python development files and pybind11 when using the `python-quality` preset
 - Python 3.12+ and [uv](https://docs.astral.sh/uv/)
-- Optionally, [Just](https://just.systems/) for the developer workflow façade (also provided by `nix develop`)
+- Optionally, [Mise](https://mise.jdx.dev/) for general development tools
+- Optionally, [Just](https://just.systems/) for the developer workflow façade (also provided by Mise and `nix develop`)
 
 The checked-in configure presets do not select a dependency provider, compiler,
 or machine-local path. In a Nix development shell, use them directly:
@@ -85,15 +87,15 @@ The Python extension defaults to disabled in every ordinary CMake build.
 
 There are five cross-platform configure presets:
 
-| Preset | Build type | Linkage | Static analysis | Python extension |
-| --- | --- | --- | --- | --- |
-| `debug` | Debug | Static | Off | Off |
-| `quality` | Debug | Static | clang-tidy | Off |
-| `python-dev` | Debug | Static | clang-tidy | On |
-| `release` | Release | Static | Off | Off |
-| `shared-release` | Release | Shared | Off | Off |
+| Preset           | Build type | Linkage | Static analysis | Python extension |
+| ---------------- | ---------- | ------- | --------------- | ---------------- |
+| `debug`          | Debug      | Static  | Off             | Off              |
+| `quality`        | Debug      | Static  | clang-tidy      | Off              |
+| `python-quality` | Debug      | Static  | clang-tidy      | On               |
+| `release`        | Release    | Static  | Off             | Off              |
+| `shared-release` | Release    | Shared  | Off             | Off              |
 
-All five build the native applications, examples, and tests. `python-dev`
+All five build the native applications, examples, and tests. `python-quality`
 inherits the quality configuration, enables position-independent code, and
 also builds the `_core` extension so its binding source receives clang-tidy
 coverage. It is a direct CMake diagnostic workflow, not a replacement for the
@@ -114,12 +116,12 @@ the checked-in presets and Just recipes provider-neutral and adopts a simple
 rule: clean the affected native and Python build trees before making such a
 change.
 
-| Design considered | Decision |
-| --- | --- |
-| Provider-specific directories selected by Just | Rejected: provider routing does not belong in the task runner. |
-| Clean before switching provider/toolchain | Adopted: explicit, portable, and no hidden state. |
-| Provider-specific `CMakeUserPresets.json` entries | Optional for users who switch frequently, but not required. |
-| Derive a directory suffix in checked-in presets | Rejected: preset macros cannot safely normalize or hash arbitrary toolchain paths. |
+| Design considered                                 | Decision                                                                           |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Provider-specific directories selected by Just    | Rejected: provider routing does not belong in the task runner.                     |
+| Clean before switching provider/toolchain         | Adopted: explicit, portable, and no hidden state.                                  |
+| Provider-specific `CMakeUserPresets.json` entries | Optional for users who switch frequently, but not required.                        |
+| Derive a directory suffix in checked-in presets   | Rejected: preset macros cannot safely normalize or hash arbitrary toolchain paths. |
 
 For example, before changing the environment used by `quality`:
 
@@ -148,7 +150,7 @@ ctest --preset quality
 ```
 
 Use `debug` in those commands for a faster Debug check without static analysis,
-`python-dev` to include the Python extension in the quality checks, `release`
+`python-quality` to include the Python extension in the quality checks, `release`
 for a static Release check, or `shared-release` for shared-library
 verification.
 
@@ -158,25 +160,32 @@ The root `justfile` is an optional façade over CMake, CTest, uv, and the
 project's console scripts. It does not select a dependency provider: every
 recipe uses the current shell environment, just like its raw command.
 
-| Recipe | Delegated operation |
-| --- | --- |
-| `cpp configure [preset] [--fresh]` | Configure the preset, optionally from a fresh CMake cache |
-| `cpp build [preset]` | Build its native tree |
-| `cpp clean [preset]` | Run the configured tree's clean target |
-| `cpp verify-headers [preset]` | Verify that each public header is self-contained |
-| `cpp test [preset]` | Run its native tests |
-| `cpp check [preset]` | Freshly configure, build, verify public headers, and test |
+| Recipe                                             | Delegated operation                                                              |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `cpp format` / `cpp format-check`                  | Apply or check clang-format on every tracked C++ source and header               |
+| `cpp lint`                                         | Run clang-tidy across every native target, including the Python binding          |
+| `cpp configure [preset] [--fresh]`                 | Configure the preset, optionally from a fresh CMake cache                        |
+| `cpp build [preset]`                               | Build its native tree                                                            |
+| `cpp clean [preset]`                               | Run the configured tree's clean target                                           |
+| `cpp verify-headers [preset]`                      | Verify that each public header is self-contained                                 |
+| `cpp test [preset]`                                | Run its native tests                                                             |
+| `cpp validate [preset]`                            | Freshly configure, cleanly build, validate public headers, and test              |
 | `cpp ci check-installed [release\|shared-release]` | Install a Release native build, then build and run the CMake consumer against it |
-| `py sync` | Create or synchronize the locked Python environment |
-| `py update` | Update `uv.lock` to the newest dependency versions allowed by the project |
-| `py rebuild` | Incrementally rebuild and reinstall the extension |
-| `py check` | Check the rebuilt development install and a distributable wheel |
-| `py plot [arguments]` / `py dump [arguments]` | Run a locked Python CLI |
-| `py ci smoke [output-directory]` | Rebuild and smoke-test both Python console applications |
-| `py ci wheel [work-directory]` | Build a wheel and smoke-test it in a fresh environment |
-| `rm-out` | Delete the entire `out/` directory |
-| `purge` | Delete disposable build state, environments, caches, and package outputs |
-| `check [preset]` | Run the native and Python developer checks |
+| `py format` / `py format-check`                    | Apply or check Ruff's Python formatter                                           |
+| `py lint`                                          | Run the Ruff linter                                                              |
+| `py sync`                                          | Create or synchronize the locked Python environment                              |
+| `py upgrade`                                       | Update `uv.lock` to the newest dependency versions allowed by the project        |
+| `py rebuild`                                       | Incrementally rebuild and reinstall the extension                                |
+| `py validate`                                      | Validate the rebuilt development install and a distributable wheel               |
+| `py plot [arguments]` / `py dump [arguments]`      | Run a locked Python CLI                                                          |
+| `py ci smoke [output-directory]`                   | Rebuild and smoke-test both Python console applications                          |
+| `py ci wheel [work-directory]`                     | Build a wheel and smoke-test it in a fresh environment                           |
+| `format-misc` / `format-check-misc`                | Apply or check Just and dprint formatting for miscellaneous files                |
+| `format` / `format-check`                          | Apply or check every repository formatter                                        |
+| `quality`                                          | Check all formatting, then run C++ and Python linting                            |
+| `verify`                                           | Run formatting, linting, native, Python application, and wheel checks            |
+| `purge-out`                                        | Delete the entire `out/` directory                                               |
+| `purge-all`                                        | Delete disposable build state, environments, caches, and package outputs         |
 
 `py sync` is primarily an environment bootstrap and repair command. It creates
 `.venv` when necessary, installs the versions from `uv.lock`, removes
@@ -184,13 +193,24 @@ undeclared packages, and installs this project editably. Normal `uv run`
 commands already check and synchronize the environment, so `py sync` is not a
 required prelude to every application run.
 
-`just check [preset]` is the convenient local approximation of the repository's
-CI checks: it runs the native checks, rebuilds and smoke-tests the locked Python
-development install, and builds and smoke-tests a wheel in a fresh environment.
-CI invokes the underlying recipes separately where its platform matrices differ.
-The native Just recipes default to the `quality` preset, so incremental
-developer builds include static analysis. Pass `debug` explicitly when a faster
-Debug build without clang-tidy is preferable.
+`just quality` is the static-quality entry point: it checks every formatter and
+explicitly runs clang-tidy and Ruff. `just verify` is the convenient local
+approximation of the repository's complete CI checks: it also runs the native
+verification, rebuilds and smoke-tests the locked Python development install,
+and builds and smoke-tests a wheel in a fresh environment. Both commands use
+the comprehensive `python-quality` configuration, covering the ordinary native
+targets and the Python binding. CI invokes the underlying recipes separately
+where its platform matrices differ.
+
+General native recipes default to the `quality` preset, while `cpp lint` always
+uses `python-quality` for complete clang-tidy coverage. Pass `debug` explicitly
+to native build or verification recipes when a faster Debug build without
+clang-tidy is preferable. C++ formatting uses `git ls-files` to pass every
+tracked C or C++ source and header to clang-format, leaving generated and
+untracked files untouched. Python formatting and linting use the Ruff version
+declared by the development dependency group and locked in `uv.lock`. Mise and
+Nix may provide the general tools, but recipes invoke those tools directly from
+the active environment.
 
 Editable installation makes Python-source changes visible immediately, but it
 does not automatically recompile the C++ extension. After changing native
@@ -203,8 +223,8 @@ tools, while Just provides the same command vocabulary used elsewhere:
 
 ```bash
 nix develop
-just cpp check
-just cpp check python-dev
+just cpp validate
+just cpp validate python-quality
 just py rebuild
 ```
 
@@ -217,17 +237,17 @@ when the selected configuration enables `MYLIB_BUILD_PYTHON`:
 
 ```bash
 source tools/activate-vcpkg.sh
-just cpp check
-just cpp check python-dev
+just cpp validate
+just cpp validate python-quality
 just py rebuild
 ```
 
 ```powershell
 . .\tools\activate-vcpkg.ps1
-just cpp check
-just cpp check python-dev
-just cpp check release
-just cpp check shared-release
+just cpp validate
+just cpp validate python-quality
+just cpp validate release
+just cpp validate shared-release
 just py rebuild
 ```
 
@@ -263,7 +283,7 @@ On Windows the corresponding executables end in `.exe`.
 
 ## Testing
 
-Run `just cpp check [preset]`, or use the raw configure, build, public-header
+Run `just cpp validate [preset]`, or use the raw configure, build, public-header
 verification, and CTest commands shown above. The normal build compiles the
 library, applications, examples, and native test executables; CTest runs only
 the explicitly registered native tests. Static Debug with or without the
@@ -296,7 +316,7 @@ stages the imported package's runtime DLLs before CTest runs it.
 CI expresses coverage as data-driven toolchain lanes. Every ordinary Linux and
 Windows lane runs the locked Python application smoke check, static and shared
 Release native checks, and both installed-package consumer checks.
-Comprehensive lanes additionally run the `python-dev` preset. It is a superset
+Comprehensive lanes additionally run the `python-quality` preset. It is a superset
 of `quality`, so those lanes apply clang-tidy to every ordinary native target
 and the Python binding without building the two configurations separately. A
 future toolchain can opt into the comprehensive suite by changing its matrix
@@ -316,7 +336,7 @@ entry rather than duplicating the workflow.
 - The `debug` preset uses the same Debug build configuration without static
   analysis. Pass it explicitly to a Just recipe when a quicker incremental
   build is more useful than immediate analysis feedback.
-- The `python-dev` preset extends `quality` with the `_core` extension, providing
+- The `python-quality` preset extends `quality` with the `_core` extension, providing
   clang-tidy coverage for the pybind11 binding source.
 - Static analysis remains caller policy and can be enabled for another preset
   when needed:
@@ -364,8 +384,8 @@ Notes:
   `pyproject.toml`. Its package output uses pyproject-nix's `mkApplication` so
   the virtual environment remains an internal implementation detail.
 - The dev shell is uv-first: it provides the C++ toolchain, Eigen, LLVM 22
-  tools, pybind11, `uv`, Just, and a pinned Nix Python interpreter, but it does
-  not put the packaged Python application on `PATH`. Inside `nix develop`, use
+  tools, dprint, pybind11, `uv`, Just, and a pinned Nix Python interpreter, but
+  it does not put the packaged Python application on `PATH`. Inside `nix develop`, use
   `just py sync` (or raw `uv sync --locked`) and normal `just py plot` /
   `just py dump` commands. The shell also exposes Nix-provided `tkinter` plus the
   X11/Wayland client libraries so uv-managed `matplotlib` can open interactive
@@ -414,7 +434,7 @@ Notes:
   native build instead of starting from scratch; the wheel tag separates
   Python ABI and platform combinations.
 - Python packaging declares pybind11 in `pyproject.toml`, so its isolated build
-  environment provides it automatically. A direct `python-dev` CMake build
+  environment provides it automatically. A direct `python-quality` CMake build
   instead uses the active native provider: the vcpkg adapter selects the
   manifest's `python` feature, while the Nix development shell supplies
   pybind11 directly.

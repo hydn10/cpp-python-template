@@ -31,6 +31,7 @@
     {
       "name": "quality",
       "displayName": "quality",
+      "description": "Debug native build with clang-tidy.",
       "inherits": "debug",
       "cacheVariables": {
         "CMAKE_CXX_CLANG_TIDY": "$<IF:$<PLATFORM_ID:Windows>,clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc,clang-tidy;--warnings-as-errors=*>",
@@ -38,8 +39,9 @@
       }
     },
     {
-      "name": "python-dev",
-      "displayName": "python-dev",
+      "name": "python-quality",
+      "displayName": "python-quality",
+      "description": "Debug native and Python binding build with clang-tidy.",
       "inherits": "quality",
       "cacheVariables": {
         "CMAKE_POSITION_INDEPENDENT_CODE": "ON",
@@ -75,8 +77,8 @@
       "configurePreset": "quality"
     },
     {
-      "name": "python-dev",
-      "configurePreset": "python-dev"
+      "name": "python-quality",
+      "configurePreset": "python-quality"
     },
     {
       "name": "release",
@@ -109,8 +111,8 @@
       }
     },
     {
-      "name": "python-dev",
-      "configurePreset": "python-dev",
+      "name": "python-quality",
+      "configurePreset": "python-quality",
       "output": {
         "outputOnFailure": true
       },

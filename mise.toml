@@ -1,0 +1,8 @@
+[settings]
+lockfile = true
+
+[tools]
+dprint = "latest"
+just = "latest"
+actionlint = "latest"
+shellcheck = "latest"

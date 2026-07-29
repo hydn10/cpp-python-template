@@ -104,14 +104,14 @@ jobs:
           "CC=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
           "CXX=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
 
-      - name: Check native static Release
-        run: just cpp check release
+      - name: Validate native static Release
+        run: just cpp validate release
 
       - name: Check installed static CMake package
         run: just cpp ci check-installed release
 
-      - name: Check native shared Release
-        run: just cpp check shared-release
+      - name: Validate native shared Release
+        run: just cpp validate shared-release
 
       - name: Check installed shared CMake package
         run: just cpp ci check-installed shared-release
@@ -206,12 +206,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Check native Python development configuration
+      - name: Validate native Python quality configuration
         run: |
-          # Just cannot forward CMake options; its check reuses this cache entry.
-          # Cleanup keeps vcpkg's Python build within the runner disk limit.
-          cmake --preset python-dev -DVCPKG_INSTALL_OPTIONS=--clean-after-build
-          just cpp check python-dev
+          # Prime vcpkg with cleanup to keep its Python build within the runner disk limit.
+          cmake --preset python-quality -DVCPKG_INSTALL_OPTIONS=--clean-after-build
+          just cpp validate python-quality
 
   python-apps:
     name: Python apps (${{ matrix.platform.name }}, Python ${{ matrix.python }})
@@ -337,7 +336,7 @@ jobs:
         run: nix flake check -L
 
       - name: Smoke-test the development workflow
-        run: nix develop --command just check
+        run: nix develop --command just verify
 
       - name: Create smoke-test output directory
         run: mkdir -p out/smoke/nix

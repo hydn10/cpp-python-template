@@ -56,17 +56,17 @@ Every important concern should have one place that owns its meaning.
 
 Typical ownership in this repository should be:
 
-| Concern | Owner |
-| --- | --- |
-| Native libraries, applications, examples, tests, install/export shape | CMake |
-| Native dependency requirements | CMake package discovery and target links |
-| Python package metadata, scripts, runtime dependencies | Python packaging metadata |
-| Python environment synchronization | uv and its lock state |
-| Shared C++ and Python project version | vcpkg manifest |
-| vcpkg dependency mapping and baseline | vcpkg metadata |
-| Optional developer workflow composition | Just |
-| Reproducible development and package environments | Nix |
-| Remote platform matrix and result reporting | CI |
+| Concern                                                               | Owner                                    |
+| --------------------------------------------------------------------- | ---------------------------------------- |
+| Native libraries, applications, examples, tests, install/export shape | CMake                                    |
+| Native dependency requirements                                        | CMake package discovery and target links |
+| Python package metadata, scripts, runtime dependencies                | Python packaging metadata                |
+| Python environment synchronization                                    | uv and its lock state                    |
+| Shared C++ and Python project version                                 | vcpkg manifest                           |
+| vcpkg dependency mapping and baseline                                 | vcpkg metadata                           |
+| Optional developer workflow composition                               | Just                                     |
+| Reproducible development and package environments                     | Nix                                      |
+| Remote platform matrix and result reporting                           | CI                                       |
 
 The exact tools may evolve, but the ownership boundaries matter. An outer layer may call an owner, configure it, or translate its metadata for a specific ecosystem. It should not maintain a second manual description of the same sources, targets, dependencies, or test behavior.
 

@@ -12,12 +12,24 @@ sync:
 upgrade:
     uv lock --upgrade
 
+# Format all Python files.
+format:
+    uv run --locked ruff format .
+
+# Check Python formatting without changing files.
+format-check:
+    uv run --locked ruff format --check .
+
+# Lint all Python files.
+lint:
+    uv run --locked ruff check .
+
 # Incrementally rebuild and reinstall the native Python extension.
 rebuild:
     uv sync --locked --reinstall-package mylib-tools
 
-# Rebuild and smoke-test the development install and a distributable wheel.
-check: ci::smoke ci::wheel
+# Validate the development install and a distributable wheel.
+validate: ci::smoke ci::wheel
 
 # Run the plotting CLI (usage: just py plot --save path).
 plot *args:

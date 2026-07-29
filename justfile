@@ -28,7 +28,24 @@ purge-all dry_run="false":
 purge-all dry_run="false":
     & "tools/purge-all/purge-all.ps1" {{ if dry_run == "true" { "-DryRun" } else { "" } }} -RepositoryRoot "{{ justfile_directory() }}"
 
-default-cpp-preset := "quality"
+# Format every supported repository file.
+format: cpp::format py::format format-misc
 
-# Run the native and Python developer checks.
-check preset=default-cpp-preset: (cpp::check preset) py::check
+# Check formatting for every supported repository file without changing it.
+format-check: cpp::format-check py::format-check format-check-misc
+
+# Format Just recipes and dprint-managed miscellaneous files.
+format-misc:
+    just --fmt
+    dprint fmt
+
+# Check Just recipes and dprint-managed miscellaneous files without changing them.
+format-check-misc:
+    just --fmt --check
+    dprint check
+
+# Run all formatting and static-analysis checks.
+quality: format-check py::lint cpp::lint
+
+# Run the complete local repository verification.
+verify: format-check py::lint (cpp::validate "python-quality") py::validate

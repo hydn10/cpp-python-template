@@ -1,4 +1,5 @@
 import argparse
+
 from pathlib import Path
 from typing import Optional, Sequence
 
@@ -22,8 +23,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
 
     x_values, y_values = compute_sample_series(sample_grid)
     rows = ["x,y"] + [
-        f"{x_value:.12g},{y_value:.12g}"
-        for x_value, y_value in zip(x_values, y_values)
+        f"{x_value:.12g},{y_value:.12g}" for x_value, y_value in zip(x_values, y_values)
     ]
     csv_output = "\n".join(rows) + "\n"
 

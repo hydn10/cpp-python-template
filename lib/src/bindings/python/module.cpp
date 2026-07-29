@@ -1,7 +1,7 @@
 // pybind11 headers need to be included first. See [1].
 // [1]: https://pybind11.readthedocs.io/en/stable/basics.html#header-and-namespace-conventions
-#include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 
 #include <mylib/mylib.hpp>
 
@@ -19,7 +19,7 @@ namespace
 // pybind11's public umbrella headers intentionally provide these declarations.
 // NOLINTBEGIN(misc-include-cleaner)
 py::array_t<double>
-as_numpy_array(std::vector<double> const& values)
+as_numpy_array(std::vector<double> const &values)
 {
   auto const element_count = static_cast<py::ssize_t>(values.size());
   auto result = py::array_t<double>(element_count);
