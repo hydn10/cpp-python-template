@@ -208,9 +208,11 @@ jobs:
 
       - name: Validate native Python quality configuration
         run: |
-          # Prime vcpkg with cleanup to keep its Python build within the runner disk limit.
-          cmake --preset python-quality -DVCPKG_INSTALL_OPTIONS=--clean-after-build
-          just cpp validate python-quality
+          # Configure freshly while keeping vcpkg's Python build within the runner disk limit.
+          cmake --preset python-quality --fresh -DVCPKG_INSTALL_OPTIONS=--clean-after-build
+          just cpp build python-quality
+          just cpp verify-headers python-quality
+          just cpp test python-quality
 
   python-apps:
     name: Python apps (${{ matrix.platform.name }}, Python ${{ matrix.python }})
