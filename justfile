@@ -6,6 +6,9 @@ mod cpp 'just/cpp.just'
 # Python environment and application workflows.
 mod py 'just/py.just'
 
+# Local GitHub Actions workflow execution.
+mod ci 'just/ci.just'
+
 # List all root and module recipes.
 help:
     @just --list --list-submodules

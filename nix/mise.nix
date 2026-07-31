@@ -3,6 +3,7 @@ let
   adapter = import ./lib/mise-to-nix.nix;
 
   mappings = {
+    act = _tool: pkgs.act;
     dprint = _tool: pkgs.dprint;
     just = _tool: pkgs.just;
     actionlint = _tool: pkgs.actionlint;

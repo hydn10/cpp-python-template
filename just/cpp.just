@@ -3,9 +3,7 @@ set working-directory := ".."
 
 default-preset := "quality"
 cpp-file-patterns := "'*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' '*.inl'"
-
-# Native package checks used by continuous integration.
-mod ci 'cpp/ci.just'
+repo-root := justfile_directory()
 
 [private]
 require-git:
@@ -61,3 +59,11 @@ lint: (fresh-build "python-quality")
 
 # Freshly configure, cleanly build, validate public headers, and test the native project.
 validate preset=default-preset: (fresh-build preset) (verify-headers preset) (test preset)
+
+# Install one native build, then build and run a consumer of its CMake package.
+[arg("preset", pattern="release|shared-release")]
+check-installed preset="release":
+    cmake --install "out/build/{{ preset }}"
+    cmake -S tests/consumer-cmake -B "out/build/consumer-cmake/{{ preset }}" -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_PREFIX_PATH={{ repo-root }}/out/install/{{ preset }}"
+    cmake --build "out/build/consumer-cmake/{{ preset }}"
+    ctest --test-dir "out/build/consumer-cmake/{{ preset }}" --output-on-failure --no-tests=error

@@ -2,6 +2,7 @@
 lockfile = true
 
 [tools]
+act = "latest"
 dprint = "latest"
 just = "latest"
 actionlint = "latest"

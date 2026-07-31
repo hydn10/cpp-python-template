@@ -1,0 +1,3 @@
+--workflows=.github/workflows/ci.yml
+--platform=ubuntu-latest=catthehacker/ubuntu:act-latest
+--concurrent-jobs=1

@@ -50,6 +50,8 @@ See `docs/repo-philosophy.md` for the repository design principles.
 - Python 3.12+ and [uv](https://docs.astral.sh/uv/)
 - Optionally, [Mise](https://mise.jdx.dev/) for general development tools
 - Optionally, [Just](https://just.systems/) for the developer workflow façade (also provided by Mise and `nix develop`)
+- Optionally, [act](https://nektosact.com/) for local Linux GitHub Actions execution (provided by Mise and `nix develop`)
+- Docker Desktop or another Docker-compatible container engine, already running, only when using `act`; this repository does not provision or manage the Docker daemon
 
 The checked-in configure presets do not select a dependency provider, compiler,
 or machine-local path. In a Nix development shell, use them directly:
@@ -160,32 +162,37 @@ The root `justfile` is an optional façade over CMake, CTest, uv, and the
 project's console scripts. It does not select a dependency provider: every
 recipe uses the current shell environment, just like its raw command.
 
-| Recipe                                             | Delegated operation                                                              |
-| -------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `cpp format` / `cpp format-check`                  | Apply or check clang-format on every tracked C++ source and header               |
-| `cpp lint`                                         | Run clang-tidy across every native target, including the Python binding          |
-| `cpp configure [preset] [--fresh]`                 | Configure the preset, optionally from a fresh CMake cache                        |
-| `cpp build [preset]`                               | Build its native tree                                                            |
-| `cpp clean [preset]`                               | Run the configured tree's clean target                                           |
-| `cpp verify-headers [preset]`                      | Verify that each public header is self-contained                                 |
-| `cpp test [preset]`                                | Run its native tests                                                             |
-| `cpp validate [preset]`                            | Freshly configure, cleanly build, validate public headers, and test              |
-| `cpp ci check-installed [release\|shared-release]` | Install a Release native build, then build and run the CMake consumer against it |
-| `py format` / `py format-check`                    | Apply or check Ruff's Python formatter                                           |
-| `py lint`                                          | Run the Ruff linter                                                              |
-| `py sync`                                          | Create or synchronize the locked Python environment                              |
-| `py upgrade`                                       | Update `uv.lock` to the newest dependency versions allowed by the project        |
-| `py rebuild`                                       | Incrementally rebuild and reinstall the extension                                |
-| `py validate`                                      | Validate the rebuilt development install and a distributable wheel               |
-| `py plot [arguments]` / `py dump [arguments]`      | Run a locked Python CLI                                                          |
-| `py ci smoke [output-directory]`                   | Rebuild and smoke-test both Python console applications                          |
-| `py ci wheel [work-directory]`                     | Build a wheel and smoke-test it in a fresh environment                           |
-| `format-misc` / `format-check-misc`                | Apply or check Just and dprint formatting for miscellaneous files                |
-| `format` / `format-check`                          | Apply or check every repository formatter                                        |
-| `quality`                                          | Check all formatting, then run C++ and Python linting                            |
-| `verify`                                           | Run formatting, linting, native, Python application, and wheel checks            |
-| `purge-out`                                        | Delete the entire `out/` directory                                               |
-| `purge-all`                                        | Delete disposable build state, environments, caches, and package outputs         |
+| Recipe                                          | Delegated operation                                                              |
+| ----------------------------------------------- | -------------------------------------------------------------------------------- |
+| `cpp format` / `cpp format-check`               | Apply or check clang-format on every tracked C++ source and header               |
+| `cpp lint`                                      | Run clang-tidy across every native target, including the Python binding          |
+| `cpp configure [preset] [--fresh]`              | Configure the preset, optionally from a fresh CMake cache                        |
+| `cpp build [preset]`                            | Build its native tree                                                            |
+| `cpp clean [preset]`                            | Run the configured tree's clean target                                           |
+| `cpp verify-headers [preset]`                   | Verify that each public header is self-contained                                 |
+| `cpp test [preset]`                             | Run its native tests                                                             |
+| `cpp validate [preset]`                         | Freshly configure, cleanly build, validate public headers, and test              |
+| `cpp check-installed [release\|shared-release]` | Install a Release native build, then build and run the CMake consumer against it |
+| `py format` / `py format-check`                 | Apply or check Ruff's Python formatter                                           |
+| `py lint`                                       | Run the Ruff linter                                                              |
+| `py sync`                                       | Create or synchronize the locked Python environment                              |
+| `py upgrade`                                    | Update `uv.lock` to the newest dependency versions allowed by the project        |
+| `py rebuild`                                    | Incrementally rebuild and reinstall the extension                                |
+| `py validate`                                   | Validate the rebuilt development install and a distributable wheel               |
+| `py plot [arguments]` / `py dump [arguments]`   | Run a locked Python CLI                                                          |
+| `py smoke [output-directory]`                   | Rebuild and smoke-test both Python console applications                          |
+| `py check-wheel [work-directory]`               | Build a wheel and smoke-test it in a fresh environment                           |
+| `ci list`                                       | List GitHub Actions jobs for the `push` event                                    |
+| `ci plan`                                       | Validate and display the locally supported GitHub Actions execution plan         |
+| `ci run [--rm]`                                 | Run every locally supported GitHub Actions job                                   |
+| `ci job <job-id> [--rm]`                        | Run one GitHub Actions job and its locally supported matrix entries              |
+| `ci debug <job-id> [--rm]`                      | Run one job with verbose `act` diagnostics                                       |
+| `format-misc` / `format-check-misc`             | Apply or check Just and dprint formatting for miscellaneous files                |
+| `format` / `format-check`                       | Apply or check every repository formatter                                        |
+| `quality`                                       | Check all formatting, then run C++ and Python linting                            |
+| `verify`                                        | Run formatting, linting, native, Python application, and wheel checks            |
+| `purge-out`                                     | Delete the entire `out/` directory                                               |
+| `purge-all`                                     | Delete disposable build state, environments, caches, and package outputs         |
 
 `py sync` is primarily an environment bootstrap and repair command. It creates
 `.venv` when necessary, installs the versions from `uv.lock`, removes
@@ -293,7 +300,7 @@ and platform combinations remain CI concerns.
 
 The installed CMake package has a separate, minimal consumer check. After
 building the `release` or `shared-release` preset, run
-`just cpp ci check-installed [release|shared-release]`, or use the underlying
+`just cpp check-installed [release|shared-release]`, or use the underlying
 commands directly:
 
 ```bash
@@ -313,14 +320,73 @@ package. `CMAKE_PREFIX_PATH` must be absolute because CMake interprets relative
 package-search paths from the consumer build tree. On Windows, the consumer
 stages the imported package's runtime DLLs before CTest runs it.
 
-CI expresses coverage as data-driven toolchain lanes. Every ordinary Linux and
-Windows lane runs the locked Python application smoke check, static and shared
-Release native checks, and both installed-package consumer checks.
-Comprehensive lanes additionally run the `python-quality` preset. It is a superset
-of `quality`, so those lanes apply clang-tidy to every ordinary native target
-and the Python binding without building the two configurations separately. A
-future toolchain can opt into the comprehensive suite by changing its matrix
-entry rather than duplicating the workflow.
+CI groups coverage into explicit Linux and Windows jobs. The native jobs use
+per-OS compiler matrices for static and shared Release validation plus installed
+package consumer checks. Dedicated quality jobs run the `python-quality` preset
+with Clang or clang-cl, while separate application and wheel jobs cover Python
+3.12 and 3.14 on each OS. The Nix job validates the flake, development workflow,
+and packaged applications.
+
+## Local Linux CI with act
+
+`just verify` remains the normal, comparatively direct local verification path.
+It delegates to CMake, CTest, uv, and the repository's other project tools without
+adding a containerized GitHub Actions layer. `just ci run` is a slower, optional
+workflow-fidelity check: Just delegates to `act`, which reads the existing
+`.github/workflows/ci.yml` and in turn runs the same repository-owned commands as
+GitHub Actions.
+
+The repository-local `act` configuration maps only `ubuntu-latest` to a medium
+Ubuntu container image and runs top-level jobs sequentially by default. The
+`native-linux`, `quality-linux`, `python-apps-linux`, `wheel-linux`, and `nix`
+jobs are locally supported. Windows and macOS runner labels are intentionally
+left unmapped, so those jobs are skipped rather than emulated. A skipped
+unsupported platform does not mean that platform passed.
+
+Every workflow job uses a literal `runs-on` label. Keeping Linux and Windows in
+separate jobs avoids an `act` 0.2.89 race when parallel matrix entries evaluate a
+matrix-derived `runs-on` value
+([nektos/act#6050](https://github.com/nektos/act/pull/6050)). Within each OS-specific
+job, matrices vary only the compiler or Python version. Refresh the generated
+`act` lock when an upstream release includes the fix.
+
+Start Docker Desktop or another compatible container engine before planning or
+executing a job. The engine and socket come from the host; the repository neither
+installs nor manages the Docker daemon. Mise and the Nix development shell provide
+the `act` client, but the Nix shell still relies on that external engine. Dry-run
+planning does not create containers.
+
+Common commands are:
+
+```bash
+just ci list
+just ci plan
+just ci job native-linux
+just ci job quality-linux
+just ci job python-apps-linux
+just ci job wheel-linux
+just ci job nix
+just ci run
+just ci run --rm
+just ci debug native-linux
+```
+
+Job selection uses GitHub Actions job IDs such as `native-linux`, not their
+display names. The corresponding Windows job IDs use the `-windows` suffix and
+are skipped by the repository's Linux-only `act` configuration. The commands
+operate on the local working tree, print normal step and job logs directly to the
+terminal, and preserve `act`'s nonzero status when an executed job fails. Normal
+local use does not log in to GitHub, push commits, dispatch a remote workflow,
+register a runner, or publish results. Raw `act push` commands remain available
+when Just is not used.
+
+By default, `act` preserves containers and volumes from failed jobs for
+inspection. Pass `--rm` to `run`, `job`, or `debug` to opt into removing them
+after a failure.
+
+`act` approximates GitHub's Ubuntu runner inside a container; it is not perfect
+VM-level reproduction. Actual GitHub Actions remains authoritative for both Ubuntu
+and Windows CI, including every cross-platform result that local `act` skips.
 
 ## Static Analysis (clang-tidy 22)
 
@@ -375,7 +441,7 @@ This repo includes a per-system Nix flake currently supporting
   - `nix run .#mylib-dump`
 - Build the packaged Python application:
   - `nix build .#python-apps`
-- Enter a development shell with C++, Python, uv, and Just available:
+- Enter a development shell with C++, Python, uv, Just, and `act` available:
   - `nix develop`
 
 Notes:
@@ -384,12 +450,14 @@ Notes:
   `pyproject.toml`. Its package output uses pyproject-nix's `mkApplication` so
   the virtual environment remains an internal implementation detail.
 - The dev shell is uv-first: it provides the C++ toolchain, Eigen, LLVM 22
-  tools, dprint, pybind11, `uv`, Just, and a pinned Nix Python interpreter, but
+  tools, dprint, pybind11, `uv`, Just, `act`, and a pinned Nix Python interpreter, but
   it does not put the packaged Python application on `PATH`. Inside `nix develop`, use
   `just py sync` (or raw `uv sync --locked`) and normal `just py plot` /
   `just py dump` commands. The shell also exposes Nix-provided `tkinter` plus the
   X11/Wayland client libraries so uv-managed `matplotlib` can open interactive
   windows on Nix.
+- The Nix shell provides the `act` client only. Local containerized CI still uses
+  the Docker-compatible engine and socket supplied by the host.
 - If you want to pin a different Python (e.g. 3.12), adjust the `python = pkgs.python3;` line in `flake.nix` to `python = pkgs.python312;`.
 
 ## Python apps with UV (locked env)
@@ -446,7 +514,7 @@ Notes:
   cleanup is the Python counterpart of cleaning a native preset tree.
 - The project version used by the C++ build and Python distribution metadata is read from `vcpkg.json`.
 - The console app runtime deps (`numpy`, `matplotlib`) are listed under `[project.dependencies]` and locked via `uv.lock`.
-- `just py ci wheel [work-dir]` builds and checks a normal wheel in a fresh
+- `just py check-wheel [work-dir]` builds and checks a normal wheel in a fresh
   environment under `out/smoke/wheel` by default.
 
 ## Using the C++ library from another CMake project

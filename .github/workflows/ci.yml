@@ -8,38 +8,102 @@ permissions:
   contents: read
 
 jobs:
-  native:
-    name: Native package (${{ matrix.platform.name }})
-    runs-on: ${{ matrix.platform.os }}
+  native-linux:
+    name: Native package (Linux ${{ matrix.name }})
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - name: Linux GCC
-            os: ubuntu-latest
+        include:
+          - name: GCC
             compiler: gcc
             cc: gcc-14
             cxx: g++-14
-          - name: Linux Clang
-            os: ubuntu-latest
+          - name: Clang
             compiler: clang
             cc: clang
             cxx: clang++
             llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
-          - name: Windows MSVC
-            os: windows-latest
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Ensure CMake and Ninja are installed
+        shell: bash
+        run: |
+          # Required for local act runs; its reduced Ubuntu image omits both tools.
+          if ! command -v cmake >/dev/null || ! command -v ninja >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y cmake ninja-build
+          fi
+
+          cmake --version
+          ninja --version
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Set up Just
+        uses: extractions/setup-just@v4
+
+      - name: Install GCC 14
+        if: matrix.compiler == 'gcc'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-14 g++-14
+
+      - name: Install LLVM 22
+        if: matrix.compiler == 'clang'
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "22.1.6"
+          force-url: ${{ matrix.llvm_url }}
+          env: false
+
+      - name: Select the installed Clang compiler
+        if: matrix.compiler == 'clang'
+        shell: bash
+        run: |
+          echo "CC=${LLVM_PATH}/bin/clang" >> "$GITHUB_ENV"
+          echo "CXX=${LLVM_PATH}/bin/clang++" >> "$GITHUB_ENV"
+
+      - name: Validate native static Release
+        run: just cpp validate release
+
+      - name: Check installed static CMake package
+        run: just cpp check-installed release
+
+      - name: Validate native shared Release
+        run: just cpp validate shared-release
+
+      - name: Check installed shared CMake package
+        run: just cpp check-installed shared-release
+
+  native-windows:
+    name: Native package (Windows ${{ matrix.name }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: MSVC
             compiler: msvc
             cc: cl.exe
             cxx: cl.exe
-          - name: Windows clang-cl
-            os: windows-latest
+          - name: clang-cl
             compiler: clang-cl
             cc: clang-cl.exe
             cxx: clang-cl.exe
             llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
     env:
-      CC: ${{ matrix.platform.cc }}
-      CXX: ${{ matrix.platform.cxx }}
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
       CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
@@ -52,23 +116,15 @@ jobs:
       - name: Set up Just
         uses: extractions/setup-just@v4
 
-      - name: Install GCC 14
-        if: matrix.platform.compiler == 'gcc'
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-14 g++-14
-
       - name: Install LLVM 22
-        if: matrix.platform.compiler == 'clang' || matrix.platform.compiler == 'clang-cl'
+        if: matrix.compiler == 'clang-cl'
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: "22.1.6"
-          force-url: ${{ matrix.platform.llvm_url }}
+          force-url: ${{ matrix.llvm_url }}
           env: false
 
       - name: Set up the Visual Studio environment
-        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $info = vswhere -latest -format json | ConvertFrom-Json
@@ -83,24 +139,12 @@ jobs:
             "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV
           }
 
-      - name: Select the installed Linux Clang compiler
-        if: matrix.platform.compiler == 'clang'
-        shell: bash
-        run: |
-          echo "CC=${LLVM_PATH}/bin/clang" >> "$GITHUB_ENV"
-          echo "CXX=${LLVM_PATH}/bin/clang++" >> "$GITHUB_ENV"
-
-      - name: Prioritize the installed LLVM tools on Windows
-        if: matrix.platform.compiler == 'clang-cl'
-        shell: pwsh
-        run: |
-          Join-Path $env:LLVM_PATH 'bin' >> $env:GITHUB_PATH
-
-      - name: Select the installed Windows clang-cl compiler
-        if: matrix.platform.compiler == 'clang-cl'
+      - name: Select the installed clang-cl compiler
+        if: matrix.compiler == 'clang-cl'
         shell: pwsh
         run: |
           $llvmBin = Join-Path $env:LLVM_PATH 'bin'
+          $llvmBin >> $env:GITHUB_PATH
           "CC=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
           "CXX=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
 
@@ -108,41 +152,37 @@ jobs:
         run: just cpp validate release
 
       - name: Check installed static CMake package
-        run: just cpp ci check-installed release
+        run: just cpp check-installed release
 
       - name: Validate native shared Release
         run: just cpp validate shared-release
 
       - name: Check installed shared CMake package
-        run: just cpp ci check-installed shared-release
+        run: just cpp check-installed shared-release
 
-  quality:
-    name: Native quality (${{ matrix.platform.name }}, Python 3.12)
-    runs-on: ${{ matrix.platform.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - name: Linux Clang
-            os: ubuntu-latest
-            compiler: clang
-            cc: clang
-            cxx: clang++
-            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
-          - name: Windows clang-cl
-            os: windows-latest
-            compiler: clang-cl
-            cc: clang-cl.exe
-            cxx: clang-cl.exe
-            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
+  quality-linux:
+    name: Native quality (Linux Clang, Python 3.12)
+    runs-on: ubuntu-latest
     env:
-      CC: ${{ matrix.platform.cc }}
-      CXX: ${{ matrix.platform.cxx }}
+      CC: clang
+      CXX: clang++
       CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Ensure CMake and Ninja are installed
+        shell: bash
+        run: |
+          # Required for local act runs; its reduced Ubuntu image omits both tools.
+          if ! command -v cmake >/dev/null || ! command -v ninja >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y cmake ninja-build
+          fi
+
+          cmake --version
+          ninja --version
 
       - name: Set up vcpkg
         uses: lukka/run-vcpkg@v11
@@ -150,8 +190,7 @@ jobs:
       - name: Set up Just
         uses: extractions/setup-just@v4
 
-      - name: Install Linux build prerequisites
-        if: runner.os == 'Linux'
+      - name: Install build prerequisites
         shell: bash
         run: |
           sudo apt-get update
@@ -161,11 +200,54 @@ jobs:
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: "22.1.6"
-          force-url: ${{ matrix.platform.llvm_url }}
+          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
+          env: false
+
+      - name: Select the installed Clang compiler
+        shell: bash
+        run: |
+          echo "CC=${LLVM_PATH}/bin/clang" >> "$GITHUB_ENV"
+          echo "CXX=${LLVM_PATH}/bin/clang++" >> "$GITHUB_ENV"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Validate native Python quality configuration
+        run: |
+          # Configure freshly while keeping vcpkg's Python build within the runner disk limit.
+          cmake --preset python-quality --fresh -DVCPKG_INSTALL_OPTIONS=--clean-after-build
+          just cpp build python-quality
+          just cpp verify-headers python-quality
+          just cpp test python-quality
+
+  quality-windows:
+    name: Native quality (Windows clang-cl, Python 3.12)
+    runs-on: windows-latest
+    env:
+      CC: clang-cl.exe
+      CXX: clang-cl.exe
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Set up Just
+        uses: extractions/setup-just@v4
+
+      - name: Install LLVM 22
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "22.1.6"
+          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
           env: false
 
       - name: Set up the Visual Studio environment
-        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $info = vswhere -latest -format json | ConvertFrom-Json
@@ -180,24 +262,11 @@ jobs:
             "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV
           }
 
-      - name: Select the installed Linux Clang compiler
-        if: matrix.platform.compiler == 'clang'
-        shell: bash
-        run: |
-          echo "CC=${LLVM_PATH}/bin/clang" >> "$GITHUB_ENV"
-          echo "CXX=${LLVM_PATH}/bin/clang++" >> "$GITHUB_ENV"
-
-      - name: Prioritize the installed LLVM tools on Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Join-Path $env:LLVM_PATH 'bin' >> $env:GITHUB_PATH
-
-      - name: Select the installed Windows clang-cl compiler
-        if: matrix.platform.compiler == 'clang-cl'
+      - name: Select the installed clang-cl compiler
         shell: pwsh
         run: |
           $llvmBin = Join-Path $env:LLVM_PATH 'bin'
+          $llvmBin >> $env:GITHUB_PATH
           "CC=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
           "CXX=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
 
@@ -214,20 +283,47 @@ jobs:
           just cpp verify-headers python-quality
           just cpp test python-quality
 
-  python-apps:
-    name: Python apps (${{ matrix.platform.name }}, Python ${{ matrix.python }})
-    runs-on: ${{ matrix.platform.os }}
+  python-apps-linux:
+    name: Python apps (Linux, Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python: &python-lines
           - "3.12"
           - "3.14"
-        platform:
-          - name: Linux
-            os: ubuntu-latest
-          - name: Windows
-            os: windows-latest
+    env:
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      MPLBACKEND: Agg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Set up Just
+        uses: extractions/setup-just@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Check Python applications
+        run: just py smoke
+
+  python-apps-windows:
+    name: Python apps (Windows, Python ${{ matrix.python }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: *python-lines
     env:
       CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
@@ -243,7 +339,6 @@ jobs:
         uses: extractions/setup-just@v4
 
       - name: Set up the Visual Studio environment
-        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $info = vswhere -latest -format json | ConvertFrom-Json
@@ -267,20 +362,47 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Check Python applications
-        run: just py ci smoke
+        run: just py smoke
 
-  wheel:
-    name: Wheel (${{ matrix.platform.name }}, Python ${{ matrix.python }})
-    runs-on: ${{ matrix.platform.os }}
+  wheel-linux:
+    name: Wheel (Linux, Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python: *python-lines
-        platform:
-          - name: Linux
-            os: ubuntu-latest
-          - name: Windows
-            os: windows-latest
+    env:
+      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      MPLBACKEND: Agg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Set up Just
+        uses: extractions/setup-just@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Build and smoke-test the wheel
+        run: just py check-wheel
+
+  wheel-windows:
+    name: Wheel (Windows, Python ${{ matrix.python }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: *python-lines
     env:
       CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
@@ -296,7 +418,6 @@ jobs:
         uses: extractions/setup-just@v4
 
       - name: Set up the Visual Studio environment
-        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $info = vswhere -latest -format json | ConvertFrom-Json
@@ -320,7 +441,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Build and smoke-test the wheel
-        run: just py ci wheel
+        run: just py check-wheel
 
   nix:
     name: Nix
