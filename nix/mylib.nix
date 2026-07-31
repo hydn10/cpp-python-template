@@ -1,14 +1,16 @@
 { lib
 , stdenv
 , cmake
-, eigen
+, targetBuildInputs
+, hostBuildInputs
 , buildTests ? false
 , buildApps ? false
 , buildExamples ? false
 }:
 let
   pname = "mylib";
-  vcpkgManifest = builtins.fromJSON (builtins.readFile ./vcpkg.json);
+  projectRoot = ../.;
+  vcpkgManifest = builtins.fromJSON (builtins.readFile (projectRoot + "/vcpkg.json"));
 
   version = vcpkgManifest.version;
 
@@ -25,11 +27,11 @@ in
     name = "${pname}-${version}";
     inherit version;
 
-    src = lib.cleanSource ./.;
+    src = lib.cleanSource projectRoot;
 
-    nativeBuildInputs = [ cmake ];
+    nativeBuildInputs = [ cmake ] ++ hostBuildInputs;
 
-    buildInputs = [ eigen ];
+    buildInputs = targetBuildInputs;
 
     cmakeFlags = [
       "-DMYLIB_BUILD_TESTING=${buildTestsFlag}"

@@ -1,0 +1,39 @@
+{
+  "name": "fixture-project",
+  "version": "1.0.0",
+  "dependencies": [
+    "root-target",
+    {
+      "name": "root-host",
+      "host": true,
+      "features": ["tools"],
+      "default-features": false,
+      "version>=": "2.0"
+    },
+    { "name": "root-target" },
+    "same-a"
+  ],
+  "features": {
+    "python": {
+      "description": "Python binding support",
+      "dependencies": [
+        {
+          "name": "feature-only",
+          "features": ["core", "extras"],
+          "default-features": false,
+          "version>=": "3.0"
+        },
+        { "name": "root-target", "features": ["python-context"] },
+        { "name": "fixture-project", "features": ["internal-support"] },
+        { "name": "feature-only" }
+      ]
+    },
+    "tools": {
+      "dependencies": [
+        { "name": "feature-host", "host": true },
+        "same-b",
+        { "name": "root-target", "features": ["tools-context"] }
+      ]
+    }
+  }
+}

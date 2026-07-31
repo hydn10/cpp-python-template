@@ -34,12 +34,34 @@
       mkSystemOutputs = system:
         let
           pkgs = import nixpkgs { inherit system; };
+          python = pkgs.python3;
 
-          cpp = import ./nix/cpp.nix { inherit pkgs; };
+          dependencyCatalogue = {
+            eigen3 = pkgs.eigen;
+            pybind11 = python.pkgs.pybind11;
+          };
+
+          vcpkgDependencies = import ./nix/vcpkg-dependencies.nix {
+            catalogue = dependencyCatalogue;
+          };
+
+          devShellProjectFeatures = vcpkgDependencies.selectProjectFeatures
+            (builtins.attrNames vcpkgDependencies.projectFeatures);
+
+          cpp = import ./nix/cpp.nix {
+            inherit pkgs vcpkgDependencies;
+          };
 
           pythonModules = import ./nix/python.nix {
-            inherit pkgs uv2nix pyproject-nix pyproject-build-systems;
-            python = pkgs.python3;
+            inherit
+              pkgs
+              python
+              dependencyCatalogue
+              vcpkgDependencies
+              uv2nix
+              pyproject-nix
+              pyproject-build-systems
+              ;
             cppPackage = cpp.mylib;
           };
 
@@ -93,6 +115,10 @@
                 pkgs.pkg-config
               ]
               ++ mise.packages
+              # Root dependencies arrive through cpp.mylib. Every declared
+              # project feature is selected for the development shell, which
+              # therefore only needs their packages that are additional to root.
+              ++ devShellProjectFeatures.additionalPackages
               ++ pythonModules.shellPackages;
             env = pythonModules.shellEnv;
           };
@@ -107,6 +133,9 @@
           });
 
           checks.mise-to-nix = import ./nix/tests/mise-adapter.nix { inherit pkgs; };
+          checks.vcpkg-to-nix = import ./nix/tests/vcpkg-adapter.nix {
+            inherit pkgs python dependencyCatalogue vcpkgDependencies;
+          };
         };
 
       perSystem = nixpkgs.lib.genAttrs supportedSystems mkSystemOutputs;

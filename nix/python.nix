@@ -1,6 +1,8 @@
 { pkgs
 , python
 , cppPackage
+, dependencyCatalogue
+, vcpkgDependencies
 , uv2nix
 , pyproject-nix
 , pyproject-build-systems
@@ -37,8 +39,10 @@ let
               nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
                 pkgs.cmake
                 pkgs.ninja
-                python.pkgs.pybind11
-              ];
+                # pyproject.toml requires pybind11 independently of vcpkg's
+                # direct-CMake feature, but both use the catalogue value.
+                dependencyCatalogue.pybind11
+              ] ++ vcpkgDependencies.root.hostPackages;
               buildInputs = (old.buildInputs or [ ]) ++ (cppPackage.buildInputs or [ ]);
               env = (old.env or { }) // {
                 CMAKE_GENERATOR = "Ninja";
@@ -65,7 +69,6 @@ in {
   shellPackages = [
     pkgs.uv
     python
-    python.pkgs.pybind11
   ];
 
   shellEnv =

@@ -1,0 +1,11 @@
+{
+  "name": "platform-project",
+  "version": "1.0.0",
+  "features": {
+    "conditional": {
+      "dependencies": [
+        { "name": "conditional-dependency", "platform": "linux" }
+      ]
+    }
+  }
+}

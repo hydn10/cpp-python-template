@@ -1,6 +1,9 @@
-{ pkgs }:
+{ pkgs, vcpkgDependencies }:
 let
-  mylib = pkgs.callPackage ../default.nix { };
+  mylib = pkgs.callPackage ./mylib.nix {
+    targetBuildInputs = vcpkgDependencies.root.targetPackages;
+    hostBuildInputs = vcpkgDependencies.root.hostPackages;
+  };
   mylibWithApps = mylib.override {
     buildApps = true;
   };
