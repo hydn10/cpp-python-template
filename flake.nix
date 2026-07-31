@@ -43,6 +43,8 @@
             cppPackage = cpp.mylib;
           };
 
+          mise = import ./nix/mise.nix { inherit pkgs; };
+
           mylibWithApps = cpp.mylibWithApps;
           mylibWithTestsAndChecks = cpp.mylibWithTestsAndChecks;
         in {
@@ -87,10 +89,10 @@
             packages =
               [
                 pkgs.llvmPackages_22.clang-tools
-                pkgs.just
                 pkgs.ninja
                 pkgs.pkg-config
               ]
+              ++ mise.packages
               ++ pythonModules.shellPackages;
             env = pythonModules.shellEnv;
           };
@@ -103,6 +105,8 @@
               cmake --build . --target all_verify_interface_header_sets
             '';
           });
+
+          checks.mise-to-nix = import ./nix/tests/mise-adapter.nix { inherit pkgs; };
         };
 
       perSystem = nixpkgs.lib.genAttrs supportedSystems mkSystemOutputs;

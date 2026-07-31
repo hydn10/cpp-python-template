@@ -1,0 +1,15 @@
+{ pkgs }:
+let
+  adapter = import ./lib/mise-to-nix.nix;
+
+  mappings = {
+    dprint = _tool: pkgs.dprint;
+    just = _tool: pkgs.just;
+    actionlint = _tool: pkgs.actionlint;
+    shellcheck = _tool: pkgs.shellcheck;
+  };
+in
+adapter.mapTools {
+  miseToml = ../mise.toml;
+  miseLock = ../mise.lock;
+} mappings
