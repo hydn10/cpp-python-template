@@ -18,15 +18,15 @@ upgrade:
 
 # Format all Python files.
 format:
-    uv run --locked ruff format .
+    uv run --locked --only-group dev ruff format .
 
 # Check Python formatting without changing files.
 format-check:
-    uv run --locked ruff format --check .
+    uv run --locked --only-group dev ruff format --check .
 
 # Lint all Python files.
 lint:
-    uv run --locked ruff check .
+    uv run --locked --only-group dev ruff check .
 
 # Incrementally rebuild and reinstall the native Python extension.
 rebuild:

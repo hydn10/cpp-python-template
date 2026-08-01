@@ -113,16 +113,58 @@ url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041351"
 checksum = "sha256:e9ba8ed7988f3350501a8cf8af92da616cdec8d9d5c831c069293c587311b49d"
 url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-aarch64-apple-darwin.zip"
 url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041350"
+provenance = "github-attestations"
 
 [tools.dprint."platforms.macos-x64"]
 checksum = "sha256:b7074cf6c814f995b783b5baa7e516b34e783c42c9baf7af553dbad731adb3a7"
 url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-x86_64-apple-darwin.zip"
 url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041364"
+provenance = "github-attestations"
 
 [tools.dprint."platforms.windows-x64"]
 checksum = "sha256:12e8c26abc8c436223e70f5a30a2864001c92fa356a859eb93e06b97ab7dbd12"
 url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-x86_64-pc-windows-msvc.zip"
 url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041355"
+provenance = "github-attestations"
+provenance_verified = true
+
+[[tools.dprint]]
+version = "0.55.2"
+backend = "github:dprint/dprint"
+
+[tools.dprint.options]
+asset_pattern = "dprint-x86_64-unknown-linux-gnu.zip"
+
+[tools.dprint."platforms.linux-x64"]
+checksum = "sha256:d7ccde62d789dfb048717252d259e21253e32feffe4cbf2dab9954eeab492219"
+url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-x86_64-unknown-linux-gnu.zip"
+url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041352"
+provenance = "github-attestations"
+
+[tools.dprint."platforms.linux-x64-musl"]
+checksum = "sha256:d7ccde62d789dfb048717252d259e21253e32feffe4cbf2dab9954eeab492219"
+url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-x86_64-unknown-linux-gnu.zip"
+url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041352"
+provenance = "github-attestations"
+
+[[tools.dprint]]
+version = "0.55.2"
+backend = "github:dprint/dprint"
+
+[tools.dprint.options]
+asset_pattern = "dprint-aarch64-unknown-linux-gnu.zip"
+
+[tools.dprint."platforms.linux-arm64"]
+checksum = "sha256:299923f2b56d66756ad2c7c220650c72f26437fd3f48b3fb6c0df664073eb1d1"
+url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-aarch64-unknown-linux-gnu.zip"
+url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041360"
+provenance = "github-attestations"
+
+[tools.dprint."platforms.linux-arm64-musl"]
+checksum = "sha256:299923f2b56d66756ad2c7c220650c72f26437fd3f48b3fb6c0df664073eb1d1"
+url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-aarch64-unknown-linux-gnu.zip"
+url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041360"
+provenance = "github-attestations"
 
 [[tools.just]]
 version = "1.57.0"
