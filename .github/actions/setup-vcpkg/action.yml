@@ -1,0 +1,84 @@
+name: Set up vcpkg with binary caching
+description: Set up the pinned vcpkg revision and its persisted binary-package cache.
+
+inputs:
+  triplet:
+    description: vcpkg target and host triplet used by the job.
+    required: true
+  toolchain:
+    description: Stable cache namespace for the compiler family and configured version.
+    required: true
+  feature-profile:
+    description: Stable name for the vcpkg manifest feature set requested by the job.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Configure vcpkg
+      shell: bash
+      run: |
+        echo "VCPKG_DEFAULT_TRIPLET=${{ inputs.triplet }}" >> "$GITHUB_ENV"
+        echo "VCPKG_DEFAULT_HOST_TRIPLET=${{ inputs.triplet }}" >> "$GITHUB_ENV"
+        echo "VCPKG_BINARY_SOURCES=clear;files,${{ github.workspace }}/.cache/vcpkg-binaries,readwrite" >> "$GITHUB_ENV"
+
+    - name: Set up the pinned vcpkg revision
+      uses: lukka/run-vcpkg@v11
+
+    - name: Fingerprint the POSIX toolchain
+      id: fingerprint-posix
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        compiler="${CXX:-c++}"
+        compiler_path="$(command -v "$compiler")"
+        compiler_hash="$(sha256sum "$compiler_path" | cut -d ' ' -f 1)"
+        if command -v cmake >/dev/null; then
+          cmake_version="$(cmake --version | head -n 1)"
+        else
+          cmake_version="not-yet-installed"
+        fi
+        fingerprint="$({
+          echo "image-os=${ImageOS:-local}"
+          echo "image-version=${ImageVersion:-local}"
+          echo "compiler-hash=$compiler_hash"
+          echo "cmake=$cmake_version"
+        } | sha256sum | cut -d ' ' -f 1)"
+        echo "value=$fingerprint" >> "$GITHUB_OUTPUT"
+
+    - name: Fingerprint the Windows toolchain
+      id: fingerprint-windows
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        $compilerName = if ($env:CXX) { $env:CXX } else { 'cl.exe' }
+        $compilerPath = (Get-Command $compilerName -ErrorAction Stop).Source
+        $compilerHash = (Get-FileHash -LiteralPath $compilerPath -Algorithm SHA256).Hash
+        $cmakeVersion = cmake --version | Select-Object -First 1
+        $payload = @(
+          "image-os=$($env:ImageOS ?? 'local')"
+          "image-version=$($env:ImageVersion ?? 'local')"
+          "compiler-hash=$compilerHash"
+          "cmake=$cmakeVersion"
+          "powershell=$($PSVersionTable.PSVersion)"
+        ) -join "`n"
+        $bytes = [Text.Encoding]::UTF8.GetBytes($payload)
+        $fingerprint = [Convert]::ToHexString(
+          [Security.Cryptography.SHA256]::HashData($bytes)
+        ).ToLowerInvariant()
+        "value=$fingerprint" >> $env:GITHUB_OUTPUT
+
+    # The outer GitHub key selects a useful archive collection. Package
+    # correctness comes from vcpkg's internal ABI hash, which includes the
+    # compiler, triplet, selected features, port contents, and dependency ABIs.
+    - name: Restore and save vcpkg binary packages
+      if: env.ACT != 'true'
+      uses: actions/cache@v6
+      with:
+        path: ${{ github.workspace }}/.cache/vcpkg-binaries
+        key: >-
+          vcpkg-bin-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.triplet }}-${{ inputs.toolchain }}-${{ steps.fingerprint-posix.outputs.value || steps.fingerprint-windows.outputs.value }}-${{ inputs.feature-profile }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'cmake/toolchains/vcpkg.cmake', 'triplets/**', 'cmake/triplets/**', 'ports/**', 'overlays/**') }}
+        restore-keys: |
+          vcpkg-bin-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.triplet }}-${{ inputs.toolchain }}-${{ steps.fingerprint-posix.outputs.value || steps.fingerprint-windows.outputs.value }}-${{ inputs.feature-profile }}-
+          vcpkg-bin-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.triplet }}-${{ inputs.toolchain }}-${{ steps.fingerprint-posix.outputs.value || steps.fingerprint-windows.outputs.value }}-
+          vcpkg-bin-v1-${{ runner.os }}-${{ runner.arch }}-${{ inputs.triplet }}-${{ inputs.toolchain }}-

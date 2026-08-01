@@ -76,9 +76,6 @@ jobs:
           cmake --version
           ninja --version
 
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
-
       - name: Set up Just
         uses: extractions/setup-just@v4
 
@@ -103,6 +100,13 @@ jobs:
         run: |
           echo "CC=${LLVM_PATH}/bin/clang" >> "$GITHUB_ENV"
           echo "CXX=${LLVM_PATH}/bin/clang++" >> "$GITHUB_ENV"
+
+      - name: Set up vcpkg and its binary cache
+        uses: ./.github/actions/setup-vcpkg
+        with:
+          triplet: x64-linux
+          toolchain: ${{ matrix.compiler }}
+          feature-profile: core
 
       - name: Validate native static Release
         run: just cpp validate release
@@ -141,9 +145,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
-
       - name: Set up Just
         uses: extractions/setup-just@v4
 
@@ -178,6 +179,13 @@ jobs:
           $llvmBin >> $env:GITHUB_PATH
           "CC=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
           "CXX=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
+
+      - name: Set up vcpkg and its binary cache
+        uses: ./.github/actions/setup-vcpkg
+        with:
+          triplet: x64-windows
+          toolchain: ${{ matrix.compiler }}
+          feature-profile: core
 
       - name: Validate native static Release
         run: just cpp validate release
@@ -215,9 +223,6 @@ jobs:
           cmake --version
           ninja --version
 
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
-
       - name: Set up Just
         uses: extractions/setup-just@v4
 
@@ -239,6 +244,13 @@ jobs:
         run: |
           echo "CC=${LLVM_PATH}/bin/clang" >> "$GITHUB_ENV"
           echo "CXX=${LLVM_PATH}/bin/clang++" >> "$GITHUB_ENV"
+
+      - name: Set up vcpkg and its binary cache
+        uses: ./.github/actions/setup-vcpkg
+        with:
+          triplet: x64-linux
+          toolchain: clang
+          feature-profile: core-python
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -264,9 +276,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
 
       - name: Set up Just
         uses: extractions/setup-just@v4
@@ -301,6 +310,13 @@ jobs:
           "CC=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
           "CXX=$(Join-Path $llvmBin 'clang-cl.exe')" >> $env:GITHUB_ENV
 
+      - name: Set up vcpkg and its binary cache
+        uses: ./.github/actions/setup-vcpkg
+        with:
+          triplet: x64-windows
+          toolchain: clang-cl
+          feature-profile: core-python
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -331,8 +347,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
+      - name: Set up vcpkg and its binary cache
+        uses: ./.github/actions/setup-vcpkg
+        with:
+          triplet: x64-linux
+          toolchain: gcc
+          feature-profile: core
 
       - name: Set up Just
         uses: extractions/setup-just@v4
@@ -363,9 +383,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
-
       - name: Set up Just
         uses: extractions/setup-just@v4
 
@@ -383,6 +400,13 @@ jobs:
           Get-ChildItem 'env:' | ForEach-Object {
             "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV
           }
+
+      - name: Set up vcpkg and its binary cache
+        uses: ./.github/actions/setup-vcpkg
+        with:
+          triplet: x64-windows
+          toolchain: msvc
+          feature-profile: core
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -410,8 +434,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
+      - name: Set up vcpkg and its binary cache
+        uses: ./.github/actions/setup-vcpkg
+        with:
+          triplet: x64-linux
+          toolchain: gcc
+          feature-profile: core
 
       - name: Set up Just
         uses: extractions/setup-just@v4
@@ -442,9 +470,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up vcpkg
-        uses: lukka/run-vcpkg@v11
-
       - name: Set up Just
         uses: extractions/setup-just@v4
 
@@ -462,6 +487,13 @@ jobs:
           Get-ChildItem 'env:' | ForEach-Object {
             "$($_.Name)=$($_.Value)" >> $env:GITHUB_ENV
           }
+
+      - name: Set up vcpkg and its binary cache
+        uses: ./.github/actions/setup-vcpkg
+        with:
+          triplet: x64-windows
+          toolchain: msvc
+          feature-profile: core
 
       - name: Set up Python
         uses: actions/setup-python@v6

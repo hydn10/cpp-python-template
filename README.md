@@ -327,6 +327,37 @@ with Clang or clang-cl, while separate application and wheel jobs cover Python
 3.12 and 3.14 on each OS. The Nix job validates the flake, development workflow,
 and packaged applications.
 
+## CI vcpkg binary cache
+
+GitHub Actions persists vcpkg binary packages through the repository's
+`setup-vcpkg` composite action. The action configures vcpkg's supported
+filesystem binary-cache provider and saves only its package archives with
+`actions/cache`; installed trees, build trees, and CMake build directories are
+not cached.
+
+The outer GitHub cache key separates operating systems, architectures, target
+triplets, compiler families, actual toolchain environments, and manifest feature
+profiles. Its dependency fingerprint covers the manifest and the repository's
+vcpkg adapter, with restore prefixes allowing a changed manifest or baseline to
+start from older archives. The outer key only locates a useful collection of
+archives: vcpkg's internal ABI hash validates every package against its compiler,
+triplet, selected features, port contents, and dependency ABIs before reuse.
+
+Direct CMake Python-quality jobs use the `core-python` feature profile because
+the adapter enables the manifest's `python` feature. Wheel and Python-application
+jobs use the `core` profile because scikit-build-core supplies pybind11 from its
+isolated Python build environment. A broader toolchain restore prefix lets these
+profiles seed one another with compatible common packages such as Eigen, while
+vcpkg still validates each archive independently.
+
+The GitHub cache step is skipped under `act`, which has no authoritative GitHub
+cache service. vcpkg continues to use the repository-local filesystem cache, so
+the supported Linux jobs still run locally. On GitHub, a successful cold run
+builds and saves missing packages; a repeated equivalent run should report them
+as restored. Source-only changes leave the dependency fingerprint unchanged,
+while manifest, baseline, feature-selection, or toolchain changes create a new
+primary key and may restore an older cache as a seed.
+
 ## Local Linux CI with act
 
 `just verify` remains the normal, comparatively direct local verification path.
