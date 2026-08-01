@@ -6,7 +6,7 @@ inputs:
     description: vcpkg target and host triplet used by the job.
     required: true
   toolchain:
-    description: Stable cache namespace for the compiler family and configured version.
+    description: Stable cache namespace for the compiler family.
     required: true
   feature-profile:
     description: Stable name for the vcpkg manifest feature set requested by the job.
@@ -40,7 +40,6 @@ runs:
         fi
         fingerprint="$({
           echo "image-os=${ImageOS:-local}"
-          echo "image-version=${ImageVersion:-local}"
           echo "compiler-hash=$compiler_hash"
           echo "cmake=$cmake_version"
         } | sha256sum | cut -d ' ' -f 1)"
@@ -57,7 +56,6 @@ runs:
         $cmakeVersion = cmake --version | Select-Object -First 1
         $payload = @(
           "image-os=$($env:ImageOS ?? 'local')"
-          "image-version=$($env:ImageVersion ?? 'local')"
           "compiler-hash=$compilerHash"
           "cmake=$cmakeVersion"
           "powershell=$($PSVersionTable.PSVersion)"
