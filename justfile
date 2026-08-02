@@ -1,5 +1,9 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
+# Source formatting and read-only quality checks.
+mod format 'just/format.just'
+mod check 'just/check.just'
+
 # Native CMake and CTest workflows.
 mod cpp 'just/cpp.just'
 
@@ -31,24 +35,5 @@ purge-all dry_run="false":
 purge-all dry_run="false":
     & "tools/purge-all/purge-all.ps1" {{ if dry_run == "true" { "-DryRun" } else { "" } }} -RepositoryRoot "{{ justfile_directory() }}"
 
-# Format every supported repository file.
-format: cpp::format py::format format-misc
-
-# Check formatting for every supported repository file without changing it.
-format-check: cpp::format-check py::format-check format-check-misc
-
-# Format Just recipes and dprint-managed miscellaneous files.
-format-misc:
-    just --fmt
-    dprint fmt
-
-# Check Just recipes and dprint-managed miscellaneous files without changing them.
-format-check-misc:
-    just --fmt --check
-    dprint check
-
-# Run all formatting and static-analysis checks.
-quality: format-check py::lint cpp::lint
-
 # Run the complete local repository verification.
-verify: format-check py::lint (cpp::validate "python-quality") py::validate
+verify: check::format::all check::lint::all (cpp::validate "python-quality") py::validate

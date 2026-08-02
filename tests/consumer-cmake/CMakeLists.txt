@@ -8,8 +8,7 @@ add_executable(mylib-consumer-smoke)
 
 target_sources(
     mylib-consumer-smoke
-    PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
 )
 
 target_compile_features(mylib-consumer-smoke PRIVATE cxx_std_17)

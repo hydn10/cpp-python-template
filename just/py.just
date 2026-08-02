@@ -16,18 +16,6 @@ sync:
 upgrade:
     uv lock --upgrade
 
-# Format all Python files.
-format:
-    uv run --locked --only-group dev ruff format .
-
-# Check Python formatting without changing files.
-format-check:
-    uv run --locked --only-group dev ruff format --check .
-
-# Lint all Python files.
-lint:
-    uv run --locked --only-group dev ruff check .
-
 # Incrementally rebuild and reinstall the native Python extension.
 rebuild:
     uv sync --locked --reinstall-package mylib-tools

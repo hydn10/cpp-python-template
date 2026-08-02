@@ -6,6 +6,41 @@
   "json": {},
   "markdown": {},
   "toml": {},
+  "exec": {
+    "associations": [
+      "**/CMakeLists.txt",
+      "**/CMakeLists.txt.in",
+      "**/*.cmake",
+      "**/*.cmake.in"
+    ],
+    "cwd": "${configDir}",
+    "cacheKey": "clang-format-22",
+    "timeout": 120,
+    "commands": [
+      {
+        "command": "clang-format --assume-filename {{file_path}}",
+        "exts": ["c", "cc", "cpp", "cxx", "h", "hh", "hpp", "hxx", "inl"],
+        "cacheKeyFiles": [".clang-format"]
+      },
+      {
+        "command": "gersemi --no-warn-about-unknown-commands {{file_path}}",
+        "stdin": false,
+        "associations": "**/{CMakeLists.txt,CMakeLists.txt.in,*.cmake,*.cmake.in}",
+        "cacheKeyFiles": ["mise.lock"]
+      },
+      {
+        "command": "uv run --locked --only-group dev ruff format --stdin-filename {{file_path}} -",
+        "exts": ["py", "pyi"],
+        "cacheKeyFiles": ["pyproject.toml", "uv.lock"]
+      },
+      {
+        "command": "just --fmt --justfile -",
+        "exts": ["just"],
+        "fileNames": ["justfile"],
+        "cacheKeyFiles": ["mise.lock"]
+      }
+    ]
+  },
   "prettier": {
     "printWidth": 100,
     "associations": [
@@ -29,6 +64,7 @@
     "https://plugins.dprint.dev/json-0.23.0.wasm",
     "https://plugins.dprint.dev/markdown-0.22.1.wasm",
     "https://plugins.dprint.dev/toml-0.7.0.wasm",
-    "https://plugins.dprint.dev/prettier-0.72.0.json@6e7af2cb2182a5a11358d3adde9ae0ef3b94b7d2e5dcfdd252e3f7c3916541fe"
+    "https://plugins.dprint.dev/prettier-0.72.0.json@6e7af2cb2182a5a11358d3adde9ae0ef3b94b7d2e5dcfdd252e3f7c3916541fe",
+    "https://plugins.dprint.dev/exec-0.7.3.json@a7898d5f1897e77bff474cec3d948c3ec3a7f455e32de2cc60c8adb9a5dd24aa"
   ]
 }

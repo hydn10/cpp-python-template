@@ -4,8 +4,7 @@ add_executable(${target_name})
 
 target_sources(
     ${target_name}
-    PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/cpp/test_compute_value.cpp"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/cpp/test_compute_value.cpp"
 )
 
 target_compile_features(${target_name} PRIVATE cxx_std_23)

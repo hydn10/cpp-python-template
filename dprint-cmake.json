@@ -1,0 +1,10 @@
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  "extends": "./dprint.json",
+  "includes": [
+    "**/CMakeLists.txt",
+    "**/CMakeLists.txt.in",
+    "**/*.cmake",
+    "**/*.cmake.in"
+  ]
+}

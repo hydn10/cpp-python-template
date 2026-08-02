@@ -13,14 +13,10 @@ if(NOT DEFINED ENV{VCPKG_ROOT} OR "$ENV{VCPKG_ROOT}" STREQUAL "")
     message(FATAL_ERROR "VCPKG_ROOT must point to a vcpkg checkout.")
 endif()
 
-set(
-    _MYLIB_VCPKG_TOOLCHAIN
-    "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+set(_MYLIB_VCPKG_TOOLCHAIN "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 
 if(NOT EXISTS "${_MYLIB_VCPKG_TOOLCHAIN}")
-    message(
-        FATAL_ERROR
-        "vcpkg toolchain not found: ${_MYLIB_VCPKG_TOOLCHAIN}")
+    message(FATAL_ERROR "vcpkg toolchain not found: ${_MYLIB_VCPKG_TOOLCHAIN}")
 endif()
 
 include("${_MYLIB_VCPKG_TOOLCHAIN}")

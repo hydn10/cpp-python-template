@@ -3,12 +3,14 @@ lockfile = true
 
 [tool_alias]
 dprint = "github:dprint/dprint"
+gersemi = "pipx:gersemi"
 
 [tools]
 act = "latest"
 just = "latest"
 actionlint = "latest"
 shellcheck = "latest"
+gersemi = "latest"
 
 [tools.dprint]
 version = "latest"

@@ -10,8 +10,7 @@ function(add_mylib_app app_name)
 
     set_target_properties(
         ${target_name}
-        PROPERTIES
-            OUTPUT_NAME "mylib-${app_name}"
+        PROPERTIES OUTPUT_NAME "mylib-${app_name}"
     )
 
     mylib_stage_runtime_dlls(${target_name})

@@ -43,13 +43,14 @@ See `docs/repo-philosophy.md` for the repository design principles.
 - C++23-capable compiler to build this repo's applications and native tests
 - C++17 is sufficient for downstream consumers of the installed `mylib` library target
 - LLVM/clang-format and clang-tidy 22 for C++ formatting and static analysis
-- Git for discovering the tracked C++ files passed to clang-format
 - A provider for the native dependencies (currently Eigen3), such as Nix, a
   system package manager, or [vcpkg](https://learn.microsoft.com/vcpkg/)
 - Python development files and pybind11 when using the `python-quality` preset
 - Python 3.12+ and [uv](https://docs.astral.sh/uv/)
+- dprint as the formatting frontend, with gersemi for CMake and Just for Justfiles
+  (all provided by Mise and `nix develop`)
 - Optionally, [Mise](https://mise.jdx.dev/) for general development tools
-- Optionally, [Just](https://just.systems/) for the developer workflow façade (also provided by Mise and `nix develop`)
+- Optionally, [Just](https://just.systems/) as the developer workflow façade
 - Optionally, [act](https://nektosact.com/) for local Linux GitHub Actions execution (provided by Mise and `nix develop`)
 - Docker Desktop or another Docker-compatible container engine, already running, only when using `act`; this repository does not provision or manage the Docker daemon
 
@@ -164,8 +165,19 @@ recipe uses the current shell environment, just like its raw command.
 
 | Recipe                                          | Delegated operation                                                              |
 | ----------------------------------------------- | -------------------------------------------------------------------------------- |
-| `cpp format` / `cpp format-check`               | Apply or check clang-format on every tracked C++ source and header               |
-| `cpp lint`                                      | Run clang-tidy across every native target, including the Python binding          |
+| `format all`                                    | Apply every repository formatter through dprint                                  |
+| `format native`                                 | Apply C++ and CMake formatting                                                   |
+| `format cpp` / `format cmake`                   | Apply C++ or CMake formatting                                                    |
+| `format py` / `format misc`                     | Apply Python or miscellaneous-file formatting                                    |
+| `check format all`                              | Check every repository formatter without changing files                          |
+| `check format native`                           | Check C++ and CMake formatting                                                   |
+| `check format cpp` / `check format cmake`       | Check C++ or CMake formatting                                                    |
+| `check format py` / `check format misc`         | Check Python or miscellaneous-file formatting                                    |
+| `check lint all`                                | Run all available linters                                                        |
+| `check lint cpp`                                | Run clang-tidy across every native target, including the Python binding          |
+| `check lint py`                                 | Run the Ruff linter                                                              |
+| `check lint ci`                                 | Validate GitHub Actions workflows with actionlint                                |
+| `check all`                                     | Run every formatting check and linter                                            |
 | `cpp configure [preset] [--fresh]`              | Configure the preset, optionally from a fresh CMake cache                        |
 | `cpp build [preset]`                            | Build its native tree                                                            |
 | `cpp clean [preset]`                            | Run the configured tree's clean target                                           |
@@ -173,8 +185,6 @@ recipe uses the current shell environment, just like its raw command.
 | `cpp test [preset]`                             | Run its native tests                                                             |
 | `cpp validate [preset]`                         | Freshly configure, cleanly build, validate public headers, and test              |
 | `cpp check-installed [release\|shared-release]` | Install a Release native build, then build and run the CMake consumer against it |
-| `py format` / `py format-check`                 | Apply or check Ruff's Python formatter                                           |
-| `py lint`                                       | Run the Ruff linter                                                              |
 | `py sync`                                       | Create or synchronize the locked Python environment                              |
 | `py upgrade`                                    | Update `uv.lock` to the newest dependency versions allowed by the project        |
 | `py rebuild`                                    | Incrementally rebuild and reinstall the extension                                |
@@ -187,9 +197,6 @@ recipe uses the current shell environment, just like its raw command.
 | `ci run [--rm]`                                 | Run every locally supported GitHub Actions job                                   |
 | `ci job <job-id> [--rm]`                        | Run one GitHub Actions job and its locally supported matrix entries              |
 | `ci debug <job-id> [--rm]`                      | Run one job with verbose `act` diagnostics                                       |
-| `format-misc` / `format-check-misc`             | Apply or check Just and dprint formatting for miscellaneous files                |
-| `format` / `format-check`                       | Apply or check every repository formatter                                        |
-| `quality`                                       | Check all formatting, then run C++ and Python linting                            |
 | `verify`                                        | Run formatting, linting, native, Python application, and wheel checks            |
 | `purge-out`                                     | Delete the entire `out/` directory                                               |
 | `purge-all`                                     | Delete disposable build state, environments, caches, and package outputs         |
@@ -200,8 +207,16 @@ undeclared packages, and installs this project editably. Normal `uv run`
 commands already check and synchronize the environment, so `py sync` is not a
 required prelude to every application run.
 
-`just quality` is the static-quality entry point: it checks every formatter and
-explicitly runs clang-tidy and Ruff. `just verify` is the convenient local
+Formatting has one universal, auto-discovered `dprint.json`. Thin
+`dprint-{cpp,cmake,python,misc}.json` configurations extend it and own the file
+sets used by the category-specific `just format` and `just check format`
+recipes. Plain `dprint fmt` and `dprint check` cover the entire repository;
+consequently they require the full formatting toolchain on `PATH`: clang-format,
+gersemi, uv, and Just. The selector configurations require only the tools
+relevant to their category.
+
+`just check all` is the static-quality entry point: it checks every formatter
+and explicitly runs clang-tidy, Ruff, and actionlint. `just verify` is the convenient local
 approximation of the repository's complete CI checks: it also runs the native
 verification, rebuilds and smoke-tests the locked Python development install,
 and builds and smoke-tests a wheel in a fresh environment. Both commands use
@@ -209,15 +224,15 @@ the comprehensive `python-quality` configuration, covering the ordinary native
 targets and the Python binding. CI invokes the underlying recipes separately
 where its platform matrices differ.
 
-General native recipes default to the `quality` preset, while `cpp lint` always
-uses `python-quality` for complete clang-tidy coverage. Pass `debug` explicitly
+General native recipes default to the `quality` preset, while `check lint cpp`
+always uses `python-quality` for complete clang-tidy coverage. Pass `debug` explicitly
 to native build or verification recipes when a faster Debug build without
-clang-tidy is preferable. C++ formatting uses `git ls-files` to pass every
-tracked C or C++ source and header to clang-format, leaving generated and
-untracked files untouched. Python formatting and linting use the Ruff version
-declared by the development dependency group and locked in `uv.lock`. Mise and
-Nix may provide the general tools, but recipes invoke those tools directly from
-the active environment.
+clang-tidy is preferable. Dprint discovers every nonignored file selected by
+the category configurations, including new untracked files. Python formatting
+and linting use the Ruff version declared by the development dependency group
+and locked in `uv.lock`; formatting goes through dprint while linting continues
+to invoke Ruff through uv directly. Mise, uv, Nix, and the host environment
+retain their existing provisioning responsibilities.
 
 Editable installation makes Python-source changes visible immediately, but it
 does not automatically recompile the C++ extension. After changing native
@@ -481,7 +496,7 @@ Notes:
   `pyproject.toml`. Its package output uses pyproject-nix's `mkApplication` so
   the virtual environment remains an internal implementation detail.
 - The dev shell is uv-first: it provides the C++ toolchain, Eigen, LLVM 22
-  tools, dprint, pybind11, `uv`, Just, `act`, and a pinned Nix Python interpreter, but
+  tools, dprint, gersemi, pybind11, `uv`, Just, `act`, and a pinned Nix Python interpreter, but
   it does not put the packaged Python application on `PATH`. Inside `nix develop`, use
   `just py sync` (or raw `uv sync --locked`) and normal `just py plot` /
   `just py dump` commands. The shell also exposes Nix-provided `tkinter` plus the

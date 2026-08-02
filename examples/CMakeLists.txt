@@ -10,8 +10,7 @@ function(add_mylib_example example_name)
 
     set_target_properties(
         ${target_name}
-        PROPERTIES
-            OUTPUT_NAME "mylib-${example_name}-example"
+        PROPERTIES OUTPUT_NAME "mylib-${example_name}-example"
     )
 
     mylib_stage_runtime_dlls(${target_name})
