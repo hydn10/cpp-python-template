@@ -6,29 +6,36 @@ This document describes how this repository should evolve at the repository-desi
 
 It is intended for human contributors and coding agents. It is not a folder map and it is not a command reference. The README and the repository itself show the current mechanics. This document explains the principles that should keep those mechanics coherent as tools change.
 
-This repository is a mixed C++ and Python project. The C++ library is the portable core. Python provides application-facing wrappers and packaging around that core. CMake, Python packaging, uv, vcpkg, Nix, Just, and CI all have useful roles, but those roles should stay distinct.
+This repository is a mixed C++ and Python project. The C++ library is the portable core. Python provides optional bindings and applications around that core. CMake, Python packaging, uv, vcpkg, Nix, Just, dprint, mise, and CI all have useful roles, but those roles should stay distinct.
 
 ---
 
 ## 1. Build the repository in layers
 
-The repository should be understandable as a set of layers:
+The repository should be understandable as an onion of increasingly optional
+dependencies and workflow tools:
 
 ```text
-Project semantics
-    ->
-Standard C++ and Python ecosystem interfaces
-    ->
-Developer workflow conveniences
-    ->
-Environment provisioning
-    ->
-Packaging and distribution
-    ->
-Continuous integration
+Project and workflow onion:
+    Native C++ core: CMake, a C++ toolchain, and native dependencies
+        -> Optional Python binding and packaging
+            -> Python applications and dependencies
+                -> Developer workflow and quality tools: Just, dprint, and others
+
+Provisioning models:
+    Selective: host-provided native tools, Python and uv, optional mise
+    Holistic: Nix packages and `nix develop`
 ```
 
-Inner layers describe what the project is. Outer layers make it easier to provision, build, test, package, or verify.
+Inner layers describe what the project is. Outer layers make it easier to
+provision, build, test, package, format, or verify. An outer workflow tool may
+depend on inner layers or on other workflow tools, so having Just available does
+not imply that every recipe is available.
+
+Mise optionally provides the miscellaneous tool layer; the native toolchain and
+Python/uv remain selected separately. Contributors may provide any layer
+manually. Nix is the parallel, holistic provider for packages and complete
+development shells.
 
 The layers express a direction of authority, not a sequence every workflow must traverse. An outer layer may delegate directly to the appropriate inner layer.
 
@@ -36,7 +43,7 @@ The important rule is:
 
 > An outer layer should invoke, provision, validate, or package an inner layer. It should not redefine the inner layer independently.
 
-For this repository, CMake should remain the authoritative description of the native target graph. Python packaging should describe the Python package and delegate native extension builds through the normal native build interface. uv, vcpkg, Nix, Just, presets, activation helpers, IDE integration, and CI should compose or provide those workflows, not replace them with parallel models.
+For this repository, CMake should remain the authoritative description of the native target graph. Python packaging should describe the Python package and delegate native extension builds through the normal native build interface. uv, vcpkg, Nix, Just, dprint, mise, presets, activation helpers, IDE integration, and CI should compose or provide those workflows, not replace them with parallel models.
 
 ---
 
@@ -56,17 +63,17 @@ Every important concern should have one place that owns its meaning.
 
 Typical ownership in this repository should be:
 
-| Concern                                                               | Owner                                    |
-| --------------------------------------------------------------------- | ---------------------------------------- |
-| Native libraries, applications, examples, tests, install/export shape | CMake                                    |
-| Native dependency requirements                                        | CMake package discovery and target links |
-| Python package metadata, scripts, runtime dependencies                | Python packaging metadata                |
-| Python environment synchronization                                    | uv and its lock state                    |
-| Shared C++ and Python project version                                 | vcpkg manifest                           |
-| vcpkg dependency mapping and baseline                                 | vcpkg metadata                           |
-| Optional developer workflow composition                               | Just                                     |
-| Reproducible development and package environments                     | Nix                                      |
-| Remote platform matrix and result reporting                           | CI                                       |
+| Concern                                                               | Owner                     |
+| --------------------------------------------------------------------- | ------------------------- |
+| Native libraries, applications, examples, tests, install/export shape | CMake                     |
+| Native dependency provider integration                                | vcpkg                     |
+| Python package metadata, scripts, runtime dependencies                | Python packaging metadata |
+| Python environment synchronization                                    | uv                        |
+| Formatting policy and composition                                     | dprint                    |
+| Optional developer workflow composition                               | Just                      |
+| Optional miscellaneous tool provisioning                              | mise                      |
+| Reproducible development and package environments                     | Nix                       |
+| Remote platform matrix and result reporting                           | CI                        |
 
 The exact tools may evolve, but the ownership boundaries matter. An outer layer may call an owner, configure it, or translate its metadata for a specific ecosystem. It should not maintain a second manual description of the same sources, targets, dependencies, or test behavior.
 
@@ -86,8 +93,10 @@ Good delegation in this repository looks like:
 
 - CI invoking repository-owned build and test workflows.
 - Python packaging invoking the native build through the configured backend rather than carrying its own native target graph.
-- Nix providing compilers, dependencies, Python, and package builds while deriving from the same project metadata where practical.
+- Nix providing an all-in development and packaging environment while deriving from the same project semantics where practical.
 - Just recipes composing common workflows and CMake presets selecting common configurations without becoming independent build systems.
+- dprint owning formatting while using plugins or external tools as needed.
+- Just invoking dprint for formatting, while dprint invokes Just to format Just files. This mutual dependency is intentional and limited to formatting.
 
 Repeated commands or values are not automatically bad. Lockfiles, generated metadata, platform-specific package expressions, and CI matrix entries may repeat information for good reasons. The problem is manual, competing authority.
 
@@ -130,6 +139,11 @@ The project should declare the dependencies it needs. Providers should decide ho
 
 CMake may declare a native dependency through standard package discovery. Python packaging may declare Python build and runtime requirements. Those dependencies may then be supplied by vcpkg, uv, Nix, a system package manager, a toolchain file, a configured prefix, or another provider.
 
+Native toolchain and Python/uv versions are intentionally caller-selectable.
+Mise's defaults are optional conveniences for miscellaneous tools, not
+universal toolchain authority. Nix is the all-in alternative when a complete
+environment is desired.
+
 Provider-specific metadata is legitimate. Different ecosystems need their own names, locks, and translation rules. The important distinction is:
 
 - The project declares the semantic dependency.
@@ -146,7 +160,7 @@ Repository organization should reflect what things are, not just how they are bu
 The main categories in this project are:
 
 - A reusable C++ library with a public consumption story.
-- Python applications and wrappers built on top of that native core.
+- A Python extension and applications built on top of that native core.
 - Examples that demonstrate use.
 - Tests and consumer checks that verify behavior and packaging.
 - Development, packaging, and environment tooling.
@@ -193,5 +207,6 @@ Changes should preserve these principles:
 6. Keep dependency declaration separate from provisioning.
 7. Keep CI and packaging derived from repository-owned behavior.
 8. Prefer explicit behavior over hidden automation.
-9. Remove superseded workflows rather than preserving ambiguous alternatives.
-10. Update this philosophy only when the intended architecture changes, not when filenames or command spellings change.
+9. Keep mise an optional miscellaneous-tool provider and Nix a parallel all-in provider.
+10. Remove superseded workflows rather than preserving ambiguous alternatives.
+11. Update this philosophy only when the intended architecture changes, not when filenames or command spellings change.

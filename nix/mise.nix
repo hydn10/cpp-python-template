@@ -5,6 +5,7 @@ let
   mappings = {
     act = _tool: pkgs.act;
     dprint = _tool: pkgs.dprint;
+    # Use default version once nixpkgs catches up: 0.23.2 cannot parse @PACKAGE_INIT@.
     gersemi = _tool: import ./pkgs/gersemi.nix { inherit pkgs; };
     just = _tool: pkgs.just;
     actionlint = _tool: pkgs.actionlint;
