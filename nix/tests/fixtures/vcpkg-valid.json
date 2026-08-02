@@ -25,7 +25,12 @@
         },
         { "name": "root-target", "features": ["python-context"] },
         { "name": "fixture-project", "features": ["internal-support"] },
-        { "name": "feature-only" }
+        {
+          "name": "feature-only",
+          "features": ["core", "extras"],
+          "default-features": false,
+          "version>=": "3.0"
+        }
       ]
     },
     "tools": {

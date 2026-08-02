@@ -1,0 +1,12 @@
+{
+  "name": "conflicting-host",
+  "version": "1.0.0",
+  "features": {
+    "tools": {
+      "dependencies": [
+        "some-package",
+        { "name": "some-package", "host": true }
+      ]
+    }
+  }
+}

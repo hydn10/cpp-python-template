@@ -8,7 +8,51 @@ let
 
   describeNames = names: builtins.concatStringsSep ", " names;
 
-  uniqueByName = dependencies:
+  dependencyFields = dependency: {
+    inherit (dependency)
+      name
+      host
+      requestedFeatures
+      defaultFeatures
+      versionAtLeast
+      ;
+  };
+
+  differingDependencyFields = previous: dependency:
+    let
+      fields = {
+        host = value: value.host;
+        features = value: value.requestedFeatures;
+        "default-features" = value: value.defaultFeatures;
+        "version>=" = value: value.versionAtLeast;
+      };
+    in
+      builtins.filter
+        (field: fields.${field} previous != fields.${field} dependency)
+        (builtins.attrNames fields);
+
+  deduplicateDependencies = location: dependencies:
+    (builtins.foldl'
+      (result: dependency:
+        if builtins.hasAttr dependency.name result.seen then
+          let
+            previous = result.seen.${dependency.name};
+          in
+            if dependencyFields previous == dependencyFields dependency then
+              result
+            else
+              fail "${location} contains conflicting declarations for dependency '${dependency.name}' at indexes ${toString previous.context.index} and ${toString dependency.context.index}; differing fields: ${describeNames (differingDependencyFields previous dependency)}"
+        else
+          {
+            seen = result.seen // { "${dependency.name}" = dependency; };
+            values = result.values ++ [ dependency ];
+          })
+      { seen = { }; values = [ ]; }
+      dependencies).values;
+
+  # Cross-scope summaries need one representative per dependency name. The
+  # validated root and per-feature records remain available with their context.
+  representativeByName = dependencies:
     (builtins.foldl'
       (result: dependency:
         if builtins.hasAttr dependency.name result.seen then
@@ -157,7 +201,7 @@ let
             else
               feature.dependencies or [ ];
 
-          dependencies =
+          declarations =
             if !builtins.isList rawDependencies then
               fail "project feature '${featureName}' has a 'dependencies' value that is not a list"
             else
@@ -168,8 +212,11 @@ let
                     { scope = "feature"; feature = featureName; inherit index; }
                     (builtins.elemAt rawDependencies index))
                 (builtins.length rawDependencies);
+          dependencies = deduplicateDependencies
+            "project feature '${featureName}' dependencies"
+            declarations;
         in
-          feature // { inherit dependencies; };
+          feature // { inherit declarations dependencies; };
 
       projectFeatures =
         if !builtins.isAttrs rawFeatures then
@@ -179,27 +226,27 @@ let
 
       isExternal = dependency: dependency.name != packageName;
 
-      rootDependencies = uniqueByName rootDeclarations;
-      externalRootDeclarations = builtins.filter isExternal rootDeclarations;
-      externalRootDependencies = uniqueByName externalRootDeclarations;
+      rootDependencies = deduplicateDependencies "root dependencies" rootDeclarations;
+      externalRootDependencies = builtins.filter isExternal rootDependencies;
 
       featureDeclarationsByFeature = builtins.mapAttrs
-        (_featureName: feature: feature.dependencies)
+        (_featureName: feature: feature.declarations)
         projectFeatures;
       externalFeatureDependenciesByFeature = builtins.mapAttrs
-        (_featureName: dependencies:
-          uniqueByName (builtins.filter isExternal dependencies))
-        featureDeclarationsByFeature;
-      featureDependencies = uniqueByName (builtins.concatMap
+        (_featureName: feature: builtins.filter isExternal feature.dependencies)
+        projectFeatures;
+      featureDependencies = representativeByName (builtins.concatMap
         (featureName: externalFeatureDependenciesByFeature.${featureName})
         (builtins.attrNames externalFeatureDependenciesByFeature));
 
-      rootTargetDependencies = uniqueByName
-        (builtins.filter (dependency: !dependency.host) externalRootDeclarations);
-      rootHostDependencies = uniqueByName
-        (builtins.filter (dependency: dependency.host) externalRootDeclarations);
+      rootTargetDependencies = builtins.filter
+        (dependency: !dependency.host)
+        externalRootDependencies;
+      rootHostDependencies = builtins.filter
+        (dependency: dependency.host)
+        externalRootDependencies;
 
-      externalDependencies = uniqueByName
+      externalDependencies = representativeByName
         (externalRootDependencies ++ featureDependencies);
 
       parsed = {
@@ -273,12 +320,12 @@ let
             selfDependencies = builtins.filter
               (dependency: dependency.name == parsed.packageName)
               feature.dependencies;
-            targetDependencies = uniqueByName (builtins.filter
+            targetDependencies = builtins.filter
               (dependency: !dependency.host)
-              externalDependencies);
-            hostDependencies = uniqueByName (builtins.filter
+              externalDependencies;
+            hostDependencies = builtins.filter
               (dependency: dependency.host)
-              externalDependencies);
+              externalDependencies;
             mappedDependencies = map mapDependency externalDependencies;
             targetPackages = packagesFor targetDependencies;
             hostPackages = packagesFor hostDependencies;
@@ -301,6 +348,8 @@ let
 
         projectFeatures = builtins.mapAttrs realizeProjectFeature parsed.projectFeatures;
 
+        # Select exactly the named project feature records. Self-dependencies
+        # remain inspectable but are not traversed to compute feature closure.
         selectProjectFeatures = featureNames:
           if !builtins.isList featureNames then
             fail "selectProjectFeatures expected a list of project feature names"

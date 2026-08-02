@@ -11,7 +11,6 @@ let
   workspace = uv2nix.lib.workspace.loadWorkspace {
     workspaceRoot = ../.;
   };
-  mylib = cppPackage;
 
   overlay = workspace.mkPyprojectOverlay {
     sourcePreference = "wheel";

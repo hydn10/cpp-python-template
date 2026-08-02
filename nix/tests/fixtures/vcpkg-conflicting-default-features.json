@@ -1,0 +1,8 @@
+{
+  "name": "conflicting-default-features",
+  "version": "1.0.0",
+  "dependencies": [
+    "some-package",
+    { "name": "some-package", "default-features": false }
+  ]
+}

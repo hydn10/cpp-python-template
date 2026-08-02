@@ -1,0 +1,8 @@
+{
+  "name": "conflicting-features",
+  "version": "1.0.0",
+  "dependencies": [
+    { "name": "some-package", "features": ["core"] },
+    { "name": "some-package", "features": ["tools"] }
+  ]
+}

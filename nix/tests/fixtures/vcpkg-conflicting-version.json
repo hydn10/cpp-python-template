@@ -1,0 +1,8 @@
+{
+  "name": "conflicting-version",
+  "version": "1.0.0",
+  "dependencies": [
+    { "name": "some-package", "version>=": "1.0" },
+    { "name": "some-package", "version>=": "2.0" }
+  ]
+}

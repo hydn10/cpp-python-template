@@ -81,11 +81,35 @@ let
     vcpkgJson = fixtures + "/vcpkg-platform.json";
   };
 
+  conflictingHost = adapter.parseManifest {
+    vcpkgJson = fixtures + "/vcpkg-conflicting-host.json";
+  };
+
+  conflictingFeatures = adapter.parseManifest {
+    vcpkgJson = fixtures + "/vcpkg-conflicting-features.json";
+  };
+
+  conflictingDefaultFeatures = adapter.parseManifest {
+    vcpkgJson = fixtures + "/vcpkg-conflicting-default-features.json";
+  };
+
+  conflictingVersion = adapter.parseManifest {
+    vcpkgJson = fixtures + "/vcpkg-conflicting-version.json";
+  };
+
+  selfFeatureMapped = adapter.mapDependencies {
+    vcpkgJson = fixtures + "/vcpkg-self-feature.json";
+  } {
+    closure-only = _dependency: pkgs.jq;
+  };
+
   pythonSelection = mapped.selectProjectFeatures [ "python" ];
   allFeatureSelection = mapped.selectProjectFeatures
     (builtins.attrNames mapped.projectFeatures);
   duplicateFeatureSelection = mapped.selectProjectFeatures [ "python" "python" ];
   unknownFeatureSelection = mapped.selectProjectFeatures [ "missing" ];
+  outerFeatureSelection = selfFeatureMapped.selectProjectFeatures [ "outer" ];
+  innerFeatureSelection = selfFeatureMapped.selectProjectFeatures [ "inner" ];
 
   repositoryFeatureSelection = vcpkgDependencies.selectProjectFeatures
     (builtins.attrNames vcpkgDependencies.projectFeatures);
@@ -154,6 +178,8 @@ let
     # Duplicate dependency names and duplicate resulting store paths collapse.
     (builtins.length mapped.rootDeclarations == 4)
     (builtins.length mapped.rootDependencies == 3)
+    (builtins.length mapped.featureDeclarationsByFeature.python == 4)
+    (builtins.length mapped.projectFeatures.python.dependencies == 3)
     (builtins.length mapped.root.mappedDependencies == 3)
     (builtins.length mapped.root.packages == 3)
     (builtins.length mapped.projectFeatures.python.mappedDependencies == 2)
@@ -176,7 +202,20 @@ let
     (fails staleMapping)
     (fails malformed)
     (fails conditional)
+    (fails conflictingHost)
+    (fails conflictingFeatures)
+    (fails conflictingDefaultFeatures)
+    (fails conflictingVersion)
     (fails unknownFeatureSelection)
+
+    # Feature selection is exact: preserved self-dependencies do not add the
+    # referenced project feature or its packages to the selection.
+    (outerFeatureSelection.selectedNames == [ "outer" ])
+    (builtins.attrNames outerFeatureSelection.selectedProjectFeatures == [ "outer" ])
+    (outerFeatureSelection.featurePackages == [ ])
+    ((builtins.head selfFeatureMapped.projectFeatures.outer.selfDependencies).requestedFeatures
+      == [ "inner" ])
+    (packagePaths innerFeatureSelection.featurePackages == packagePaths [ pkgs.jq ])
 
     # The repository mappings are realized only through its shared catalogue.
     (packagePath dependencyCatalogue.eigen3 == packagePath pkgs.eigen)

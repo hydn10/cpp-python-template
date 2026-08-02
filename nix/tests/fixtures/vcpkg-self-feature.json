@@ -1,0 +1,14 @@
+{
+  "name": "self-feature-project",
+  "version": "1.0.0",
+  "features": {
+    "inner": {
+      "dependencies": ["closure-only"]
+    },
+    "outer": {
+      "dependencies": [
+        { "name": "self-feature-project", "features": ["inner"] }
+      ]
+    }
+  }
+}
