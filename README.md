@@ -129,7 +129,7 @@ change.
 For example, before changing the environment used by `quality`:
 
 ```bash
-just purge-out
+just purge out
 ```
 
 This also discards scikit-build-core's persistent native build cache. For a
@@ -198,8 +198,8 @@ recipe uses the current shell environment, just like its raw command.
 | `ci job <job-id> [--rm]`                        | Run one GitHub Actions job and its locally supported matrix entries              |
 | `ci debug <job-id> [--rm]`                      | Run one job with verbose `act` diagnostics                                       |
 | `verify`                                        | Run formatting, linting, native, Python application, and wheel checks            |
-| `purge-out`                                     | Delete the entire `out/` directory                                               |
-| `purge-all`                                     | Delete disposable build state, environments, caches, and package outputs         |
+| `purge out`                                     | Delete the entire `out/` directory                                               |
+| `purge all`                                     | Delete disposable build state, environments, caches, and package outputs         |
 
 `py sync` is primarily an environment bootstrap and repair command. It creates
 `.venv` when necessary, installs the versions from `uv.lock`, removes
