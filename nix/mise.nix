@@ -1,15 +1,16 @@
-{ pkgs }:
+{
+  pkgs,
+  adapter,
+}:
 let
-  adapter = import ./lib/mise-to-nix.nix;
-
   mappings = {
-    act = _tool: pkgs.act;
-    dprint = _tool: pkgs.dprint;
+    act = _: pkgs.act;
+    dprint = _: pkgs.dprint;
     # Use default version once nixpkgs catches up: 0.23.2 cannot parse @PACKAGE_INIT@.
-    gersemi = _tool: import ./pkgs/gersemi.nix { inherit pkgs; };
-    just = _tool: pkgs.just;
-    actionlint = _tool: pkgs.actionlint;
-    shellcheck = _tool: pkgs.shellcheck;
+    gersemi = _: import ./pkgs/gersemi.nix { inherit pkgs; };
+    just = _: pkgs.just;
+    actionlint = _: pkgs.actionlint;
+    shellcheck = _: pkgs.shellcheck;
   };
 in
 adapter.mapTools {

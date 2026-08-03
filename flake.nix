@@ -7,6 +7,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    mise-nix-adapter = {
+      url = "github:hydn10/mise-nix-adapter/v0.1.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -30,6 +35,7 @@
     self,
     nixpkgs,
     vcpkg-nix-adapter,
+    mise-nix-adapter,
     uv2nix,
     pyproject-nix,
     pyproject-build-systems,
@@ -68,7 +74,7 @@
             cppPackage = cpp.mylib;
           };
 
-          mise = import ./nix/mise.nix { inherit pkgs; };
+          mise = import ./nix/mise.nix { inherit pkgs; adapter = mise-nix-adapter.lib; };
 
           mylibWithApps = cpp.mylibWithApps;
           mylibWithTestsAndChecks = cpp.mylibWithTestsAndChecks;
@@ -134,8 +140,6 @@
               cmake --build . --target all_verify_interface_header_sets
             '';
           });
-
-          checks.mise-to-nix = import ./nix/tests/mise-adapter.nix { inherit pkgs; };
         };
 
       perSystem = nixpkgs.lib.genAttrs supportedSystems mkSystemOutputs;

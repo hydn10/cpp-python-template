@@ -1,5 +1,26 @@
 {
   "nodes": {
+    "mise-nix-adapter": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1785785041,
+        "narHash": "sha256-nQMuYe6f1pA6xdsEvxPpnAq13Nt9XhmI1W/L9a7f9Po=",
+        "owner": "hydn10",
+        "repo": "mise-nix-adapter",
+        "rev": "558e0f4255b981599c16e130f4746cf20eda33bc",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hydn10",
+        "ref": "v0.1.0",
+        "repo": "mise-nix-adapter",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1785692966,
@@ -62,6 +83,7 @@
     },
     "root": {
       "inputs": {
+        "mise-nix-adapter": "mise-nix-adapter",
         "nixpkgs": "nixpkgs",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
@@ -99,11 +121,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1785778204,
-        "narHash": "sha256-nTNPzf9fvplld7ui62Lo07eI2KyWDpzvEqEg19qVoAA=",
+        "lastModified": 1785785044,
+        "narHash": "sha256-Xnv4V/+TW+AlRyOUQdqgM7zo07Fo08ikRGjIV6llbCo=",
         "owner": "hydn10",
         "repo": "vcpkg-nix-adapter",
-        "rev": "dab15a4dbbe4d2c4853a01befc1bed6dea203eed",
+        "rev": "e748eda9a4b64dc69e64c9dcf38a0054f4e062f6",
         "type": "github"
       },
       "original": {

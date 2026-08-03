@@ -1,7 +1,0 @@
-[tools]
-single = "latest"
-options = { version = "2", channel = "stable" }
-multi = ["1", "2"]
-repeated = "latest"
-same-a = "latest"
-same-b = { version = ["latest"], feature = "test" }
