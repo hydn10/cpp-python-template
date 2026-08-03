@@ -1,7 +1,6 @@
 { pkgs
 , python
 , cppPackage
-, dependencyCatalogue
 , vcpkgDependencies
 , uv2nix
 , pyproject-nix
@@ -39,8 +38,8 @@ let
                 pkgs.cmake
                 pkgs.ninja
                 # pyproject.toml requires pybind11 independently of vcpkg's
-                # direct-CMake feature, but both use the catalogue value.
-                dependencyCatalogue.pybind11
+                # direct-CMake feature, but both use the same package.
+                python.pkgs.pybind11
               ] ++ vcpkgDependencies.root.hostPackages;
               buildInputs = (old.buildInputs or [ ]) ++ (cppPackage.buildInputs or [ ]);
               env = (old.env or { }) // {

@@ -1,7 +1,0 @@
-{
-  "name": "malformed-project",
-  "version": "1.0.0",
-  "dependencies": [
-    { "host": true }
-  ]
-}

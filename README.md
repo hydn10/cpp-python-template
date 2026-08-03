@@ -1,6 +1,6 @@
 > [!NOTE]
 > This repository is a project template. The README below documents the included
-> example as a real project; replace this notice and the project-specific content
+> example as a real project. Replace this notice and the project-specific content
 > when adopting the template.
 
 # mylib
@@ -150,7 +150,7 @@ Nix provides a complete development environment.
 ```sh
 nix develop       # enter the development environment
 nix build         # build the default C++ library package
-nix flake check   # run the flake's native and adapter checks
+nix flake check   # run the flake's checks
 ```
 
 The packaged applications can be run directly:

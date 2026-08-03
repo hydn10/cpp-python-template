@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -62,7 +62,7 @@ jobs:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Ensure CMake and Ninja are installed
         shell: bash
@@ -143,7 +143,7 @@ jobs:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Just
         uses: extractions/setup-just@v4
@@ -209,7 +209,7 @@ jobs:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Ensure CMake and Ninja are installed
         shell: bash
@@ -275,7 +275,7 @@ jobs:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Just
         uses: extractions/setup-just@v4
@@ -345,7 +345,7 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up vcpkg and its binary cache
         uses: ./.github/actions/setup-vcpkg
@@ -381,7 +381,7 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Just
         uses: extractions/setup-just@v4
@@ -432,7 +432,7 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up vcpkg and its binary cache
         uses: ./.github/actions/setup-vcpkg
@@ -468,7 +468,7 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Just
         uses: extractions/setup-just@v4
@@ -513,7 +513,7 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31

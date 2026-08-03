@@ -2,6 +2,11 @@
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
+    vcpkg-nix-adapter = {
+      url = "github:hydn10/vcpkg-nix-adapter/v0.1.0";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -24,6 +29,7 @@
   outputs = {
     self,
     nixpkgs,
+    vcpkg-nix-adapter,
     uv2nix,
     pyproject-nix,
     pyproject-build-systems,
@@ -36,13 +42,11 @@
           pkgs = import nixpkgs { inherit system; };
           python = pkgs.python3;
 
-          dependencyCatalogue = {
-            eigen3 = pkgs.eigen;
-            pybind11 = python.pkgs.pybind11;
-          };
-
-          vcpkgDependencies = import ./nix/vcpkg-dependencies.nix {
-            catalogue = dependencyCatalogue;
+          vcpkgDependencies = vcpkg-nix-adapter.lib.mapDependencies {
+            vcpkgJson = ./vcpkg.json;
+          } {
+            eigen3 = _: pkgs.eigen;
+            pybind11 = _: python.pkgs.pybind11;
           };
 
           devShellProjectFeatures = vcpkgDependencies.selectProjectFeatures
@@ -56,7 +60,6 @@
             inherit
               pkgs
               python
-              dependencyCatalogue
               vcpkgDependencies
               uv2nix
               pyproject-nix
@@ -133,9 +136,6 @@
           });
 
           checks.mise-to-nix = import ./nix/tests/mise-adapter.nix { inherit pkgs; };
-          checks.vcpkg-to-nix = import ./nix/tests/vcpkg-adapter.nix {
-            inherit pkgs python dependencyCatalogue vcpkgDependencies;
-          };
         };
 
       perSystem = nixpkgs.lib.genAttrs supportedSystems mkSystemOutputs;
