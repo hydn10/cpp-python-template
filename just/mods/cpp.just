@@ -1,5 +1,5 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
-set working-directory := ".."
+set working-directory := "../.."
 
 default-preset := "quality"
 repo-root := justfile_directory()

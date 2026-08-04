@@ -1,5 +1,5 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
-set working-directory := ".."
+set working-directory := "../.."
 
 # Delete the entire out/ directory, including every build and generated artifact.
 out:

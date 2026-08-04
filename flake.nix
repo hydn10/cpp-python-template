@@ -31,32 +31,38 @@
     };
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    vcpkg-nix-adapter,
-    mise-nix-adapter,
-    uv2nix,
-    pyproject-nix,
-    pyproject-build-systems,
-  }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      vcpkg-nix-adapter,
+      mise-nix-adapter,
+      uv2nix,
+      pyproject-nix,
+      pyproject-build-systems,
+    }:
     let
       supportedSystems = [ "x86_64-linux" ];
 
-      mkSystemOutputs = system:
+      mkSystemOutputs =
+        system:
         let
           pkgs = import nixpkgs { inherit system; };
           python = pkgs.python3;
 
-          vcpkgDependencies = vcpkg-nix-adapter.lib.mapDependencies {
-            vcpkgJson = ./vcpkg.json;
-          } {
-            eigen3 = _: pkgs.eigen;
-            pybind11 = _: python.pkgs.pybind11;
-          };
+          vcpkgDependencies =
+            vcpkg-nix-adapter.lib.mapDependencies
+              {
+                vcpkgJson = ./vcpkg.json;
+              }
+              {
+                eigen3 = _: pkgs.eigen;
+                pybind11 = _: python.pkgs.pybind11;
+              };
 
-          devShellProjectFeatures = vcpkgDependencies.selectProjectFeatures
-            (builtins.attrNames vcpkgDependencies.projectFeatures);
+          devShellProjectFeatures = vcpkgDependencies.selectProjectFeatures (
+            builtins.attrNames vcpkgDependencies.projectFeatures
+          );
 
           cpp = import ./nix/cpp.nix {
             inherit pkgs vcpkgDependencies;
@@ -74,11 +80,15 @@
             cppPackage = cpp.mylib;
           };
 
-          mise = import ./nix/mise.nix { inherit pkgs; adapter = mise-nix-adapter.lib; };
+          mise = import ./nix/mise.nix {
+            inherit pkgs;
+            adapter = mise-nix-adapter.lib;
+          };
 
           mylibWithApps = cpp.mylibWithApps;
           mylibWithTestsAndChecks = cpp.mylibWithTestsAndChecks;
-        in {
+        in
+        {
           packages = {
             default = cpp.mylib;
             mylib = cpp.mylib;
@@ -117,18 +127,18 @@
           # development environment and provides common tools.
           devShells.default = pkgs.mkShell {
             inputsFrom = [ cpp.mylib ];
-            packages =
-              [
-                pkgs.llvmPackages_22.clang-tools
-                pkgs.ninja
-                pkgs.pkg-config
-              ]
-              ++ mise.packages
-              # Root dependencies arrive through cpp.mylib. Every declared
-              # project feature is selected for the development shell, which
-              # therefore only needs their packages that are additional to root.
-              ++ devShellProjectFeatures.additionalPackages
-              ++ pythonModules.shellPackages;
+            packages = [
+              pkgs.llvmPackages_22.clang-tools
+              pkgs.ninja
+              pkgs.nixfmt
+              pkgs.pkg-config
+            ]
+            ++ mise.packages
+            # Root dependencies arrive through cpp.mylib. Every declared
+            # project feature is selected for the development shell, which
+            # therefore only needs their packages that are additional to root.
+            ++ devShellProjectFeatures.additionalPackages
+            ++ pythonModules.shellPackages;
             env = pythonModules.shellEnv;
           };
 
@@ -143,7 +153,8 @@
         };
 
       perSystem = nixpkgs.lib.genAttrs supportedSystems mkSystemOutputs;
-    in {
+    in
+    {
       packages = nixpkgs.lib.mapAttrs (_: systemOutputs: systemOutputs.packages) perSystem;
       apps = nixpkgs.lib.mapAttrs (_: systemOutputs: systemOutputs.apps) perSystem;
       devShells = nixpkgs.lib.mapAttrs (_: systemOutputs: systemOutputs.devShells) perSystem;

@@ -1,11 +1,12 @@
-{ lib
-, stdenv
-, cmake
-, targetBuildInputs
-, hostBuildInputs
-, buildTests ? false
-, buildApps ? false
-, buildExamples ? false
+{
+  lib,
+  stdenv,
+  cmake,
+  targetBuildInputs,
+  hostBuildInputs,
+  buildTests ? false,
+  buildApps ? false,
+  buildExamples ? false,
 }:
 let
   pname = "mylib";
@@ -20,22 +21,21 @@ let
   buildAppsFlag = mkCMakeFlag buildApps;
   buildExamplesFlag = mkCMakeFlag buildExamples;
 in
-  stdenv.mkDerivation
-  {
-    inherit pname;
+stdenv.mkDerivation {
+  inherit pname;
 
-    name = "${pname}-${version}";
-    inherit version;
+  name = "${pname}-${version}";
+  inherit version;
 
-    src = lib.cleanSource projectRoot;
+  src = lib.cleanSource projectRoot;
 
-    nativeBuildInputs = [ cmake ] ++ hostBuildInputs;
+  nativeBuildInputs = [ cmake ] ++ hostBuildInputs;
 
-    buildInputs = targetBuildInputs;
+  buildInputs = targetBuildInputs;
 
-    cmakeFlags = [
-      "-DMYLIB_BUILD_TESTING=${buildTestsFlag}"
-      "-DMYLIB_BUILD_APPS=${buildAppsFlag}"
-      "-DMYLIB_BUILD_EXAMPLES=${buildExamplesFlag}"
-    ];
-  }
+  cmakeFlags = [
+    "-DMYLIB_BUILD_TESTING=${buildTestsFlag}"
+    "-DMYLIB_BUILD_APPS=${buildAppsFlag}"
+    "-DMYLIB_BUILD_EXAMPLES=${buildExamplesFlag}"
+  ];
+}

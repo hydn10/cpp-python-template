@@ -117,6 +117,7 @@ just help                 # discover all recipes
 just cpp validate debug   # configure, build, check headers, and test
 just py rebuild           # rebuild the Python development install
 just format all           # format the repository
+just check format all     # check repository formatting
 just verify               # run the complete local verification
 ```
 
@@ -140,8 +141,8 @@ Alternatively, run a command inside the Mise environment:
 mise x -- just help
 ```
 
-Mise provides the repository's task, formatting, linting, and local-CI tools.
-Bring your own compiler, CMake, Ninja, Python, uv, and native dependencies.
+Mise provides the repository’s portable workflow tooling.
+Language toolchains, language-specific tools, runtimes, and project dependencies remain caller-provided.
 
 ### Nix (complete)
 

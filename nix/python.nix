@@ -1,10 +1,11 @@
-{ pkgs
-, python
-, cppPackage
-, vcpkgDependencies
-, uv2nix
-, pyproject-nix
-, pyproject-build-systems
+{
+  pkgs,
+  python,
+  cppPackage,
+  vcpkgDependencies,
+  uv2nix,
+  pyproject-nix,
+  pyproject-build-systems,
 }:
 let
   workspace = uv2nix.lib.workspace.loadWorkspace {
@@ -18,36 +19,39 @@ let
   hacks = pkgs.callPackage pyproject-nix.build.hacks { };
   inherit (pkgs.callPackages pyproject-nix.build.util { }) mkApplication;
 
-  pythonSet =
-    (pkgs.callPackage pyproject-nix.build.packages { inherit python; }).overrideScope
-      (pkgs.lib.composeManyExtensions [
-        pyproject-build-systems.overlays.wheel
-        overlay
-        (_final: prev: {
-            matplotlib = hacks.nixpkgsPrebuilt {
-              from = python.pkgs.matplotlib;
-              prev = prev.matplotlib;
-            };
+  pythonSet = (pkgs.callPackage pyproject-nix.build.packages { inherit python; }).overrideScope (
+    pkgs.lib.composeManyExtensions [
+      pyproject-build-systems.overlays.wheel
+      overlay
+      (_final: prev: {
+        matplotlib = hacks.nixpkgsPrebuilt {
+          from = python.pkgs.matplotlib;
+          prev = prev.matplotlib;
+        };
 
-            tkinter = hacks.nixpkgsPrebuilt {
-              from = python.pkgs.tkinter;
-            };
+        tkinter = hacks.nixpkgsPrebuilt {
+          from = python.pkgs.tkinter;
+        };
 
-            "mylib-tools" = prev."mylib-tools".overrideAttrs (old: {
-              nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [
-                pkgs.cmake
-                pkgs.ninja
-                # pyproject.toml requires pybind11 independently of vcpkg's
-                # direct-CMake feature, but both use the same package.
-                python.pkgs.pybind11
-              ] ++ vcpkgDependencies.root.hostPackages;
-              buildInputs = (old.buildInputs or [ ]) ++ (cppPackage.buildInputs or [ ]);
-              env = (old.env or { }) // {
-                CMAKE_GENERATOR = "Ninja";
-              };
-            });
-          })
-      ]);
+        "mylib-tools" = prev."mylib-tools".overrideAttrs (old: {
+          nativeBuildInputs =
+            (old.nativeBuildInputs or [ ])
+            ++ [
+              pkgs.cmake
+              pkgs.ninja
+              # pyproject.toml requires pybind11 independently of vcpkg's
+              # direct-CMake feature, but both use the same package.
+              python.pkgs.pybind11
+            ]
+            ++ vcpkgDependencies.root.hostPackages;
+          buildInputs = (old.buildInputs or [ ]) ++ (cppPackage.buildInputs or [ ]);
+          env = (old.env or { }) // {
+            CMAKE_GENERATOR = "Ninja";
+          };
+        });
+      })
+    ]
+  );
 
   mylibVenv = pythonSet.mkVirtualEnv "mylib-tools-env" (
     workspace.deps.default
@@ -61,7 +65,8 @@ let
     package = pythonSet."mylib-tools";
   };
 
-in {
+in
+{
   inherit python pythonSet mylibApplication;
 
   shellPackages = [
@@ -69,20 +74,19 @@ in {
     python
   ];
 
-  shellEnv =
-    {
-      UV_PYTHON_DOWNLOADS = "never";
-      UV_PYTHON = python.interpreter;
-      # uv manages .venv in the dev shell, but Tk is still supplied by nixpkgs.
-      PYTHONPATH = "${python.pkgs.tkinter}/${python.sitePackages}";
-    }
-    // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
-      # PyPI wheels used by uv need GUI/runtime libraries visible on Nix.
-      LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
-        pkgs.stdenv.cc.cc.lib
-        pkgs.zlib
-        pkgs.libx11
-        pkgs.wayland
-      ];
-    };
+  shellEnv = {
+    UV_PYTHON_DOWNLOADS = "never";
+    UV_PYTHON = python.interpreter;
+    # uv manages .venv in the dev shell, but Tk is still supplied by nixpkgs.
+    PYTHONPATH = "${python.pkgs.tkinter}/${python.sitePackages}";
+  }
+  // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+    # PyPI wheels used by uv need GUI/runtime libraries visible on Nix.
+    LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+      pkgs.stdenv.cc.cc.lib
+      pkgs.zlib
+      pkgs.libx11
+      pkgs.wayland
+    ];
+  };
 }

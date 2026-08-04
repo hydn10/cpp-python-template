@@ -1,20 +1,20 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
 # Source formatting and read-only quality checks.
-mod format 'just/format.just'
-mod check 'just/check.just'
+mod format 'just/mods/format.just'
+mod check 'just/mods/check.just'
 
 # Native CMake and CTest workflows.
-mod cpp 'just/cpp.just'
+mod cpp 'just/mods/cpp.just'
 
 # Python environment and application workflows.
-mod py 'just/py.just'
+mod py 'just/mods/py.just'
 
 # Disposable build state, environments, caches, and package outputs.
-mod purge 'just/purge.just'
+mod purge 'just/mods/purge.just'
 
 # Local GitHub Actions workflow execution.
-mod ci 'just/ci.just'
+mod ci 'just/mods/ci.just'
 
 # List all root and module recipes.
 help:
