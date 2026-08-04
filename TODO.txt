@@ -4,4 +4,5 @@
 
 - When nixpkgs' gersemi catches up with verson >= 0.25.4, remove our custom override.
 
-- When dprint merges PR #1207, move the dprint-*.json configs to config/. Probably dprint > 0.55.x.
+- Keep Oxfmt pinned at 0.59.0 until nixpkgs catches up with 0.62.0 or a compatible newer version.
+  Its breaking YAML-formatting changes can make Mise and Nix output differ. Then reconsider returning Mise to latest.

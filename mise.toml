@@ -2,8 +2,8 @@
 lockfile = true
 
 [tool_alias]
-dprint = "github:dprint/dprint"
 gersemi = "pipx:gersemi"
+treefmt = "aqua:numtide/treefmt"
 
 [tools]
 act = "latest"
@@ -11,10 +11,5 @@ just = "latest"
 actionlint = "latest"
 shellcheck = "latest"
 gersemi = "latest"
-
-[tools.dprint]
-version = "latest"
-
-[tools.dprint.platforms]
-linux-x64 = { asset_pattern = "dprint-x86_64-unknown-linux-gnu.zip" }
-linux-arm64 = { asset_pattern = "dprint-aarch64-unknown-linux-gnu.zip" }
+oxfmt = "0.59.0"
+treefmt = "latest"

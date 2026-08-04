@@ -4,23 +4,23 @@ set working-directory := ".."
 # Format every portable project file.
 [default]
 all:
-    dprint fmt
+    treefmt --no-cache
 
 # Format all native source files, including C++ and CMake.
 native: cpp cmake
 
-# Format all C and C++ source and header files through dprint and clang-format.
+# Format all C and C++ source and header files.
 cpp:
-    dprint fmt --config dprint-cpp.json
+    treefmt --no-cache -f cpp
 
-# Format all CMake source files through dprint and gersemi.
+# Format all CMake source files.
 cmake:
-    dprint fmt --config dprint-cmake.json
+    treefmt --no-cache -f cmake
 
-# Format all Python files through dprint and uv-managed Ruff.
+# Format all Python files through uv-managed Ruff.
 py:
-    dprint fmt --config dprint-python.json
+    treefmt --no-cache -f python
 
-# Format all miscellaneous portable files through dprint and Just.
+# Format all miscellaneous portable files.
 misc:
-    dprint fmt --config dprint-misc.json
+    treefmt --no-cache -f just,misc

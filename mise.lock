@@ -85,66 +85,6 @@ url = "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_
 url_api = "https://api.github.com/repos/rhysd/actionlint/releases/assets/384924919"
 provenance = "github-attestations"
 
-[[tools.dprint]]
-version = "0.55.2"
-backend = "github:dprint/dprint"
-
-[tools.dprint."platforms.macos-arm64"]
-checksum = "sha256:e9ba8ed7988f3350501a8cf8af92da616cdec8d9d5c831c069293c587311b49d"
-url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-aarch64-apple-darwin.zip"
-url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041350"
-provenance = "github-attestations"
-
-[tools.dprint."platforms.macos-x64"]
-checksum = "sha256:b7074cf6c814f995b783b5baa7e516b34e783c42c9baf7af553dbad731adb3a7"
-url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-x86_64-apple-darwin.zip"
-url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041364"
-provenance = "github-attestations"
-
-[tools.dprint."platforms.windows-x64"]
-checksum = "sha256:12e8c26abc8c436223e70f5a30a2864001c92fa356a859eb93e06b97ab7dbd12"
-url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-x86_64-pc-windows-msvc.zip"
-url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041355"
-provenance = "github-attestations"
-
-[[tools.dprint]]
-version = "0.55.2"
-backend = "github:dprint/dprint"
-
-[tools.dprint.options]
-asset_pattern = "dprint-x86_64-unknown-linux-gnu.zip"
-
-[tools.dprint."platforms.linux-x64"]
-checksum = "sha256:d7ccde62d789dfb048717252d259e21253e32feffe4cbf2dab9954eeab492219"
-url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-x86_64-unknown-linux-gnu.zip"
-url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041352"
-provenance = "github-attestations"
-
-[tools.dprint."platforms.linux-x64-musl"]
-checksum = "sha256:d7ccde62d789dfb048717252d259e21253e32feffe4cbf2dab9954eeab492219"
-url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-x86_64-unknown-linux-gnu.zip"
-url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041352"
-provenance = "github-attestations"
-
-[[tools.dprint]]
-version = "0.55.2"
-backend = "github:dprint/dprint"
-
-[tools.dprint.options]
-asset_pattern = "dprint-aarch64-unknown-linux-gnu.zip"
-
-[tools.dprint."platforms.linux-arm64"]
-checksum = "sha256:299923f2b56d66756ad2c7c220650c72f26437fd3f48b3fb6c0df664073eb1d1"
-url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-aarch64-unknown-linux-gnu.zip"
-url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041360"
-provenance = "github-attestations"
-
-[tools.dprint."platforms.linux-arm64-musl"]
-checksum = "sha256:299923f2b56d66756ad2c7c220650c72f26437fd3f48b3fb6c0df664073eb1d1"
-url = "https://github.com/dprint/dprint/releases/download/0.55.2/dprint-aarch64-unknown-linux-gnu.zip"
-url_api = "https://api.github.com/repos/dprint/dprint/releases/assets/477041360"
-provenance = "github-attestations"
-
 [[tools.gersemi]]
 version = "0.28.0"
 backend = "pipx:gersemi"
@@ -188,6 +128,10 @@ checksum = "sha256:4c7391d17cb1d17b758b52004ee6411372b8a13ff37c3c9b9031625cb6026
 url = "https://github.com/casey/just/releases/download/1.57.0/just-1.57.0-x86_64-pc-windows-msvc.zip"
 url_api = "https://api.github.com/repos/casey/just/releases/assets/481977734"
 
+[[tools.oxfmt]]
+version = "0.59.0"
+backend = "npm:oxfmt"
+
 [[tools.shellcheck]]
 version = "0.11.0"
 backend = "aqua:koalaman/shellcheck"
@@ -226,3 +170,37 @@ url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/2790
 checksum = "sha256:8a4e35ab0b331c85d73567b12f2a444df187f483e5079ceffa6bda1faa2e740e"
 url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.zip"
 url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056944"
+
+[[tools.treefmt]]
+version = "2.5.0"
+backend = "aqua:numtide/treefmt"
+
+[tools.treefmt."platforms.linux-arm64"]
+checksum = "sha256:fce47c6fc8cb6a87461b1309fc6d3102eade64b6fe0c9b86678b4eed9eb00e57"
+url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045230"
+
+[tools.treefmt."platforms.linux-arm64-musl"]
+checksum = "sha256:fce47c6fc8cb6a87461b1309fc6d3102eade64b6fe0c9b86678b4eed9eb00e57"
+url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045230"
+
+[tools.treefmt."platforms.linux-x64"]
+checksum = "sha256:95f707bf9666d08b50888b116768fd77f042ad5af92aa3b795f063160e72758f"
+url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045232"
+
+[tools.treefmt."platforms.linux-x64-musl"]
+checksum = "sha256:95f707bf9666d08b50888b116768fd77f042ad5af92aa3b795f063160e72758f"
+url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045232"
+
+[tools.treefmt."platforms.macos-arm64"]
+checksum = "sha256:a3cdfa8e92eb7c302bb851f73800187e75d5789f2a75835b403b158d77b2c376"
+url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045242"
+
+[tools.treefmt."platforms.macos-x64"]
+checksum = "sha256:21388b1f7d6c2f572e1ce9231f7dfc08f80a062438908791ab078c1d76b10a49"
+url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_darwin_amd64.tar.gz"
+url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045231"

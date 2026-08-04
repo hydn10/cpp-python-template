@@ -1,8 +1,10 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
-# Source formatting and read-only quality checks.
+# Source formatting.
 mod format 'just/format.just'
-mod check 'just/check.just'
+
+# Read-only linting checks.
+mod lint 'just/lint.just'
 
 # Native CMake and CTest workflows.
 mod cpp 'just/cpp.just'
@@ -22,4 +24,4 @@ help:
 
 # Run the complete local repository verification.
 # The C++ linter supplies the fresh python-quality build consumed by validate-built.
-verify: check::format::all check::lint::all (cpp::validate-built "python-quality") py::validate
+verify: lint::all (cpp::validate-built "python-quality") py::validate

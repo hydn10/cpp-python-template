@@ -25,7 +25,7 @@ Project and workflow onion:
     Native C++ core: CMake, a C++ toolchain, and native dependencies
         -> Optional Python binding and packaging
             -> Python applications and dependencies
-                -> Developer workflow and quality tools: Just, dprint, and others
+                -> Developer workflow and quality tools: formatting, linting, and automation
 
 Provisioning models:
     Selective: host-provided native tools, Python and uv, optional mise

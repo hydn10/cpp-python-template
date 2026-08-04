@@ -14,23 +14,15 @@ classifiers = [
 ]
 
 # Python runtime dependencies shared by the console apps
-dependencies = [
-  "numpy>=1.22",
-  "matplotlib>=3.6",
-]
+dependencies = ["numpy>=1.22", "matplotlib>=3.6"]
 
 [dependency-groups]
-dev = [
-  "ruff>=0.16.0",
-]
+dev = ["ruff>=0.16.0"]
 
 ## No Python testing dependencies; Python is only a small set of console apps.
 
 [build-system]
-requires = [
-  "scikit-build-core>=0.12,<1",
-  "pybind11>=2.11",
-]
+requires = ["scikit-build-core>=0.12,<1", "pybind11>=2.11"]
 build-backend = "scikit_build_core.build"
 
 [project.scripts]
@@ -38,16 +30,11 @@ mylib-plot = "mylib_tools.plot:main"
 mylib-dump = "mylib_tools.dump:main"
 
 [tool.uv]
-cache-keys = [
-  { file = "pyproject.toml" },
-  { file = "vcpkg.json" },
-]
+cache-keys = [{ file = "pyproject.toml" }, { file = "vcpkg.json" }]
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
-wheel.packages = [
-  "python/src/mylib_tools",
-]
+wheel.packages = ["python/src/mylib_tools"]
 install.components = ["python"]
 build-dir = "out/_skbuild/{wheel_tag}"
 build.verbose = false

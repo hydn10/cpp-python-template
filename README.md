@@ -117,9 +117,11 @@ just help                 # discover all recipes
 just cpp validate debug   # configure, build, check headers, and test
 just py rebuild           # rebuild the Python development install
 just format all           # format portable project files
-just check format all     # check portable project formatting
-just verify               # run the complete local verification
+just lint                 # run all linting checks
+just verify               # run complete read-only verification
 ```
+
+For a final pre-submission pass, consider running `just format all` followed by `just verify`.
 
 ## Development environment
 
@@ -156,7 +158,7 @@ nix flake check   # run the flake's checks, including Nix formatting
 ```
 
 `nix fmt` formats the Nix integration separately from `just format all`.
-`nix flake check` also verifies its formatting.
+`nix flake check` verifies its formatting.
 
 The packaged applications can be run directly:
 
