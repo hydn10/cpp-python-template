@@ -1,5 +1,5 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
-set working-directory := "../.."
+set working-directory := ".."
 
 default-output-dir := "out/smoke/python"
 default-wheel-work-dir := "out/smoke/wheel"

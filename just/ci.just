@@ -1,5 +1,5 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
-set working-directory := "../.."
+set working-directory := ".."
 
 remove-help := "Remove containers and volumes even when the workflow fails"
 

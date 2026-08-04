@@ -1,13 +1,10 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
-set working-directory := "../.."
+set working-directory := ".."
 
-import '../format-nix.just'
-
-# Format every supported repository file.
+# Format every portable project file.
 [default]
 all:
     dprint fmt
-    @{{ nixfmt_command("fmt", []) }}
 
 # Format all native source files, including C++ and CMake.
 native: cpp cmake
@@ -24,10 +21,6 @@ cmake:
 py:
     dprint fmt --config dprint-python.json
 
-# Format all miscellaneous repository files through dprint and Just.
+# Format all miscellaneous portable files through dprint and Just.
 misc:
     dprint fmt --config dprint-misc.json
-
-# Format all Nix files through dprint and nixfmt (requires nixfmt).
-nix:
-    @{{ nixfmt_command("fmt", "true") }}

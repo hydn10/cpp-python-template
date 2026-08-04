@@ -49,6 +49,7 @@
         let
           pkgs = import nixpkgs { inherit system; };
           python = pkgs.python3;
+          nixFormatter = pkgs.nixfmt-tree;
 
           vcpkgDependencies =
             vcpkg-nix-adapter.lib.mapDependencies
@@ -142,14 +143,23 @@
             env = pythonModules.shellEnv;
           };
 
+          # Canonical formatter for the optional Nix integration.
+          formatter = nixFormatter;
+
           # Build every native category, verify public headers, and let the CMake
           # check phase run the registered native tests.
-          checks.default = mylibWithTestsAndChecks.overrideAttrs (oldAttrs: {
-            doCheck = true;
-            preCheck = (oldAttrs.preCheck or "") + ''
-              cmake --build . --target all_verify_interface_header_sets
-            '';
-          });
+          checks = {
+            default = mylibWithTestsAndChecks.overrideAttrs (oldAttrs: {
+              doCheck = true;
+              preCheck = (oldAttrs.preCheck or "") + ''
+                cmake --build . --target all_verify_interface_header_sets
+              '';
+            });
+
+            # Use the formatter's own check derivation so `nix fmt` and
+            # `nix flake check` share both traversal and formatting policy.
+            nix-format = nixFormatter.check self;
+          };
         };
 
       perSystem = nixpkgs.lib.genAttrs supportedSystems mkSystemOutputs;
@@ -158,6 +168,7 @@
       packages = nixpkgs.lib.mapAttrs (_: systemOutputs: systemOutputs.packages) perSystem;
       apps = nixpkgs.lib.mapAttrs (_: systemOutputs: systemOutputs.apps) perSystem;
       devShells = nixpkgs.lib.mapAttrs (_: systemOutputs: systemOutputs.devShells) perSystem;
+      formatter = nixpkgs.lib.mapAttrs (_: systemOutputs: systemOutputs.formatter) perSystem;
       checks = nixpkgs.lib.mapAttrs (_: systemOutputs: systemOutputs.checks) perSystem;
     };
 }

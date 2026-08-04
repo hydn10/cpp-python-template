@@ -116,8 +116,8 @@ CMake Python builds, pybind11.
 just help                 # discover all recipes
 just cpp validate debug   # configure, build, check headers, and test
 just py rebuild           # rebuild the Python development install
-just format all           # format the repository
-just check format all     # check repository formatting
+just format all           # format portable project files
+just check format all     # check portable project formatting
 just verify               # run the complete local verification
 ```
 
@@ -151,8 +151,12 @@ Nix provides a complete development environment.
 ```sh
 nix develop       # enter the development environment
 nix build         # build the default C++ library package
-nix flake check   # run the flake's checks
+nix fmt           # format the Nix integration
+nix flake check   # run the flake's checks, including Nix formatting
 ```
+
+`nix fmt` formats the Nix integration separately from `just format all`.
+`nix flake check` also verifies its formatting.
 
 The packaged applications can be run directly:
 

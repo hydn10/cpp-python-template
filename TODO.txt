@@ -5,7 +5,3 @@
 - When nixpkgs' gersemi catches up with verson >= 0.25.4, remove our custom override.
 
 - When dprint merges PR #1207, move the dprint-*.json configs to config/. Probably dprint > 0.55.x.
-
-- Nix formatting is routed through dprint and the official nixfmt.
-  Aggregate format/check commands skip it when unavailable, while explicit Nix commands require it and `nix develop` provides the canonical formatter.
-  Review the unstable Just feature use in just/format-nix.just once those features are stabilized.

@@ -4,9 +4,14 @@
 
 This document describes how this repository should evolve at the repository-design level: build structure, language boundaries, dependency ownership, development environments, packaging, automation, and CI.
 
-It is intended for human contributors and coding agents. It is not a folder map and it is not a command reference. The README and the repository itself show the current mechanics. This document explains the principles that should keep those mechanics coherent as tools change.
+It is not a folder map, command reference, or manifest of the current tools and outputs.
+The README and the repository itself show the current mechanics. This document explains the
+principles that should keep those mechanics coherent as tools change.
 
-This repository is a mixed C++ and Python project. The C++ library is the portable core. Python provides optional bindings and applications around that core. CMake, Python packaging, uv, vcpkg, Nix, Just, dprint, mise, and CI all have useful roles, but those roles should stay distinct.
+This repository is a mixed C++ and Python project. The C++ library is the
+portable core, with optional language bindings, applications, providers, and
+workflow layers around it. Those layers are useful only when they preserve the
+core project's independence and keep their own responsibilities distinct.
 
 ---
 
@@ -32,10 +37,9 @@ provision, build, test, package, format, or verify. An outer workflow tool may
 depend on inner layers or on other workflow tools, so having Just available does
 not imply that every recipe is available.
 
-Mise optionally provides the miscellaneous tool layer; the native toolchain and
-Python/uv remain selected separately. Contributors may provide any layer
-manually. Nix is the parallel, holistic provider for packages and complete
-development shells.
+Contributors may provide the layers manually or through an optional provisioning
+model. A provisioning model may make the outer layers holistic and reproducible,
+but it must not make itself a prerequisite of the core project.
 
 The layers express a direction of authority, not a sequence every workflow must traverse. An outer layer may delegate directly to the appropriate inner layer.
 
@@ -43,7 +47,10 @@ The important rule is:
 
 > An outer layer should invoke, provision, validate, or package an inner layer. It should not redefine the inner layer independently.
 
-For this repository, CMake should remain the authoritative description of the native target graph. Python packaging should describe the Python package and delegate native extension builds through the normal native build interface. uv, vcpkg, Nix, Just, dprint, mise, presets, activation helpers, IDE integration, and CI should compose or provide those workflows, not replace them with parallel models.
+For this repository, the project descriptions should remain authoritative for
+the native target graph and Python package. Providers, workflow tools, IDE
+integration, and CI should compose or provide those workflows, not replace them
+with parallel models.
 
 ---
 
@@ -61,19 +68,12 @@ This does not mean every workflow must be equally pleasant without optional tool
 
 Every important concern should have one place that owns its meaning.
 
-Typical ownership in this repository should be:
-
-| Concern                                                               | Owner                     |
-| --------------------------------------------------------------------- | ------------------------- |
-| Native libraries, applications, examples, tests, install/export shape | CMake                     |
-| Native dependency provider integration                                | vcpkg                     |
-| Python package metadata, scripts, runtime dependencies                | Python packaging metadata |
-| Python environment synchronization                                    | uv                        |
-| Formatting policy and composition                                     | dprint                    |
-| Optional developer workflow composition                               | Just                      |
-| Optional miscellaneous tool provisioning                              | mise                      |
-| Reproducible development and package environments                     | Nix                       |
-| Remote platform matrix and result reporting                           | CI                        |
+Ownership follows semantic boundaries rather than tool names. The core project
+owns its targets, interfaces, package metadata, and required behavior. An
+integration or provisioning layer owns the translation, environment, packaging,
+or workflow needed to expose that core through its ecosystem. A workflow may
+delegate to another owner, but it should not quietly become a second authority
+for the same concern.
 
 The exact tools may evolve, but the ownership boundaries matter. An outer layer may call an owner, configure it, or translate its metadata for a specific ecosystem. It should not maintain a second manual description of the same sources, targets, dependencies, or test behavior.
 
@@ -93,10 +93,11 @@ Good delegation in this repository looks like:
 
 - CI invoking repository-owned build and test workflows.
 - Python packaging invoking the native build through the configured backend rather than carrying its own native target graph.
-- Nix providing an all-in development and packaging environment while deriving from the same project semantics where practical.
+- An integration or provisioning layer deriving from the same project semantics
+  while adapting them to its ecosystem.
 - Just recipes composing common workflows and CMake presets selecting common configurations without becoming independent build systems.
-- dprint owning formatting while using plugins or external tools as needed.
-- Just invoking dprint for formatting, while dprint invokes Just to format Just files. This mutual dependency is intentional and limited to formatting.
+- Formatting and other quality workflows delegating to one owner for each
+  semantic layer, rather than composing competing policies.
 
 Repeated commands or values are not automatically bad. Lockfiles, generated metadata, platform-specific package expressions, and CI matrix entries may repeat information for good reasons. The problem is manual, competing authority.
 
@@ -175,6 +176,14 @@ Clear categories make it easier to change folder layout later without changing t
 
 Development environments should provide tools, dependencies, runtimes, and useful variables. They should not secretly redefine the project workflow.
 
+In this repository, Nix is an optional outer integration layer. Its files and
+behavior should describe how the project is provisioned, packaged, developed,
+or run through Nix; they should not redefine the core project or require Nix in
+the core workflows. The core should remain usable without Nix, and Nix should
+remain self-contained at the boundary around it. If the repository later adds a
+genuinely Nix-native component, that should be an explicit change to the
+project's semantic layers rather than an accidental leak from this integration.
+
 Packaging may translate project metadata for a target ecosystem. It may need sandboxing, lock interpretation, patched paths, split outputs, or platform-specific fixes. That is acceptable when the package still represents the same project semantics.
 
 CI should provision platforms, select toolchains, invoke repository-owned workflows, collect results, and report failures. It should not be the only place where the build or test logic exists.
@@ -207,6 +216,6 @@ Changes should preserve these principles:
 6. Keep dependency declaration separate from provisioning.
 7. Keep CI and packaging derived from repository-owned behavior.
 8. Prefer explicit behavior over hidden automation.
-9. Keep mise an optional miscellaneous-tool provider and Nix a parallel all-in provider.
+9. Keep provisioning and integration models optional. No provider should become a hidden requirement of the core project.
 10. Remove superseded workflows rather than preserving ambiguous alternatives.
 11. Update this philosophy only when the intended architecture changes, not when filenames or command spellings change.
