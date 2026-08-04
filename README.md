@@ -30,10 +30,10 @@ The Python tools call the same native implementation through a private
 
 Requirements:
 
-- [CMake](https://cmake.org/) 3.27 or newer
+- [CMake](https://cmake.org/) >= 3.27
 - [Ninja](https://ninja-build.org/)
 - [Eigen](https://eigen.tuxfamily.org/) 3
-- A [C++23-capable compiler](https://en.cppreference.com/w/cpp/compiler_support/23)
+- [C++23-capable compiler](https://en.cppreference.com/w/cpp/compiler_support/23)
 
 The installed library itself requires only C++17. Native dependencies may be
 provided by the host environment, [vcpkg](https://learn.microsoft.com/vcpkg/),

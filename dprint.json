@@ -26,7 +26,7 @@
         "command": "gersemi --no-warn-about-unknown-commands {{file_path}}",
         "stdin": false,
         "associations": "**/{CMakeLists.txt,CMakeLists.txt.in,*.cmake,*.cmake.in}",
-        "cacheKeyFiles": ["mise.lock"]
+        "cacheKeyFiles": ["mise.lock", "flake.lock"]
       },
       {
         "command": "uv run --locked --only-group dev ruff format --stdin-filename {{file_path}} -",
@@ -37,7 +37,7 @@
         "command": "just --fmt --justfile -",
         "exts": ["just"],
         "fileNames": ["justfile"],
-        "cacheKeyFiles": ["mise.lock"]
+        "cacheKeyFiles": ["mise.lock", "flake.lock"]
       }
     ]
   },

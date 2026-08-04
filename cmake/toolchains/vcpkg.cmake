@@ -1,5 +1,8 @@
 set(_MYLIB_VCPKG_FEATURES)
 
+# Any additional MYLIB options used here must be defined before project(). Their
+# defaults cannot use PROJECT_IS_TOP_LEVEL without a pre-project replacement.
+
 # scikit-build-core supplies Python and pybind11 from its isolated build
 # environment; direct CMake builds obtain them from vcpkg.
 if(MYLIB_BUILD_PYTHON AND NOT DEFINED SKBUILD)

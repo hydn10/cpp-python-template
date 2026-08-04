@@ -21,4 +21,5 @@ help:
     @just --list --list-submodules
 
 # Run the complete local repository verification.
-verify: check::format::all check::lint::all (cpp::validate "python-quality") py::validate
+# The C++ linter supplies the fresh python-quality build consumed by validate-built.
+verify: check::format::all check::lint::all (cpp::validate-built "python-quality") py::validate

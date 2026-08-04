@@ -29,13 +29,16 @@ verify-headers preset=default-preset:
 fresh-build preset: (configure preset "true")
     cmake --build --preset {{ preset }} --clean-first
 
+[private]
+validate-built preset: (verify-headers preset) (test preset)
+
 # Freshly configure, cleanly build, validate public headers, and test the native project.
-validate preset=default-preset: (fresh-build preset) (verify-headers preset) (test preset)
+validate preset=default-preset: (fresh-build preset) (validate-built preset)
 
 # Install one native build, then build and run a consumer of its CMake package.
 [arg("preset", pattern="release|shared-release")]
 check-installed preset="release":
     cmake --install "out/build/{{ preset }}"
-    cmake -S tests/consumer-cmake -B "out/build/consumer-cmake/{{ preset }}" -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_PREFIX_PATH={{ repo-root }}/out/install/{{ preset }}"
-    cmake --build "out/build/consumer-cmake/{{ preset }}"
+    cmake -S tests/consumer-cmake -B "out/build/consumer-cmake/{{ preset }}" --fresh -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_PREFIX_PATH={{ repo-root }}/out/install/{{ preset }}"
+    cmake --build "out/build/consumer-cmake/{{ preset }}" --clean-first
     ctest --test-dir "out/build/consumer-cmake/{{ preset }}" --output-on-failure --no-tests=error
