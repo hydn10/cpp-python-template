@@ -14,7 +14,7 @@ Checks: "*,
         -cppcoreguidelines-avoid-magic-numbers,
         -readability-magic-numbers,
         -readability-math-missing-parentheses,
-        -bugprone-easily-swappable-parameters
+        -bugprone-easily-swappable-parameters,
 "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

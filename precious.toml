@@ -1,0 +1,120 @@
+exclude = ["**/*-lock.json", "**/node_modules/**", "out/**", ".venv/**", "**/__pycache__/**"]
+
+[shared]
+cpp = ["*.c", "*.cc", "*.cpp", "*.cxx", "*.h", "*.hh", "*.hpp", "*.hxx", "*.inl"]
+cmake = [
+  "CMakeLists.txt",
+  "**/CMakeLists.txt",
+  "CMakeLists.txt.in",
+  "**/CMakeLists.txt.in",
+  "*.cmake",
+  "*.cmake.in",
+]
+python = ["*.py", "*.pyi"]
+just = ["justfile", "**/justfile", "*.just"]
+misc = ["*.json", "*.jsonc", "*.md", "*.markdown", "*.toml", "*.yaml", "*.yml"]
+
+[commands.clang-format-tidy]
+type = "tidy"
+shared-include = "cpp"
+cmd = ["clang-format", "-i"]
+ok-exit-codes = [0]
+labels = ["default", "native", "cpp"]
+
+[commands.clang-format-lint]
+type = "lint"
+shared-include = "cpp"
+cmd = ["clang-format", "--dry-run", "--Werror"]
+ok-exit-codes = [0]
+lint-failure-exit-codes = [1]
+# clang-format reports expected --dry-run violations on stderr. This matches
+# one or more complete diagnostics, so unrelated diagnostics remain errors.
+ignore-stderr = [
+  "(?ms)^(?:[^:\\r\\n]+:\\d+:\\d+: (?:warning|error): code should be clang-formatted \\[-Wclang-format-violations\\]\\r?\\n[^\\r\\n]*\\r?\\n[ \\t]*\\^\\r?\\n?)+$",
+]
+labels = ["default", "native", "cpp"]
+
+[commands.gersemi-tidy]
+type = "tidy"
+shared-include = "cmake"
+cmd = ["gersemi", "--no-warn-about-unknown-commands", "--in-place"]
+ok-exit-codes = [0]
+labels = ["default", "native", "cmake"]
+
+[commands.gersemi-lint]
+type = "lint"
+shared-include = "cmake"
+cmd = ["gersemi", "--no-warn-about-unknown-commands", "--check"]
+ok-exit-codes = [0]
+lint-failure-exit-codes = [1]
+# Gersemi emits this one-line formatting mismatch diagnostic on stderr. No
+# other stderr is accepted here.
+ignore-stderr = ["^(?:[^\\r\\n]+ would be reformatted\\r?\\n?)+$"]
+labels = ["default", "native", "cmake"]
+
+[commands.ruff-format-tidy]
+type = "tidy"
+shared-include = "python"
+# Formatting checks should not depend on write access to a machine-local Ruff
+# cache. This keeps Ruff's part of the check cache-free.
+cmd = ["uv", "run", "--quiet", "--locked", "--only-group", "dev", "ruff", "format", "--no-cache"]
+ok-exit-codes = [0]
+labels = ["default", "py"]
+
+[commands.ruff-format-lint]
+type = "lint"
+shared-include = "python"
+cmd = [
+  "uv",
+  "run",
+  "--quiet",
+  "--locked",
+  "--only-group",
+  "dev",
+  "ruff",
+  "format",
+  "--no-cache",
+  "--check",
+]
+ok-exit-codes = [0]
+lint-failure-exit-codes = [1]
+labels = ["default", "py"]
+
+[commands.just-tidy]
+type = "tidy"
+shared-include = "just"
+cmd = ["just", "--fmt", "--unstable", "--quiet"]
+path-flag = "--justfile"
+ok-exit-codes = [0]
+labels = ["default", "misc"]
+
+[commands.just-lint]
+type = "lint"
+shared-include = "just"
+cmd = ["just", "--fmt", "--unstable", "--check"]
+path-flag = "--justfile"
+ok-exit-codes = [0]
+lint-failure-exit-codes = [1]
+# Just reports a formatting mismatch on stderr even in --check mode. Keep this
+# limited to that one expected diagnostic.
+ignore-stderr = ["^error: formatted justfile differs from original\\r?\\n?$"]
+labels = ["default", "misc"]
+
+[commands.oxfmt-tidy]
+type = "tidy"
+shared-include = "misc"
+cmd = ["oxfmt", "--disable-nested-config", "--no-error-on-unmatched-pattern"]
+ok-exit-codes = [0]
+# Oxfmt does not support every extension covered by the shared misc group and
+# reports that expected no-op on stderr even with its non-error flag enabled.
+ignore-stderr = ["^No files found matching the given patterns\\.\\r?\\n?$"]
+labels = ["default", "misc"]
+
+[commands.oxfmt-lint]
+type = "lint"
+shared-include = "misc"
+cmd = ["oxfmt", "--disable-nested-config", "--no-error-on-unmatched-pattern", "--check"]
+ok-exit-codes = [0]
+lint-failure-exit-codes = [1]
+ignore-stderr = ["^No files found matching the given patterns\\.\\r?\\n?$"]
+labels = ["default", "misc"]

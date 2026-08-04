@@ -3,7 +3,8 @@ lockfile = true
 
 [tool_alias]
 gersemi = "pipx:gersemi"
-treefmt = "aqua:numtide/treefmt"
+oxfmt = "npm:oxfmt"
+precious = "github:houseabsolute/precious"
 
 [tools]
 act = "latest"
@@ -12,4 +13,4 @@ actionlint = "latest"
 shellcheck = "latest"
 gersemi = "latest"
 oxfmt = "0.59.0"
-treefmt = "latest"
+precious = "latest"

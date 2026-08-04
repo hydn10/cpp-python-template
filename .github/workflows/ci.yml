@@ -26,7 +26,7 @@ jobs:
       - name: Set up repository tools
         uses: jdx/mise-action@v4
         with:
-          install_args: gersemi just oxfmt treefmt
+          install_args: gersemi just oxfmt precious
 
       - name: Install LLVM 22
         uses: KyleMayes/install-llvm-action@v2
@@ -37,7 +37,7 @@ jobs:
           env: false
 
       - name: Check formatting
-        run: treefmt --ci
+        run: just check format all
 
   native-linux:
     name: Native package (Linux ${{ matrix.name }})

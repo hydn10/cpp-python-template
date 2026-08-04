@@ -10,8 +10,8 @@ let
     just = _: pkgs.just;
     actionlint = _: pkgs.actionlint;
     oxfmt = _: pkgs.oxfmt;
+    precious = _: pkgs.precious;
     shellcheck = _: pkgs.shellcheck;
-    treefmt = _: pkgs.treefmt;
   };
 in
 adapter.mapTools {

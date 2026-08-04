@@ -132,6 +132,45 @@ url_api = "https://api.github.com/repos/casey/just/releases/assets/481977734"
 version = "0.59.0"
 backend = "npm:oxfmt"
 
+[[tools.precious]]
+version = "0.11.0"
+backend = "github:houseabsolute/precious"
+
+[tools.precious."platforms.linux-arm64"]
+checksum = "sha256:44d98091a988671786a99d8025b169c76bb08718ffa8f793a80ae1aa97ca5472"
+url = "https://github.com/houseabsolute/precious/releases/download/v0.11.0/precious-Linux-musl-arm64.tar.gz"
+url_api = "https://api.github.com/repos/houseabsolute/precious/releases/assets/434639525"
+
+[tools.precious."platforms.linux-arm64-musl"]
+checksum = "sha256:44d98091a988671786a99d8025b169c76bb08718ffa8f793a80ae1aa97ca5472"
+url = "https://github.com/houseabsolute/precious/releases/download/v0.11.0/precious-Linux-musl-arm64.tar.gz"
+url_api = "https://api.github.com/repos/houseabsolute/precious/releases/assets/434639525"
+
+[tools.precious."platforms.linux-x64"]
+checksum = "sha256:6a267a3e309ebd39ef36352e283b2ad70066ccb61e4b04785afbd85df3fa76b4"
+url = "https://github.com/houseabsolute/precious/releases/download/v0.11.0/precious-Linux-musl-x86_64.tar.gz"
+url_api = "https://api.github.com/repos/houseabsolute/precious/releases/assets/434639494"
+
+[tools.precious."platforms.linux-x64-musl"]
+checksum = "sha256:6a267a3e309ebd39ef36352e283b2ad70066ccb61e4b04785afbd85df3fa76b4"
+url = "https://github.com/houseabsolute/precious/releases/download/v0.11.0/precious-Linux-musl-x86_64.tar.gz"
+url_api = "https://api.github.com/repos/houseabsolute/precious/releases/assets/434639494"
+
+[tools.precious."platforms.macos-arm64"]
+checksum = "sha256:e6cbdba5261c15e3eb9208af928facff50c883bb11c0dd0c10766379285c75b9"
+url = "https://github.com/houseabsolute/precious/releases/download/v0.11.0/precious-macOS-arm64.tar.gz"
+url_api = "https://api.github.com/repos/houseabsolute/precious/releases/assets/434639276"
+
+[tools.precious."platforms.macos-x64"]
+checksum = "sha256:5500304c379686acd0cb852ad9f32e20baaab939f7fbc1f75f1ec0583f4bd676"
+url = "https://github.com/houseabsolute/precious/releases/download/v0.11.0/precious-macOS-x86_64.tar.gz"
+url_api = "https://api.github.com/repos/houseabsolute/precious/releases/assets/434639281"
+
+[tools.precious."platforms.windows-x64"]
+checksum = "sha256:bc5dfb482675ef79798fa578dc5f8edea1cd9f2b5d7bdc5bb02b4a9590f54467"
+url = "https://github.com/houseabsolute/precious/releases/download/v0.11.0/precious-Windows-msvc-x86_64.zip"
+url_api = "https://api.github.com/repos/houseabsolute/precious/releases/assets/434640219"
+
 [[tools.shellcheck]]
 version = "0.11.0"
 backend = "aqua:koalaman/shellcheck"
@@ -170,37 +209,3 @@ url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/2790
 checksum = "sha256:8a4e35ab0b331c85d73567b12f2a444df187f483e5079ceffa6bda1faa2e740e"
 url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.zip"
 url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056944"
-
-[[tools.treefmt]]
-version = "2.5.0"
-backend = "aqua:numtide/treefmt"
-
-[tools.treefmt."platforms.linux-arm64"]
-checksum = "sha256:fce47c6fc8cb6a87461b1309fc6d3102eade64b6fe0c9b86678b4eed9eb00e57"
-url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045230"
-
-[tools.treefmt."platforms.linux-arm64-musl"]
-checksum = "sha256:fce47c6fc8cb6a87461b1309fc6d3102eade64b6fe0c9b86678b4eed9eb00e57"
-url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045230"
-
-[tools.treefmt."platforms.linux-x64"]
-checksum = "sha256:95f707bf9666d08b50888b116768fd77f042ad5af92aa3b795f063160e72758f"
-url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045232"
-
-[tools.treefmt."platforms.linux-x64-musl"]
-checksum = "sha256:95f707bf9666d08b50888b116768fd77f042ad5af92aa3b795f063160e72758f"
-url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045232"
-
-[tools.treefmt."platforms.macos-arm64"]
-checksum = "sha256:a3cdfa8e92eb7c302bb851f73800187e75d5789f2a75835b403b158d77b2c376"
-url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045242"
-
-[tools.treefmt."platforms.macos-x64"]
-checksum = "sha256:21388b1f7d6c2f572e1ce9231f7dfc08f80a062438908791ab078c1d76b10a49"
-url = "https://github.com/numtide/treefmt/releases/download/v2.5.0/treefmt_2.5.0_darwin_amd64.tar.gz"
-url_api = "https://api.github.com/repos/numtide/treefmt/releases/assets/391045231"

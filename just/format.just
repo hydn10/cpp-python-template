@@ -4,23 +4,23 @@ set working-directory := ".."
 # Format every portable project file.
 [default]
 all:
-    treefmt --no-cache
+    precious tidy --all
 
 # Format all native source files, including C++ and CMake.
 native: cpp cmake
 
 # Format all C and C++ source and header files.
 cpp:
-    treefmt --no-cache -f cpp
+    precious tidy --all --label cpp
 
 # Format all CMake source files.
 cmake:
-    treefmt --no-cache -f cmake
+    precious tidy --all --label cmake
 
 # Format all Python files through uv-managed Ruff.
 py:
-    treefmt --no-cache -f python
+    precious tidy --all --label py
 
 # Format all miscellaneous portable files.
 misc:
-    treefmt --no-cache -f just,misc
+    precious tidy --all --label misc

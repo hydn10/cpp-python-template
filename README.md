@@ -117,7 +117,9 @@ just help                 # discover all recipes
 just cpp validate debug   # configure, build, check headers, and test
 just py rebuild           # rebuild the Python development install
 just format all           # format portable project files
-just lint                 # run all linting checks
+just check format all     # check portable project formatting
+just check lint all       # run all linting checks
+just check                # run all read-only formatting and lint checks
 just verify               # run complete read-only verification
 ```
 
@@ -136,6 +138,9 @@ With Mise activated in your shell:
 mise install
 just help
 ```
+
+On Windows, if your shell does not activate Mise shims automatically, run
+`. .\tools\activate-mise-shims.ps1` first.
 
 Alternatively, run a command inside the Mise environment:
 
