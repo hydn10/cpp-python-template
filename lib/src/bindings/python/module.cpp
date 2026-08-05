@@ -1,46 +1,56 @@
-// pybind11 headers need to be included first. See [1].
-// [1]: https://pybind11.readthedocs.io/en/stable/basics.html#header-and-namespace-conventions
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
 
 #include <mylib/mylib.hpp>
 
-#include <algorithm>
 #include <cstddef>
+#include <memory>
+#include <utility>
 #include <vector>
 
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 
 namespace
 {
 
-// pybind11's public umbrella headers intentionally provide these declarations.
-// NOLINTBEGIN(misc-include-cleaner)
-py::array_t<double>
-as_numpy_array(std::vector<double> const &values)
+using values_array = nb::ndarray<nb::numpy, double, nb::ndim<1>, nb::c_contig>;
+
+values_array
+as_numpy_array(std::vector<double> values)
 {
-  auto const element_count = static_cast<py::ssize_t>(values.size());
-  auto result = py::array_t<double>(element_count);
-  std::copy(values.cbegin(), values.cend(), result.mutable_data());
-  return result;
+  auto owned_values = std::make_unique<std::vector<double>>(std::move(values));
+  auto const element_count = owned_values->size();
+
+  // Don't pass owned_values.release() since a failed capsule construction would leak it.
+  nb::capsule const owner(
+      owned_values.get(),
+      [](void *pointer) noexcept
+  {
+    delete static_cast<std::vector<double> *>(pointer); // NOLINT(cppcoreguidelines-owning-memory)
+  });
+
+  auto *data = owned_values->data();
+  owned_values.release(); // NOLINT(bugprone-unused-return-value)
+
+  return values_array(data, {element_count}, owner);
 }
 
 } // namespace
 
-PYBIND11_MODULE(_core, module)
-{
-  module.doc() = "pybind11 bindings for mylib";
 
-  module.def("compute_value", &mylib::compute_value, py::arg("x"), "Compute x*x + 1.0.");
+NB_MODULE(_core, module)
+{
+  module.doc() = "Python bindings for mylib";
+
+  module.def("compute_value", &mylib::compute_value, nb::arg("x"), "Compute x*x + 1.0.");
   module.def(
       "compute_values",
       [](double xmin, double xmax, std::size_t point_count)
   { return as_numpy_array(mylib::compute_values(xmin, xmax, point_count)); },
-      py::arg("xmin"),
-      py::arg("xmax"),
-      py::arg("point_count"),
+      nb::arg("xmin"),
+      nb::arg("xmax"),
+      nb::arg("point_count"),
       "Sample compute_value() over an evenly spaced grid and return a NumPy array.");
 }
-// NOLINTEND(misc-include-cleaner)

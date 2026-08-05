@@ -26,7 +26,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
 
     plt.figure(figsize=(6, 4))
     plt.plot(x_values, y_values, label="x*x + 1")
-    plt.title("mylib.compute_values via pybind11")
+    plt.title("mylib.compute_values")
     plt.xlabel("x")
     plt.ylabel("y")
     plt.grid(True, ls=":", alpha=0.6)

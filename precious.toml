@@ -30,7 +30,7 @@ lint-failure-exit-codes = [1]
 # clang-format reports expected --dry-run violations on stderr. This matches
 # one or more complete diagnostics, so unrelated diagnostics remain errors.
 ignore-stderr = [
-  "(?ms)^(?:[^:\\r\\n]+:\\d+:\\d+: (?:warning|error): code should be clang-formatted \\[-Wclang-format-violations\\]\\r?\\n[^\\r\\n]*\\r?\\n[ \\t]*\\^\\r?\\n?)+$",
+  "\\A(?:[^:\\r\\n]+:\\d+:\\d+: (?:warning|error): code should be clang-formatted \\[-Wclang-format-violations\\]\\r?\\n[^\\r\\n]*\\r?\\n[ \\t]*\\^\\r?\\n?)+\\z",
 ]
 labels = ["default", "native", "cpp"]
 

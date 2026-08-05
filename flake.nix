@@ -49,7 +49,10 @@
         let
           pkgs = import nixpkgs { inherit system; };
           python = pkgs.python3;
-          nixFormatter = pkgs.nixfmt-tree;
+
+          nanobind = import ./nix/pkgs/nanobind.nix {
+            inherit pkgs python;
+          };
 
           vcpkgDependencies =
             vcpkg-nix-adapter.lib.mapDependencies
@@ -58,7 +61,7 @@
               }
               {
                 eigen3 = _: pkgs.eigen;
-                pybind11 = _: python.pkgs.pybind11;
+                nanobind = _: nanobind;
               };
 
           devShellProjectFeatures = vcpkgDependencies.selectProjectFeatures (
@@ -88,6 +91,8 @@
 
           mylibWithApps = cpp.mylibWithApps;
           mylibWithTestsAndChecks = cpp.mylibWithTestsAndChecks;
+
+          nixFormatter = pkgs.nixfmt-tree;
         in
         {
           packages = {

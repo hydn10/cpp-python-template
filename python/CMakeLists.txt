@@ -1,8 +1,10 @@
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
-find_package(pybind11 CONFIG REQUIRED)
+find_package(nanobind CONFIG REQUIRED)
 
-pybind11_add_module(
+nanobind_add_module(
     _core
+    PROTECT_STACK
+    NB_SUPPRESS_WARNINGS
     "${PROJECT_SOURCE_DIR}/lib/src/bindings/python/module.cpp"
 )
 

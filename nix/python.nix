@@ -8,6 +8,20 @@
   pyproject-build-systems,
 }:
 let
+  pythonFeature =
+    vcpkgDependencies.projectFeatures.python or (throw "vcpkg project feature 'python' is required");
+
+  nanobindDependency =
+    let
+      dependency = pkgs.lib.findFirst (
+        candidate: candidate.name == "nanobind"
+      ) (throw "vcpkg project feature 'python' must depend on nanobind") pythonFeature.mappedDependencies;
+    in
+    if dependency.host then
+      throw "nanobind must be a target dependency of the vcpkg project feature 'python'"
+    else
+      dependency;
+
   workspace = uv2nix.lib.workspace.loadWorkspace {
     workspaceRoot = ../.;
   };
@@ -39,9 +53,9 @@ let
             ++ [
               pkgs.cmake
               pkgs.ninja
-              # pyproject.toml requires pybind11 independently of vcpkg's
-              # direct-CMake feature, but both use the same package.
-              python.pkgs.pybind11
+              # Use the same mapped nanobind package as the vcpkg Python
+              # feature, including its Nix-specific CMake setup hook.
+              nanobindDependency.package
             ]
             ++ vcpkgDependencies.root.hostPackages;
           buildInputs = (old.buildInputs or [ ]) ++ (cppPackage.buildInputs or [ ]);

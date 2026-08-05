@@ -24,7 +24,7 @@ auto const values = mylib::compute_values(-1.0, 1.0, 5);
 ```
 
 The Python tools call the same native implementation through a private
-[pybind11](https://pybind11.readthedocs.io/) extension.
+[nanobind](https://nanobind.readthedocs.io/) extension.
 
 ## Native C++
 
@@ -70,6 +70,8 @@ target_link_libraries(<target> PRIVATE mylib::mylib)
 [uv](https://docs.astral.sh/uv/) are required. uv uses an existing compatible
 interpreter or downloads one when needed.
 
+Building the Python extension additionally requires [nanobind](https://nanobind.readthedocs.io/) >= 2.13.
+
 ```sh
 uv sync --locked
 uv run --locked mylib-plot --save plot.png
@@ -106,7 +108,7 @@ export VCPKG_ROOT=/path/to/vcpkg
 ```
 
 The adapter sets `CMAKE_TOOLCHAIN_FILE` so vcpkg supplies Eigen and, for direct
-CMake Python builds, pybind11.
+CMake Python builds, nanobind.
 
 ## Developer commands
 
