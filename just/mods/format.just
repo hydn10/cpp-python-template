@@ -1,5 +1,5 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
-set working-directory := ".."
+set working-directory := "../.."
 
 # Format every portable project file.
 [default]

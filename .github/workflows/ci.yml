@@ -58,7 +58,6 @@ jobs:
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
@@ -109,16 +108,16 @@ jobs:
           feature-profile: core
 
       - name: Validate native static Release
-        run: just cpp validate release
+        run: just cpp validate vcpkg-release
 
       - name: Check installed static CMake package
-        run: just cpp check-installed release
+        run: just cpp check-installed vcpkg-release
 
       - name: Validate native shared Release
-        run: just cpp validate shared-release
+        run: just cpp validate vcpkg-shared-release
 
       - name: Check installed shared CMake package
-        run: just cpp check-installed shared-release
+        run: just cpp check-installed vcpkg-shared-release
 
   native-windows:
     name: Native package (Windows ${{ matrix.name }})
@@ -139,7 +138,6 @@ jobs:
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
@@ -188,16 +186,16 @@ jobs:
           feature-profile: core
 
       - name: Validate native static Release
-        run: just cpp validate release
+        run: just cpp validate vcpkg-release
 
       - name: Check installed static CMake package
-        run: just cpp check-installed release
+        run: just cpp check-installed vcpkg-release
 
       - name: Validate native shared Release
-        run: just cpp validate shared-release
+        run: just cpp validate vcpkg-shared-release
 
       - name: Check installed shared CMake package
-        run: just cpp check-installed shared-release
+        run: just cpp check-installed vcpkg-shared-release
 
   quality-linux:
     name: Native quality (Linux Clang, Python 3.12)
@@ -205,7 +203,6 @@ jobs:
     env:
       CC: clang
       CXX: clang++
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
@@ -260,10 +257,10 @@ jobs:
       - name: Validate native Python quality configuration
         run: |
           # Configure freshly while keeping vcpkg's Python build within the runner disk limit.
-          cmake --preset python-quality --fresh -DVCPKG_INSTALL_OPTIONS=--clean-after-build
-          just cpp build python-quality
-          just cpp verify-headers python-quality
-          just cpp test python-quality
+          cmake --preset vcpkg-python-quality --fresh -DVCPKG_INSTALL_OPTIONS=--clean-after-build
+          just cpp build vcpkg-python-quality
+          just cpp verify-headers vcpkg-python-quality
+          just cpp test vcpkg-python-quality
 
   quality-windows:
     name: Native quality (Windows clang-cl, Python 3.12)
@@ -271,7 +268,6 @@ jobs:
     env:
       CC: clang-cl.exe
       CXX: clang-cl.exe
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
@@ -325,10 +321,10 @@ jobs:
       - name: Validate native Python quality configuration
         run: |
           # Configure freshly while keeping vcpkg's Python build within the runner disk limit.
-          cmake --preset python-quality --fresh -DVCPKG_INSTALL_OPTIONS=--clean-after-build
-          just cpp build python-quality
-          just cpp verify-headers python-quality
-          just cpp test python-quality
+          cmake --preset vcpkg-python-quality --fresh -DVCPKG_INSTALL_OPTIONS=--clean-after-build
+          just cpp build vcpkg-python-quality
+          just cpp verify-headers vcpkg-python-quality
+          just cpp test vcpkg-python-quality
 
   python-apps-linux:
     name: Python apps (Linux, Python ${{ matrix.python }})
@@ -340,7 +336,6 @@ jobs:
           - "3.12"
           - "3.14"
     env:
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       MPLBACKEND: Agg
     steps:
@@ -376,7 +371,6 @@ jobs:
       matrix:
         python: *python-lines
     env:
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       MPLBACKEND: Agg
     steps:
@@ -427,7 +421,6 @@ jobs:
       matrix:
         python: *python-lines
     env:
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       MPLBACKEND: Agg
     steps:
@@ -463,7 +456,6 @@ jobs:
       matrix:
         python: *python-lines
     env:
-      CMAKE_TOOLCHAIN_FILE: ${{ github.workspace }}/cmake/toolchains/vcpkg.cmake
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       MPLBACKEND: Agg
     steps:

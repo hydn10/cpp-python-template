@@ -1,5 +1,6 @@
 [settings]
 lockfile = true
+windows_shim_mode = "exe"
 
 [tool_alias]
 gersemi = "pipx:gersemi"

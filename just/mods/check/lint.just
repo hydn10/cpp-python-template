@@ -1,14 +1,16 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
-set working-directory := "../.."
+set working-directory := "../../.."
+
+import '../../common.just'
 
 # Run all available linters.
 [default]
-all: cpp py ci
+all preset=default-python-quality-preset: (cpp preset) py ci
 
 # Run clang-tidy across every native target, including the Python binding.
-cpp:
-    cmake --preset python-quality --fresh
-    cmake --build --preset python-quality --clean-first
+cpp preset=default-python-quality-preset:
+    cmake --preset {{ preset }} --fresh
+    cmake --build --preset {{ preset }} --clean-first
 
 # Run the Ruff linter across all Python files.
 py:

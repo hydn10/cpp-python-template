@@ -21,6 +21,10 @@ HeaderFilterRegex: ''
 FormatStyle:     file
 
 CheckOptions:
+  # Eigen's public module headers re-export declarations from its internal
+  # headers, which misc-include-cleaner cannot reliably attribute.
+  - key: misc-include-cleaner.IgnoreHeaders
+    value: 'Eigen/.*'
   - key: readability-identifier-length.IgnoredVariableNames
     value: 'x|y|z'
   - key: readability-identifier-length.IgnoredParameterNames

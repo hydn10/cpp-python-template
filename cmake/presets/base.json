@@ -1,0 +1,139 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "native",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "MYLIB_BUILD_APPS": "ON",
+        "MYLIB_BUILD_EXAMPLES": "ON",
+        "MYLIB_BUILD_PYTHON": "OFF",
+        "MYLIB_BUILD_TESTING": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "inherits": "native",
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": "OFF",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "quality",
+      "displayName": "Quality",
+      "description": "Debug native build with clang-tidy.",
+      "inherits": "debug",
+      "cacheVariables": {
+        "CMAKE_CXX_CLANG_TIDY": "$<IF:$<PLATFORM_ID:Windows>,clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc,clang-tidy;--warnings-as-errors=*>",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "python-quality",
+      "displayName": "Python Quality",
+      "description": "Debug native and Python binding build with clang-tidy.",
+      "inherits": "quality",
+      "cacheVariables": {
+        "CMAKE_POSITION_INDEPENDENT_CODE": "ON",
+        "MYLIB_BUILD_PYTHON": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "inherits": "native",
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": "OFF",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "shared-release",
+      "displayName": "Shared Release",
+      "inherits": "native",
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": "ON",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "quality",
+      "configurePreset": "quality"
+    },
+    {
+      "name": "python-quality",
+      "configurePreset": "python-quality"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "shared-release",
+      "configurePreset": "shared-release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "quality",
+      "configurePreset": "quality",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "python-quality",
+      "configurePreset": "python-quality",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "shared-release",
+      "configurePreset": "shared-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    }
+  ]
+}

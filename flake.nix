@@ -161,6 +161,8 @@
               '';
             });
 
+            python-apps = pythonModules.mylibApplication;
+
             # Use the formatter's own check derivation so `nix fmt` and
             # `nix flake check` share both traversal and formatting policy.
             nix-format = nixFormatter.check self;

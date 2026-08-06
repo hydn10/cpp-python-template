@@ -1,27 +1,28 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 
+import 'just/common.just'
+
 # Source formatting.
-mod format 'just/format.just'
+mod format 'just/mods/format.just'
 
 # Read-only formatting and linting checks.
-mod check 'just/check.just'
+mod check 'just/mods/check.just'
 
 # Native CMake and CTest workflows.
-mod cpp 'just/cpp.just'
+mod cpp 'just/mods/cpp.just'
 
 # Python environment and application workflows.
-mod py 'just/py.just'
+mod py 'just/mods/py.just'
 
 # Disposable build state, environments, caches, and package outputs.
-mod purge 'just/purge.just'
+mod purge 'just/mods/purge.just'
 
 # Local GitHub Actions workflow execution.
-mod ci 'just/ci.just'
+mod ci 'just/mods/ci.just'
 
 # List all root and module recipes.
 help:
     @just --list --list-submodules
 
-# Run the complete local repository verification.
-# The C++ linter supplies the fresh python-quality build consumed by validate-built.
-verify: check::format::all check::lint::all (cpp::validate-built "python-quality") py::validate
+# Run the complete local repository verification using one selected Python-quality tree.
+verify preset=default-python-quality-preset: check::format::all (check::lint::all preset) (cpp::validate-built preset) (py::validate preset)

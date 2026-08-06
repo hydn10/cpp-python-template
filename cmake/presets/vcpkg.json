@@ -1,0 +1,115 @@
+{
+  "version": 6,
+  "include": ["base.json"],
+  "configurePresets": [
+    {
+      "name": "vcpkg-provider",
+      "hidden": true,
+      "condition": {
+        "type": "notEquals",
+        "lhs": "$env{VCPKG_ROOT}",
+        "rhs": ""
+      },
+      "toolchainFile": "${sourceDir}/cmake/toolchains/vcpkg.cmake"
+    },
+    {
+      "name": "vcpkg-debug",
+      "displayName": "vcpkg - Debug",
+      "inherits": ["debug", "vcpkg-provider"]
+    },
+    {
+      "name": "vcpkg-quality",
+      "displayName": "vcpkg - Quality",
+      "description": "Debug native build with clang-tidy, using vcpkg.",
+      "inherits": ["quality", "vcpkg-provider"]
+    },
+    {
+      "name": "vcpkg-python-quality",
+      "displayName": "vcpkg - Python Quality",
+      "description": "Debug native and Python binding build with clang-tidy, using vcpkg.",
+      "inherits": ["python-quality", "vcpkg-provider"]
+    },
+    {
+      "name": "vcpkg-release",
+      "displayName": "vcpkg - Release",
+      "inherits": ["release", "vcpkg-provider"]
+    },
+    {
+      "name": "vcpkg-shared-release",
+      "displayName": "vcpkg - Shared Release",
+      "inherits": ["shared-release", "vcpkg-provider"]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "vcpkg-provider",
+      "hidden": true,
+      "condition": {
+        "type": "notEquals",
+        "lhs": "$env{VCPKG_ROOT}",
+        "rhs": ""
+      }
+    },
+    {
+      "name": "vcpkg-debug",
+      "inherits": ["debug", "vcpkg-provider"],
+      "configurePreset": "vcpkg-debug"
+    },
+    {
+      "name": "vcpkg-quality",
+      "inherits": ["quality", "vcpkg-provider"],
+      "configurePreset": "vcpkg-quality"
+    },
+    {
+      "name": "vcpkg-python-quality",
+      "inherits": ["python-quality", "vcpkg-provider"],
+      "configurePreset": "vcpkg-python-quality"
+    },
+    {
+      "name": "vcpkg-release",
+      "inherits": ["release", "vcpkg-provider"],
+      "configurePreset": "vcpkg-release"
+    },
+    {
+      "name": "vcpkg-shared-release",
+      "inherits": ["shared-release", "vcpkg-provider"],
+      "configurePreset": "vcpkg-shared-release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "vcpkg-provider",
+      "hidden": true,
+      "condition": {
+        "type": "notEquals",
+        "lhs": "$env{VCPKG_ROOT}",
+        "rhs": ""
+      }
+    },
+    {
+      "name": "vcpkg-debug",
+      "inherits": ["debug", "vcpkg-provider"],
+      "configurePreset": "vcpkg-debug"
+    },
+    {
+      "name": "vcpkg-quality",
+      "inherits": ["quality", "vcpkg-provider"],
+      "configurePreset": "vcpkg-quality"
+    },
+    {
+      "name": "vcpkg-python-quality",
+      "inherits": ["python-quality", "vcpkg-provider"],
+      "configurePreset": "vcpkg-python-quality"
+    },
+    {
+      "name": "vcpkg-release",
+      "inherits": ["release", "vcpkg-provider"],
+      "configurePreset": "vcpkg-release"
+    },
+    {
+      "name": "vcpkg-shared-release",
+      "inherits": ["shared-release", "vcpkg-provider"],
+      "configurePreset": "vcpkg-shared-release"
+    }
+  ]
+}

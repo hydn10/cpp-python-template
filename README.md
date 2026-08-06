@@ -33,7 +33,7 @@ Requirements:
 - [CMake](https://cmake.org/) >= 3.27
 - [Ninja](https://ninja-build.org/)
 - [Eigen](https://eigen.tuxfamily.org/) 3
-- [C++23-capable compiler](https://en.cppreference.com/w/cpp/compiler_support/23)
+- [C++ compiler](https://en.cppreference.com/w/cpp/compiler_support/23) with C++23 support
 
 The installed library itself requires only C++17. Native dependencies may be
 provided by the host environment, [vcpkg](https://learn.microsoft.com/vcpkg/),
@@ -45,6 +45,10 @@ cmake --build --preset debug
 ctest --preset debug
 ./out/build/debug/apps/mylib-sample
 ```
+
+To use an existing `CMAKE_TOOLCHAIN_FILE`, select a generic preset (e.g. `debug`, not
+`vcpkg-debug`). When changing external toolchains, reconfigure with --fresh or remove
+the corresponding build directory.
 
 For a distribution-oriented static Release build:
 
@@ -60,7 +64,6 @@ Downstream CMake projects consume the installed package with:
 
 ```cmake
 find_package(mylib CONFIG REQUIRED)
-
 target_link_libraries(<target> PRIVATE mylib::mylib)
 ```
 
@@ -86,29 +89,16 @@ uv sync --locked --reinstall-package mylib-tools
 
 ## Native dependencies with vcpkg
 
-Ensure `VCPKG_ROOT` points to a vcpkg checkout. Set it only if your environment
-has not already done so.
-
-PowerShell:
-
-```powershell
-# Only if VCPKG_ROOT is not already set:
-$env:VCPKG_ROOT = "C:\path\to\vcpkg"
-
-. .\tools\activate-vcpkg.ps1
-```
-
-POSIX shell:
+Set `VCPKG_ROOT` to a valid vcpkg checkout. The matching `vcpkg-*` presets then
+become available to CMake. They use `cmake/toolchains/vcpkg.cmake`.
 
 ```sh
-# Only if VCPKG_ROOT is not already set:
-export VCPKG_ROOT=/path/to/vcpkg
+# If VCPKG_ROOT is not already set:
+# export VCPKG_ROOT=/path/to/vcpkg
 
-. tools/activate-vcpkg.sh
+cmake --preset vcpkg-quality
+cmake --build --preset vcpkg-quality
 ```
-
-The adapter sets `CMAKE_TOOLCHAIN_FILE` so vcpkg supplies Eigen and, for direct
-CMake Python builds, nanobind.
 
 ## Developer commands
 
@@ -117,6 +107,7 @@ CMake Python builds, nanobind.
 ```sh
 just help                 # discover all recipes
 just cpp validate debug   # configure, build, check headers, and test
+just py sync              # provider-aware Python environment
 just py rebuild           # rebuild the Python development install
 just format all           # format portable project files
 just check format all     # check portable project formatting
@@ -124,6 +115,16 @@ just check lint all       # run all linting checks
 just check                # run all read-only formatting and lint checks
 just verify               # run complete read-only verification
 ```
+
+With no preset argument, Just uses:
+
+- Generic, when `CMAKE_TOOLCHAIN_FILE` is set (preserving that toolchain).
+- The matching `vcpkg-*` preset, otherwise, when `VCPKG_ROOT` is set.
+- Generic, when neither variable is set.
+
+Explicit presets are literal: `just cpp build quality` is always `quality`.
+
+Raw `uv` commands use the caller’s native environment. `just py ...` applies the provider-aware defaults.
 
 For a final pre-submission pass, consider running `just format all` followed by `just verify`.
 
@@ -134,21 +135,21 @@ environment-provisioning approaches.
 
 ### Mise (selective)
 
-With Mise activated in your shell:
+Use Mise's normal shell integration, or ensure its shims are on `PATH`:
 
 ```sh
 mise install
 just help
 ```
 
-On Windows, if your shell does not activate Mise shims automatically, run
-`. .\tools\activate-mise-shims.ps1` first.
-
 Alternatively, run a command inside the Mise environment:
 
 ```sh
 mise x -- just help
 ```
+
+On Windows, `mise x -- just format all` may fail because an upstream
+command-resolution issue mishandles executable paths.
 
 Mise provides the repository’s portable workflow tooling.
 Language toolchains, language-specific tools, runtimes, and project dependencies remain caller-provided.

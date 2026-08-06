@@ -30,7 +30,13 @@ mylib-plot = "mylib_tools.plot:main"
 mylib-dump = "mylib_tools.dump:main"
 
 [tool.uv]
-cache-keys = [{ file = "pyproject.toml" }, { file = "vcpkg.json" }]
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "vcpkg.json" },
+  { file = "cmake/toolchains/vcpkg.cmake" },
+  { env = "CMAKE_TOOLCHAIN_FILE" },
+  { env = "VCPKG_ROOT" },
+]
 
 [tool.scikit-build]
 minimum-version = "build-system.requires"
