@@ -19,7 +19,7 @@ dependencies = ["numpy>=1.22", "matplotlib>=3.6"]
 [dependency-groups]
 dev = ["ruff>=0.16.0"]
 
-## No Python testing dependencies; Python is only a small set of console apps.
+# No Python testing dependencies are needed. Python is used only for a small set of console applications.
 
 [build-system]
 requires = ["scikit-build-core>=0.12,<1", "nanobind>=2.13,<3"]

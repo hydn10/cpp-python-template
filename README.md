@@ -30,7 +30,7 @@ The Python tools call the same native implementation through a private
 
 Requirements:
 
-- [CMake](https://cmake.org/) >= 3.27
+- [CMake](https://cmake.org/) >= 4.1
 - [Ninja](https://ninja-build.org/)
 - [Eigen](https://eigen.tuxfamily.org/) 3
 - [C++ compiler](https://en.cppreference.com/w/cpp/compiler_support/23) with C++23 support

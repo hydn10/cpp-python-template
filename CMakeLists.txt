@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 4.1)
 
 # Trigger configuration on file change.
 configure_file(vcpkg.json vcpkg.json COPYONLY)
@@ -15,6 +15,10 @@ option(
 mark_as_advanced(MYLIB_BUILD_PYTHON)
 
 project(mylib LANGUAGES CXX VERSION "${VERSION_FROM_JSON}")
+
+# The project does not use C++ modules. Disabling their dependency scanner also
+# keeps compiler-specific module flags out of clang-tidy invocations.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/mylib-windows-runtime.cmake")
 include(CMakePackageConfigHelpers)

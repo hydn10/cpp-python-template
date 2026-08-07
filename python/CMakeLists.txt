@@ -1,4 +1,34 @@
-find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+# Providers that predate prefixed FindPython artifacts may supply the native
+# interpreter under the conventional unprefixed input name. Treat it as the
+# build interpreter unless the caller supplied that role explicitly.
+if(DEFINED Python_EXECUTABLE AND NOT DEFINED Python_BUILD_EXECUTABLE)
+    set(Python_BUILD_EXECUTABLE "${Python_EXECUTABLE}")
+endif()
+
+# Discover the interpreter and destination artifacts independently in every
+# build. In a native build they resolve to the same platform; in a cross build
+# CMP0190 prevents the destination interpreter from being executed.
+set(Python_ARTIFACTS_PREFIX "_BUILD")
+find_package(Python COMPONENTS Interpreter REQUIRED)
+unset(Python_ARTIFACTS_PREFIX)
+
+find_package(Python COMPONENTS Development.Module REQUIRED)
+
+if(
+    NOT Python_BUILD_VERSION_MAJOR EQUAL Python_VERSION_MAJOR
+    OR NOT Python_BUILD_VERSION_MINOR EQUAL Python_VERSION_MINOR
+)
+    message(
+        FATAL_ERROR
+        "Build Python ${Python_BUILD_VERSION} is incompatible with destination Python ${Python_VERSION}"
+    )
+endif()
+
+# Nanobind 2.x consumes the unprefixed FindPython interpreter target and
+# executable while using the destination Module target, headers, and SOABI.
+add_executable(Python::Interpreter ALIAS Python_BUILD::Interpreter)
+set(Python_EXECUTABLE "${Python_BUILD_EXECUTABLE}")
+
 find_package(nanobind CONFIG REQUIRED)
 
 nanobind_add_module(
@@ -24,6 +54,17 @@ if(DEFINED SKBUILD)
             DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_tools"
             COMPONENT python
     )
+else()
+    install(
+        TARGETS _core
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/mylib_tools"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_LIBDIR}/mylib_tools"
+    )
 endif()
+
+message(
+    STATUS
+    "Python roles: build interpreter ${Python_BUILD_EXECUTABLE}; destination headers ${Python_INCLUDE_DIRS}; destination SOABI ${Python_SOABI}"
+)
 
 message(STATUS "Added Python module: _core")

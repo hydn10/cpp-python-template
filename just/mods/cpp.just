@@ -5,6 +5,10 @@ import '../common.just'
 
 repo-root := justfile_directory()
 
+# List all available CMake presets.
+list:
+    cmake --list-presets=all
+
 # Configure the native build.
 [arg("fresh", long="fresh", value="true")]
 configure preset=default-quality-preset fresh="false":

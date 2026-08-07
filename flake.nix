@@ -48,63 +48,43 @@
         system:
         let
           pkgs = import nixpkgs { inherit system; };
-          python = pkgs.python3;
-
-          nanobind = import ./nix/pkgs/nanobind.nix {
-            inherit pkgs python;
+          nixProject = import ./nix {
+            inherit
+              pkgs
+              uv2nix
+              pyproject-nix
+              pyproject-build-systems
+              ;
+            vcpkgAdapter = vcpkg-nix-adapter.lib;
+            miseAdapter = mise-nix-adapter.lib;
           };
 
-          vcpkgDependencies =
-            vcpkg-nix-adapter.lib.mapDependencies
-              {
-                vcpkgJson = ./vcpkg.json;
-              }
-              {
-                eigen3 = _: pkgs.eigen;
-                nanobind = _: nanobind;
-              };
+          inherit (nixProject) project;
+
+          inherit (project) vcpkgDependencies;
 
           devShellProjectFeatures = vcpkgDependencies.selectProjectFeatures (
             builtins.attrNames vcpkgDependencies.projectFeatures
           );
 
-          cpp = import ./nix/cpp.nix {
-            inherit pkgs vcpkgDependencies;
-          };
+          inherit (project) cpp;
 
-          pythonModules = import ./nix/python.nix {
-            inherit
-              pkgs
-              python
-              vcpkgDependencies
-              uv2nix
-              pyproject-nix
-              pyproject-build-systems
-              ;
-            cppPackage = cpp.mylib;
-          };
-
-          mise = import ./nix/mise.nix {
-            inherit pkgs;
-            adapter = mise-nix-adapter.lib;
-          };
+          pythonModules = nixProject.python;
+          mise = nixProject.development.mise;
 
           mylibWithApps = cpp.mylibWithApps;
-          mylibWithTestsAndChecks = cpp.mylibWithTestsAndChecks;
 
           nixFormatter = pkgs.nixfmt-tree;
         in
         {
           packages = {
-            default = cpp.mylib;
+            default = self.packages.${system}.mylib;
             mylib = cpp.mylib;
-            mylib-native-apps = mylibWithApps;
-            python-apps = pythonModules.mylibApplication;
           };
 
           # Expose runnable apps
           apps = {
-            # First-party C++ application installed by CMake when applications are ON
+            default = self.apps.${system}.mylib-sample;
             mylib-sample = {
               type = "app";
               program = "${mylibWithApps}/bin/mylib-sample";
@@ -112,6 +92,7 @@
                 description = "Run the packaged native sample application for mylib.";
               };
             };
+
             # Python CLI from [project.scripts]
             mylib-plot = {
               type = "app";
@@ -154,14 +135,11 @@
           # Build every native category, verify public headers, and let the CMake
           # check phase run the registered native tests.
           checks = {
-            default = mylibWithTestsAndChecks.overrideAttrs (oldAttrs: {
-              doCheck = true;
-              preCheck = (oldAttrs.preCheck or "") + ''
-                cmake --build . --target all_verify_interface_header_sets
-              '';
-            });
+            cpp-quality = cpp.mylibQualityCheck;
 
             python-apps = pythonModules.mylibApplication;
+
+            cmake-python-extension = cpp.mylibPythonExtension;
 
             # Use the formatter's own check derivation so `nix fmt` and
             # `nix flake check` share both traversal and formatting policy.

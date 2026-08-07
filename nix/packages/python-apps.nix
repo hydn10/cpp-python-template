@@ -1,29 +1,18 @@
 {
   pkgs,
-  python,
   cppPackage,
   vcpkgDependencies,
+  pythonFeature,
   uv2nix,
   pyproject-nix,
   pyproject-build-systems,
 }:
 let
-  pythonFeature =
-    vcpkgDependencies.projectFeatures.python or (throw "vcpkg project feature 'python' is required");
-
-  nanobindDependency =
-    let
-      dependency = pkgs.lib.findFirst (
-        candidate: candidate.name == "nanobind"
-      ) (throw "vcpkg project feature 'python' must depend on nanobind") pythonFeature.mappedDependencies;
-    in
-    if dependency.host then
-      throw "nanobind must be a target dependency of the vcpkg project feature 'python'"
-    else
-      dependency;
+  python = pythonFeature.python.package;
+  nanobind = pythonFeature.nanobind.package;
 
   workspace = uv2nix.lib.workspace.loadWorkspace {
-    workspaceRoot = ../.;
+    workspaceRoot = ../../.;
   };
 
   overlay = workspace.mkPyprojectOverlay {
@@ -53,12 +42,16 @@ let
             ++ [
               pkgs.cmake
               pkgs.ninja
-              # Use the same mapped nanobind package as the vcpkg Python
-              # feature, including its Nix-specific CMake setup hook.
-              nanobindDependency.package
             ]
             ++ vcpkgDependencies.root.hostPackages;
-          buildInputs = (old.buildInputs or [ ]) ++ (cppPackage.buildInputs or [ ]);
+          buildInputs =
+            (old.buildInputs or [ ])
+            ++ [
+              # Use the mapped target package, including its Nix-specific
+              # package-discovery setup hook.
+              nanobind
+            ]
+            ++ (cppPackage.buildInputs or [ ]);
           env = (old.env or { }) // {
             CMAKE_GENERATOR = "Ninja";
           };

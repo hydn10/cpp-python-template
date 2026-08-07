@@ -6,7 +6,7 @@
   "features": {
     "python": {
       "description": "Dependencies required to build the Python extension",
-      "dependencies": ["nanobind"]
+      "dependencies": ["python3", "nanobind"]
     }
   }
 }
