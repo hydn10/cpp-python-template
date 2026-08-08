@@ -5,5 +5,5 @@
     "minor": 1,
     "patch": 0
   },
-  "include": ["cmake/presets/base.json", "cmake/presets/vcpkg.json"]
+  "include": ["cmake/presets/base-presets.json", "cmake/presets/vcpkg-presets.json"]
 }

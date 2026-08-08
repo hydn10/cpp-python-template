@@ -36,10 +36,11 @@ precious = "latest"
 
 [env]
 # The Conda packages expose their executables through mise, but Windows also
-# needs the packages' runtime DLL directories on PATH for clang-tidy.
+# needs the packages' runtime DLL directories on PATH for clang-tidy. Keep each
+# entry conditional so selective installs do not require unrelated LLVM tools.
 _.path = { path = [
-  "{{ tools[\"clang-format\"].path }}/Library/bin",
-  "{{ tools[\"clang-tools\"].path }}/Library/bin",
-  "{{ tools[\"clang-format\"].path }}/bin",
-  "{{ tools[\"clang-tools\"].path }}/bin",
+  "{% if tools[\"clang-format\"] is defined %}{{ tools[\"clang-format\"].path }}/Library/bin{% endif %}",
+  "{% if tools[\"clang-tools\"] is defined %}{{ tools[\"clang-tools\"].path }}/Library/bin{% endif %}",
+  "{% if tools[\"clang-format\"] is defined %}{{ tools[\"clang-format\"].path }}/bin{% endif %}",
+  "{% if tools[\"clang-tools\"] is defined %}{{ tools[\"clang-tools\"].path }}/bin{% endif %}",
 ], tools = true }
