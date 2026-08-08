@@ -77,7 +77,8 @@ in
   inherit python pythonSet mylibApplication;
 
   shellPackages = [
-    pkgs.uv
+    # Python remains a Nix-provided runtime in the holistic environment. uv is
+    # supplied by the Mise-derived development tool set in the dev shell.
     python
   ];
 

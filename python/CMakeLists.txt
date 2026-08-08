@@ -6,13 +6,13 @@ if(DEFINED Python_EXECUTABLE AND NOT DEFINED Python_BUILD_EXECUTABLE)
 endif()
 
 # Discover the interpreter and destination artifacts independently in every
-# build. In a native build they resolve to the same platform; in a cross build
+# build. In a native build they resolve to the same platform. In a cross build
 # CMP0190 prevents the destination interpreter from being executed.
 set(Python_ARTIFACTS_PREFIX "_BUILD")
-find_package(Python COMPONENTS Interpreter REQUIRED)
+find_package(Python 3.12 COMPONENTS Interpreter REQUIRED)
 unset(Python_ARTIFACTS_PREFIX)
 
-find_package(Python COMPONENTS Development.Module REQUIRED)
+find_package(Python 3.12 COMPONENTS Development.Module REQUIRED)
 
 if(
     NOT Python_BUILD_VERSION_MAJOR EQUAL Python_VERSION_MAJOR

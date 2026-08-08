@@ -14,7 +14,7 @@ let
     targetBuildInputs = pythonFeature.selection.effectiveTargetPackages;
     hostBuildInputs = pythonFeature.selection.effectiveHostPackages;
     pythonForHost = pythonFeature.python.package;
-    pythonForBuild = pythonFeature.python.package.pythonOnBuildForHost;
+    pythonForBuild = pythonFeature.buildPython.package;
   };
 
   mylibWithApps = mylib.override {

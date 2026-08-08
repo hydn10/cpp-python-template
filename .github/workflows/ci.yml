@@ -7,34 +7,27 @@ on:
 permissions:
   contents: read
 
+env:
+  # Do not let repository-tool installs resolve missing lock data in CI.
+  MISE_LOCKED: "1"
+
 jobs:
   formatting:
     name: Formatting (Linux)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
       - name: Set up repository tools
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
         with:
-          install_args: gersemi just oxfmt precious
-
-      - name: Install LLVM 22
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "22.1.6"
-          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
-          directory: ${{ runner.temp }}/llvm
-          env: false
+          install_args: clang-format gersemi just oxfmt precious uv
 
       - name: Check formatting
         run: just check format all
@@ -61,22 +54,12 @@ jobs:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Ensure CMake and Ninja are installed
-        shell: bash
-        run: |
-          # Required for local act runs; its reduced Ubuntu image omits both tools.
-          if ! command -v cmake >/dev/null || ! command -v ninja >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y cmake ninja-build
-          fi
-
-          cmake --version
-          ninja --version
-
-      - name: Set up Just
-        uses: extractions/setup-just@v4
+      - name: Set up repository tools
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          install_args: cmake ninja just
 
       - name: Install GCC 14
         if: matrix.compiler == 'gcc'
@@ -87,7 +70,9 @@ jobs:
 
       - name: Install LLVM 22
         if: matrix.compiler == 'clang'
-        uses: KyleMayes/install-llvm-action@v2
+        # This is the caller-provided compiler dimension, independent of Mise's
+        # repository tooling.
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
         with:
           version: "22.1.6"
           force-url: ${{ matrix.llvm_url }}
@@ -141,14 +126,18 @@ jobs:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Just
-        uses: extractions/setup-just@v4
+      - name: Set up repository tools
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          install_args: cmake ninja just
 
       - name: Install LLVM 22
         if: matrix.compiler == 'clang-cl'
-        uses: KyleMayes/install-llvm-action@v2
+        # This is the caller-provided compiler dimension, independent of Mise's
+        # repository tooling.
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
         with:
           version: "22.1.6"
           force-url: ${{ matrix.llvm_url }}
@@ -206,22 +195,12 @@ jobs:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Ensure CMake and Ninja are installed
-        shell: bash
-        run: |
-          # Required for local act runs; its reduced Ubuntu image omits both tools.
-          if ! command -v cmake >/dev/null || ! command -v ninja >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y cmake ninja-build
-          fi
-
-          cmake --version
-          ninja --version
-
-      - name: Set up Just
-        uses: extractions/setup-just@v4
+      - name: Set up repository tools
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          install_args: clang-tools cmake ninja just
 
       - name: Install build prerequisites
         shell: bash
@@ -230,7 +209,9 @@ jobs:
           sudo apt-get install -y autoconf autoconf-archive automake libtool
 
       - name: Install LLVM 22
-        uses: KyleMayes/install-llvm-action@v2
+        # This is the caller-provided compiler dimension.
+        # Repository clang-tidy comes from Mise above.
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
         with:
           version: "22.1.6"
           force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
@@ -250,7 +231,7 @@ jobs:
           feature-profile: core-python
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
 
@@ -271,13 +252,17 @@ jobs:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Just
-        uses: extractions/setup-just@v4
+      - name: Set up repository tools
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          install_args: clang-tools cmake ninja just
 
       - name: Install LLVM 22
-        uses: KyleMayes/install-llvm-action@v2
+        # This is the caller-provided compiler dimension.
+        # Repository clang-tidy comes from Mise above.
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
         with:
           version: "22.1.6"
           force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
@@ -314,7 +299,7 @@ jobs:
           feature-profile: core-python
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
 
@@ -340,7 +325,7 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up vcpkg and its binary cache
         uses: ./.github/actions/setup-vcpkg
@@ -349,16 +334,15 @@ jobs:
           toolchain: gcc
           feature-profile: core
 
-      - name: Set up Just
-        uses: extractions/setup-just@v4
+      - name: Set up repository tools
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          install_args: cmake ninja just uv
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ matrix.python }}
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
 
       - name: Check Python applications
         run: just py smoke
@@ -375,10 +359,12 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Just
-        uses: extractions/setup-just@v4
+      - name: Set up repository tools
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          install_args: cmake ninja just uv
 
       - name: Set up the Visual Studio environment
         shell: pwsh
@@ -403,12 +389,9 @@ jobs:
           feature-profile: core
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ matrix.python }}
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
 
       - name: Check Python applications
         run: just py smoke
@@ -425,7 +408,7 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up vcpkg and its binary cache
         uses: ./.github/actions/setup-vcpkg
@@ -434,16 +417,15 @@ jobs:
           toolchain: gcc
           feature-profile: core
 
-      - name: Set up Just
-        uses: extractions/setup-just@v4
+      - name: Set up repository tools
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          install_args: cmake ninja just uv
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ matrix.python }}
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
 
       - name: Build and smoke-test the wheel
         run: just py check-wheel
@@ -460,10 +442,12 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Just
-        uses: extractions/setup-just@v4
+      - name: Set up repository tools
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          install_args: cmake ninja just uv
 
       - name: Set up the Visual Studio environment
         shell: pwsh
@@ -488,12 +472,9 @@ jobs:
           feature-profile: core
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ matrix.python }}
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
 
       - name: Build and smoke-test the wheel
         run: just py check-wheel
@@ -505,10 +486,10 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v31
+        uses: cachix/install-nix-action@630ae543ea3a38a9a4166f03376c02c50f408342 # v31.11.0
 
       - name: Check the flake
         run: nix flake check -L

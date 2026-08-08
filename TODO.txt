@@ -1,8 +1,8 @@
-- Recheck pyproject-nix/build-system-pkgs' uv.lock (currently scikit-build-core 0.12.2); when it supports 1.x, revisit our <1 cap and metadata syntax.
+- Recheck pyproject-nix/build-system-pkgs' uv.lock (currently scikit-build-core 0.12.2). When it supports 1.x, revisit our <1 cap and metadata syntax.
 
 - When scikit-build-core editable rebuild is no longer experimental, consider enabling it.
 
 - When nixpkgs' gersemi catches up with verson >= 0.25.4, remove our custom override.
 
-- Keep Oxfmt pinned at 0.59.0 until nixpkgs catches up with 0.62.0 or a compatible newer version.
-  Its breaking YAML-formatting changes can make Mise and Nix output differ. Then reconsider returning Mise to latest.
+- Careful with Oxfmt when nixpkgs catches up with 0.62.0 or a compatible newer version.
+  It contains breaking YAML-formatting changes.

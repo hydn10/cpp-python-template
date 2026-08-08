@@ -16,7 +16,8 @@ let
       }
       {
         eigen3 = _: pkgs.eigen;
-        python3 = _: pythonProvider;
+        python3 =
+          dependency: if dependency.host then pythonProvider.pythonOnBuildForHost else pythonProvider;
         nanobind = _: nanobindProvider;
       };
 

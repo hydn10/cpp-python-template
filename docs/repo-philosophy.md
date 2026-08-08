@@ -28,7 +28,8 @@ Project and workflow onion:
                 -> Developer workflow and quality tools: formatting, linting, and automation
 
 Provisioning models:
-    Selective: host-provided native tools, Python and uv, optional mise
+    Selective: caller-provided native C++ platform toolchain, Mise repository
+        tooling, and uv-selected Python for Python package workflows
     Holistic: Nix packages and `nix develop`
 ```
 
@@ -130,7 +131,7 @@ CMake should normally avoid imposing caller, developer, or packager policy:
 - Installation prefix and distribution-specific paths.
 - Machine-local tool locations.
 
-The boundary is not whether a setting affects the generated binary. A required link relationship belongs to the project. An aggressive warning policy or sanitizer configuration belongs to the caller. The project owns what the graph means; the caller owns how that graph is built for a particular environment or purpose.
+The boundary is not whether a setting affects the generated binary. A required link relationship belongs to the project. An aggressive warning policy or sanitizer configuration belongs to the caller. The project owns what the graph means. The caller owns how that graph is built for a particular environment or purpose.
 
 ---
 
@@ -140,10 +141,11 @@ The project should declare the dependencies it needs. Providers should decide ho
 
 CMake may declare a native dependency through standard package discovery. Python packaging may declare Python build and runtime requirements. Those dependencies may then be supplied by vcpkg, uv, Nix, a system package manager, a toolchain file, a configured prefix, or another provider.
 
-Native toolchain and Python/uv versions are intentionally caller-selectable.
-Mise's defaults are optional conveniences for miscellaneous tools, not
-universal toolchain authority. Nix is the all-in alternative when a complete
-environment is desired.
+The native C++ platform toolchain remains caller-selectable and includes the compiler, linker, SDK/sysroot, and platform-specific environment setup.
+Python interpreter selection for Python package workflows remains owned by uv. A dependency provider may separately supply a build-machine interpreter
+when a direct CMake build needs one that matches destination Python development artifacts, including during cross-compilation.
+In the selective workflow, Mise supplies the portable repository development/build tools on top of that native toolchain.
+Nix is the all-in alternative when a complete environment is desired.
 
 Provider-specific metadata is legitimate. Different ecosystems need their own names, locks, and translation rules. The important distinction is:
 
@@ -178,7 +180,7 @@ Development environments should provide tools, dependencies, runtimes, and usefu
 
 In this repository, Nix is an optional outer integration layer. Its files and
 behavior should describe how the project is provisioned, packaged, developed,
-or run through Nix; they should not redefine the core project or require Nix in
+or run through Nix. They should not redefine the core project or require Nix in
 the core workflows. The core should remain usable without Nix, and Nix should
 remain self-contained at the boundary around it. If the repository later adds a
 genuinely Nix-native component, that should be an explicit change to the

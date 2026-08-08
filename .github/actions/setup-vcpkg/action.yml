@@ -23,7 +23,7 @@ runs:
         echo "VCPKG_BINARY_SOURCES=clear;files,${{ github.workspace }}/.cache/vcpkg-binaries,readwrite" >> "$GITHUB_ENV"
 
     - name: Set up the pinned vcpkg revision
-      uses: lukka/run-vcpkg@v11
+      uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11.6
 
     - name: Fingerprint the POSIX toolchain
       id: fingerprint-posix
@@ -71,7 +71,7 @@ runs:
     # compiler, triplet, selected features, port contents, and dependency ABIs.
     - name: Restore and save vcpkg binary packages
       if: env.ACT != 'true'
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ github.workspace }}/.cache/vcpkg-binaries
         key: >-

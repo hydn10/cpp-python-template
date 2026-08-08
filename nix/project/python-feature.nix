@@ -3,21 +3,20 @@ let
   pythonFeature =
     vcpkgDependencies.projectFeatures.python or (throw "vcpkg project feature 'python' is required");
 
-  getTargetDependency =
-    name:
+  getDependency =
+    name: host:
     let
-      dependency = lib.findFirst (
-        candidate: candidate.name == name
-      ) (throw "vcpkg project feature 'python' must depend on ${name}") pythonFeature.mappedDependencies;
+      dependency =
+        lib.findFirst (candidate: candidate.name == name && candidate.host == host)
+          (throw "vcpkg project feature 'python' must depend on ${name} with host=${toString host}")
+          pythonFeature.mappedDependencies;
     in
-    if dependency.host then
-      throw "${name} must be a target dependency of the vcpkg project feature 'python'"
-    else
-      dependency;
+    dependency;
 in
 {
   feature = pythonFeature;
   selection = vcpkgDependencies.selectProjectFeatures [ "python" ];
-  python = getTargetDependency "python3";
-  nanobind = getTargetDependency "nanobind";
+  python = getDependency "python3" false;
+  buildPython = getDependency "python3" true;
+  nanobind = getDependency "nanobind" false;
 }

@@ -1,12 +1,20 @@
 {
   "name": "mylib",
   "version": "0.1.0",
-  "builtin-baseline": "40f3c709db80acf154ac4b17a1f83c564ebd022e",
+  "builtin-baseline": "ea1a7396b05637a53bf23c078647ecc0edee4b80",
   "dependencies": ["eigen3"],
   "features": {
     "python": {
       "description": "Dependencies required to build the Python extension",
-      "dependencies": ["python3", "nanobind"]
+      "dependencies": [
+        "nanobind",
+        {
+          "name": "python3",
+          "host": true,
+          "default-features": false
+        },
+        "python3"
+      ]
     }
   }
 }

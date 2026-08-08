@@ -14,6 +14,12 @@ mod cpp 'just/mods/cpp.just'
 # Python environment and application workflows.
 mod py 'just/mods/py.just'
 
+# vcpkg dependency-provider maintenance.
+mod vcpkg 'just/mods/vcpkg.just'
+
+# Mise development-environment maintenance.
+mod mise 'just/mods/mise.just'
+
 # Disposable build state, environments, caches, and package outputs.
 mod purge 'just/mods/purge.just'
 

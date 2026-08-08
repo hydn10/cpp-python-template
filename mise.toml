@@ -1,17 +1,45 @@
+min_version = "2026.7.12"
+
 [settings]
 lockfile = true
+lockfile_platforms = ["linux-x64", "windows-x64"]
 windows_shim_mode = "exe"
 
 [tool_alias]
+clang-format = "conda:clang-format"
+clang-tools = "conda:clang-tools"
 gersemi = "pipx:gersemi"
 oxfmt = "npm:oxfmt"
 precious = "github:houseabsolute/precious"
 
 [tools]
+# Loose selectors are the repository's request for a current compatible tool;
+# mise.lock records the exact reproducible snapshot for each one.
 act = "latest"
 just = "latest"
 actionlint = "latest"
 shellcheck = "latest"
-gersemi = "latest"
-oxfmt = "0.59.0"
+
+# These versions are part of the repository's development-tool policy.
+cmake = "4.1"
+# conda-forge splits the LLVM tools across these two packages: clang-format and
+# clang-tools (which supplies clang-tidy).
+clang-format = "22.1.8"
+clang-tools = "22.1.8"
+oxfmt = "0.61.0"
+gersemi = "0.25.4"
+
+# The exact locked versions are snapshots, not repository policy.
+ninja = "latest"
+uv = "latest"
 precious = "latest"
+
+[env]
+# The Conda packages expose their executables through mise, but Windows also
+# needs the packages' runtime DLL directories on PATH for clang-tidy.
+_.path = { path = [
+  "{{ tools[\"clang-format\"].path }}/Library/bin",
+  "{{ tools[\"clang-tools\"].path }}/Library/bin",
+  "{{ tools[\"clang-format\"].path }}/bin",
+  "{{ tools[\"clang-tools\"].path }}/bin",
+], tools = true }

@@ -3,7 +3,7 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
     vcpkg-nix-adapter = {
-      url = "github:hydn10/vcpkg-nix-adapter/v0.1.0";
+      url = "github:hydn10/vcpkg-nix-adapter/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -47,8 +47,9 @@
       mkSystemOutputs =
         system:
         let
-          pkgs = import nixpkgs { inherit system; };
-          nixProject = import ./nix {
+          pkgs = nixpkgs.legacyPackages.${system};
+
+          workspace = import ./nix {
             inherit
               pkgs
               uv2nix
@@ -59,27 +60,19 @@
             miseAdapter = mise-nix-adapter.lib;
           };
 
-          inherit (nixProject) project;
-
-          inherit (project) vcpkgDependencies;
-
-          devShellProjectFeatures = vcpkgDependencies.selectProjectFeatures (
-            builtins.attrNames vcpkgDependencies.projectFeatures
+          devShellProjectFeatures = workspace.project.vcpkgDependencies.selectProjectFeatures (
+            builtins.attrNames workspace.project.vcpkgDependencies.projectFeatures
           );
 
-          inherit (project) cpp;
+          pythonModules = workspace.python;
+          mise = workspace.development.mise;
 
-          pythonModules = nixProject.python;
-          mise = nixProject.development.mise;
-
-          mylibWithApps = cpp.mylibWithApps;
-
-          nixFormatter = pkgs.nixfmt-tree;
+          mylibWithApps = workspace.project.cpp.mylibWithApps;
         in
         {
           packages = {
             default = self.packages.${system}.mylib;
-            mylib = cpp.mylib;
+            mylib = workspace.project.cpp.mylib;
           };
 
           # Expose runnable apps
@@ -113,37 +106,34 @@
           # Dev shell that inherits deps from the C++ package and adds the Python
           # development environment and provides common tools.
           devShells.default = pkgs.mkShell {
-            inputsFrom = [ cpp.mylib ];
-            packages = [
-              pkgs.llvmPackages_22.clang-tools
-              pkgs.ninja
-              pkgs.nixfmt
-              pkgs.pkg-config
-            ]
-            ++ mise.packages
-            # Root dependencies arrive through cpp.mylib. Every declared
-            # project feature is selected for the development shell, which
-            # therefore only needs their packages that are additional to root.
-            ++ devShellProjectFeatures.additionalPackages
-            ++ pythonModules.shellPackages;
+            inputsFrom = [ workspace.project.cpp.mylib ];
+
+            packages =
+              mise.packages
+              # Root dependencies arrive through workspace.project.cpp.mylib.
+              # Every declared project feature is selected for the development shell,
+              # which therefore only needs their packages that are additional to root.
+              ++ devShellProjectFeatures.additionalPackages
+              ++ pythonModules.shellPackages;
+
             env = pythonModules.shellEnv;
           };
 
           # Canonical formatter for the optional Nix integration.
-          formatter = nixFormatter;
+          formatter = pkgs.nixfmt-tree;
 
           # Build every native category, verify public headers, and let the CMake
           # check phase run the registered native tests.
           checks = {
-            cpp-quality = cpp.mylibQualityCheck;
+            cpp-quality = workspace.project.cpp.mylibQualityCheck;
 
             python-apps = pythonModules.mylibApplication;
 
-            cmake-python-extension = cpp.mylibPythonExtension;
+            cmake-python-extension = workspace.project.cpp.mylibPythonExtension;
 
             # Use the formatter's own check derivation so `nix fmt` and
             # `nix flake check` share both traversal and formatting policy.
-            nix-format = nixFormatter.check self;
+            nix-format = self.formatter.${system}.check self;
           };
         };
 

@@ -70,8 +70,9 @@ target_link_libraries(<target> PRIVATE mylib::mylib)
 ## Python tools
 
 [Python](https://www.python.org/) 3.12 or newer and
-[uv](https://docs.astral.sh/uv/) are required. uv uses an existing compatible
-interpreter or downloads one when needed.
+[uv](https://docs.astral.sh/uv/) are required. In the selective Mise workflow,
+Mise supplies uv while uv selects an existing compatible interpreter or
+downloads one when needed for Python package workflows.
 
 Building the Python extension additionally requires [nanobind](https://nanobind.readthedocs.io/) >= 2.13.
 
@@ -87,7 +88,9 @@ After changing native code or bindings, rebuild the editable installation:
 uv sync --locked --reinstall-package mylib-tools
 ```
 
-## Native dependencies with vcpkg
+## vcpkg
+
+[vcpkg](https://vcpkg.io/) can provision the project's native dependencies.
 
 Set `VCPKG_ROOT` to a valid vcpkg checkout. The matching `vcpkg-*` presets then
 become available to CMake. They use `cmake/toolchains/vcpkg.cmake`.
@@ -99,6 +102,14 @@ become available to CMake. They use `cmake/toolchains/vcpkg.cmake`.
 cmake --preset vcpkg-quality
 cmake --build --preset vcpkg-quality
 ```
+
+Direct CMake builds of the Python extension select the vcpkg `python` feature.
+It declares both destination Python development artifacts and a runnable
+build-machine interpreter. In vcpkg terminology, the latter is a host
+dependency. Native builds deduplicate the two roles into one triplet. For a
+cross build, set both `VCPKG_TARGET_TRIPLET` and `VCPKG_HOST_TRIPLET`. The
+extension uses the target-triplet headers and libraries while CMake and
+nanobind execute the host-triplet interpreter.
 
 ## Developer commands
 
@@ -124,7 +135,9 @@ With no preset argument, Just uses:
 
 Explicit presets are literal: `just cpp build quality` is always `quality`.
 
-Raw `uv` commands use the caller’s native environment. `just py ...` applies the provider-aware defaults.
+Raw `uv` commands use the active workflow's uv: Mise in the selective workflow
+and Nix in the Nix development shell. `just py ...` applies the provider-aware
+defaults.
 
 For a final pre-submission pass, consider running `just format all` followed by `just verify`.
 
@@ -151,8 +164,14 @@ mise x -- just help
 On Windows, `mise x -- just format all` may fail because an upstream
 command-resolution issue mishandles executable paths.
 
-Mise provides the repository’s portable workflow tooling.
-Language toolchains, language-specific tools, runtimes, and project dependencies remain caller-provided.
+Mise provides the repository's portable development/build tooling, including
+CMake, Ninja, uv, Just, and the repository quality tools. The caller remains
+responsible for the native C++ platform toolchain.
+
+Mise does not provision Python. `uv` owns interpreter
+selection for Python package workflows. Provider-driven direct CMake builds may
+use a provider-owned build interpreter matching their destination Python
+artifacts. Project dependencies remain provider-specific.
 
 ### Nix (complete)
 
