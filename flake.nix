@@ -3,7 +3,7 @@
     nixpkgs.url = "nixpkgs/nixos-unstable";
 
     vcpkg-nix-adapter = {
-      url = "github:hydn10/vcpkg-nix-adapter/main";
+      url = "github:hydn10/vcpkg-nix-adapter/v0.2.0";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

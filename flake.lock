@@ -130,7 +130,7 @@
       },
       "original": {
         "owner": "hydn10",
-        "ref": "main",
+        "ref": "v0.2.0",
         "repo": "vcpkg-nix-adapter",
         "type": "github"
       }
