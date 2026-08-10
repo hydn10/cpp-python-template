@@ -19,14 +19,14 @@ compute_value(double x)
 std::vector<double>
 compute_values(double xmin, double xmax, std::size_t point_count)
 {
-  if (point_count == 0U)
+  if (point_count == 0u)
   {
     return {};
   }
 
   std::vector<double> values(point_count);
 
-  if (point_count == 1U)
+  if (point_count == 1u)
   {
     values.front() = compute_value(xmin);
     return values;
@@ -38,7 +38,11 @@ compute_values(double xmin, double xmax, std::size_t point_count)
 
   // This helper evaluates the same scalar expression over a uniform grid,
   // which maps neatly to Eigen's array operations without changing the public API.
-  sampled_values = x_values.unaryExpr([](double x) { return compute_value(x); });
+  sampled_values = x_values.unaryExpr(
+      [](double x)
+      {
+        return compute_value(x);
+      });
 
   return values;
 }

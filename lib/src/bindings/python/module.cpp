@@ -27,9 +27,9 @@ as_numpy_array(std::vector<double> values)
   nb::capsule const owner(
       owned_values.get(),
       [](void *pointer) noexcept
-  {
-    delete static_cast<std::vector<double> *>(pointer); // NOLINT(cppcoreguidelines-owning-memory)
-  });
+      {
+        delete static_cast<std::vector<double> *>(pointer); // NOLINT(cppcoreguidelines-owning-memory)
+      });
 
   auto *data = owned_values->data();
   owned_values.release(); // NOLINT(bugprone-unused-return-value)
@@ -48,7 +48,9 @@ NB_MODULE(_core, module)
   module.def(
       "compute_values",
       [](double xmin, double xmax, std::size_t point_count)
-  { return as_numpy_array(mylib::compute_values(xmin, xmax, point_count)); },
+      {
+        return as_numpy_array(mylib::compute_values(xmin, xmax, point_count));
+      },
       nb::arg("xmin"),
       nb::arg("xmax"),
       nb::arg("point_count"),

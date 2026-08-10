@@ -15,6 +15,9 @@ Checks: "*,
         -readability-magic-numbers,
         -readability-math-missing-parentheses,
         -bugprone-easily-swappable-parameters,
+        -readability-uppercase-literal-suffix,
+        -hicpp-uppercase-literal-suffix,
+        -cert-dcl16-c,
 "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

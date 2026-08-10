@@ -25,7 +25,7 @@ try
     }
 
     auto const values = mylib::compute_values(-1.0, 1.0, 3);
-    if (values.size() != 3U)
+    if (values.size() != 3u)
     {
       std::println(error_stream, "compute_values returned {} samples, expected 3", values.size());
       return 1;
@@ -39,7 +39,7 @@ try
     }
 
     auto const single_value = mylib::compute_values(2.0, 5.0, 1);
-    if (single_value.size() != 1U || std::abs(single_value.front() - 5.0) > 1e-12)
+    if (single_value.size() != 1u || std::abs(single_value.front() - 5.0) > 1e-12)
     {
       std::println(error_stream, "compute_values single-point case failed");
       return 1;
