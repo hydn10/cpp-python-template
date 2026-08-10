@@ -5,6 +5,7 @@ import '../common.just'
 
 default-output-dir := "out/smoke/python"
 default-wheel-work-dir := "out/smoke/wheel"
+
 python-package := "mylib-tools"
 plot-command := "mylib-plot"
 dump-command := "mylib-dump"
