@@ -4,12 +4,12 @@
   pythonFeature,
 }:
 let
-  mylib = pkgs.callPackage ../packages/mylib.nix {
+  package = pkgs.callPackage ../packages/cpp-library.nix {
     targetBuildInputs = vcpkgDependencies.root.targetPackages;
     hostBuildInputs = vcpkgDependencies.root.hostPackages;
   };
 
-  mylibPythonExtension = mylib.override {
+  pythonExtension = package.override {
     buildPython = true;
     targetBuildInputs = pythonFeature.selection.effectiveTargetPackages;
     hostBuildInputs = pythonFeature.selection.effectiveHostPackages;
@@ -17,12 +17,12 @@ let
     pythonForBuild = pythonFeature.buildPython.package;
   };
 
-  mylibWithApps = mylib.override {
+  packageWithApps = package.override {
     buildApps = true;
   };
 
-  mylibQualityCheck =
-    (mylibWithApps.override {
+  qualityCheck =
+    (packageWithApps.override {
       buildExamples = true;
       buildTests = true;
     }).overrideAttrs
@@ -42,9 +42,9 @@ let
 in
 {
   inherit
-    mylib
-    mylibPythonExtension
-    mylibWithApps
-    mylibQualityCheck
+    package
+    packageWithApps
+    pythonExtension
+    qualityCheck
     ;
 }

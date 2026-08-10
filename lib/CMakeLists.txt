@@ -1,9 +1,9 @@
-set(target_name mylib)
+set(target_name "${PROJECT_NAME}")
 
 find_package(Eigen3 CONFIG REQUIRED)
 
 add_library(${target_name})
-add_library(mylib::mylib ALIAS ${target_name})
+add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS ${target_name})
 
 target_sources(
     ${target_name}
@@ -22,7 +22,7 @@ target_link_libraries(
 
 set_target_properties(
     ${target_name}
-    PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON EXPORT_NAME mylib
+    PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON EXPORT_NAME "${PROJECT_NAME}"
 )
 
 if(BUILD_SHARED_LIBS)
@@ -32,6 +32,10 @@ if(BUILD_SHARED_LIBS)
     )
 endif()
 
-install(TARGETS ${target_name} EXPORT mylib-targets FILE_SET HEADERS)
+install(
+    TARGETS ${target_name}
+    EXPORT "${PROJECT_NAME}-targets"
+    FILE_SET HEADERS
+)
 
 message(STATUS "Added library: ${target_name}")

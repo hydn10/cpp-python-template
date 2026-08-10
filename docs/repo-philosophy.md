@@ -84,6 +84,14 @@ A useful test is:
 
 If yes, the repository probably has duplicated authority.
 
+For project identity, `vcpkg.json` owns the canonical native package name and
+version. CMake and provider integrations should derive those values from the
+manifest where their formats support it cleanly. Language-level API names,
+filesystem paths, and ecosystem metadata that must be static may keep explicit
+translations of that identity. Those translations should be consolidated
+locally and repeated consumers should delegate to their ecosystem's authoritative
+metadata rather than restating the same value.
+
 ---
 
 ## 4. Prefer delegation over reimplementation

@@ -1,4 +1,4 @@
-function(mylib_stage_runtime_dlls target_name)
+function(stage_runtime_dlls target_name)
     if(NOT WIN32)
         return()
     endif()

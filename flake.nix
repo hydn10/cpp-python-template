@@ -67,50 +67,50 @@
           pythonModules = workspace.python;
           mise = workspace.development.mise;
 
-          mylibWithApps = workspace.project.cpp.mylibWithApps;
+          projectName = workspace.project.cpp.package.pname;
+          packageWithApps = workspace.project.cpp.packageWithApps;
+          nativeSampleName = "${projectName}-sample";
+          nativeSampleApp = {
+            type = "app";
+            program = "${packageWithApps}/bin/${nativeSampleName}";
+            meta = {
+              description = "Run the packaged native sample application for ${projectName}.";
+            };
+          };
+          pythonScriptApps = builtins.listToAttrs (
+            map (scriptName: {
+              name = scriptName;
+              value = {
+                type = "app";
+                program = "${pythonModules.application}/bin/${scriptName}";
+                meta = {
+                  description = "Run the packaged ${scriptName} Python application.";
+                };
+              };
+            }) pythonModules.applicationScripts
+          );
         in
         {
           packages = {
-            default = self.packages.${system}.mylib;
-            mylib = workspace.project.cpp.mylib;
+            default = workspace.project.cpp.package;
+            "${projectName}" = workspace.project.cpp.package;
           };
 
           # Expose runnable apps
           apps = {
-            default = self.apps.${system}.mylib-sample;
-            mylib-sample = {
-              type = "app";
-              program = "${mylibWithApps}/bin/mylib-sample";
-              meta = {
-                description = "Run the packaged native sample application for mylib.";
-              };
-            };
-
-            # Python CLI from [project.scripts]
-            mylib-plot = {
-              type = "app";
-              program = "${pythonModules.mylibApplication}/bin/mylib-plot";
-              meta = {
-                description = "Run the packaged plotting CLI for the mylib template.";
-              };
-            };
-            mylib-dump = {
-              type = "app";
-              program = "${pythonModules.mylibApplication}/bin/mylib-dump";
-              meta = {
-                description = "Run the packaged CSV dump CLI for the mylib template.";
-              };
-            };
-          };
+            default = nativeSampleApp;
+            "${nativeSampleName}" = nativeSampleApp;
+          }
+          // pythonScriptApps;
 
           # Dev shell that inherits deps from the C++ package and adds the Python
           # development environment and provides common tools.
           devShells.default = pkgs.mkShell {
-            inputsFrom = [ workspace.project.cpp.mylib ];
+            inputsFrom = [ workspace.project.cpp.package ];
 
             packages =
               mise.packages
-              # Root dependencies arrive through workspace.project.cpp.mylib.
+              # Root dependencies arrive through the native C++ package.
               # Every declared project feature is selected for the development shell,
               # which therefore only needs their packages that are additional to root.
               ++ devShellProjectFeatures.additionalPackages
@@ -125,11 +125,11 @@
           # Build every native category, verify public headers, and let the CMake
           # check phase run the registered native tests.
           checks = {
-            cpp-quality = workspace.project.cpp.mylibQualityCheck;
+            cpp-quality = workspace.project.cpp.qualityCheck;
 
-            python-apps = pythonModules.mylibApplication;
+            python-apps = pythonModules.application;
 
-            cmake-python-extension = workspace.project.cpp.mylibPythonExtension;
+            cmake-python-extension = workspace.project.cpp.pythonExtension;
 
             # Use the formatter's own check derivation so `nix fmt` and
             # `nix flake check` share both traversal and formatting policy.

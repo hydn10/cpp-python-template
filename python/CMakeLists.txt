@@ -38,9 +38,11 @@ nanobind_add_module(
     "${PROJECT_SOURCE_DIR}/lib/src/bindings/python/module.cpp"
 )
 
-target_link_libraries(_core PRIVATE mylib::mylib)
+target_link_libraries(_core PRIVATE "${PROJECT_NAME}::${PROJECT_NAME}")
 
-mylib_stage_runtime_dlls(_core)
+stage_runtime_dlls(_core)
+
+set(python_package_name mylib_tools)
 
 # When building with scikit-build-core, install the extension into the shared
 # support package used by the Python console apps.
@@ -48,17 +50,17 @@ if(DEFINED SKBUILD)
     install(
         TARGETS _core
         LIBRARY
-            DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_tools"
+            DESTINATION "${SKBUILD_PLATLIB_DIR}/${python_package_name}"
             COMPONENT python
         RUNTIME
-            DESTINATION "${SKBUILD_PLATLIB_DIR}/mylib_tools"
+            DESTINATION "${SKBUILD_PLATLIB_DIR}/${python_package_name}"
             COMPONENT python
     )
 else()
     install(
         TARGETS _core
-        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/mylib_tools"
-        RUNTIME DESTINATION "${CMAKE_INSTALL_LIBDIR}/mylib_tools"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/${python_package_name}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_LIBDIR}/${python_package_name}"
     )
 endif()
 

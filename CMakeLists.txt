@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 4.1)
 # Trigger configuration on file change.
 configure_file(vcpkg.json vcpkg.json COPYONLY)
 
-file(READ "${CMAKE_CURRENT_BINARY_DIR}/vcpkg.json" MYLIB_JSON_STRING)
-string(JSON VERSION_FROM_JSON GET "${MYLIB_JSON_STRING}" version)
+file(READ "${CMAKE_CURRENT_BINARY_DIR}/vcpkg.json" PROJECT_MANIFEST_JSON)
+string(JSON PROJECT_NAME_FROM_JSON GET "${PROJECT_MANIFEST_JSON}" name)
+string(JSON PROJECT_VERSION_FROM_JSON GET "${PROJECT_MANIFEST_JSON}" version)
 
 set(MYLIB_BUILD_PYTHON_DEFAULT OFF)
 option(
@@ -14,13 +15,17 @@ option(
 )
 mark_as_advanced(MYLIB_BUILD_PYTHON)
 
-project(mylib LANGUAGES CXX VERSION "${VERSION_FROM_JSON}")
+project(
+    "${PROJECT_NAME_FROM_JSON}"
+    LANGUAGES CXX
+    VERSION "${PROJECT_VERSION_FROM_JSON}"
+)
 
 # The project does not use C++ modules. Disabling their dependency scanner also
 # keeps compiler-specific module flags out of clang-tidy invocations.
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/mylib-windows-runtime.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/windows-runtime.cmake")
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
@@ -64,28 +69,31 @@ if(MYLIB_BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
+set(project_targets_export "${PROJECT_NAME}-targets")
+set(project_package_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+
 install(
-    EXPORT mylib-targets
-    NAMESPACE mylib::
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/mylib"
-    FILE mylib-targets.cmake
+    EXPORT "${project_targets_export}"
+    NAMESPACE "${PROJECT_NAME}::"
+    DESTINATION "${project_package_install_dir}"
+    FILE "${project_targets_export}.cmake"
 )
 
 configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/lib/mylib-config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/lib/mylib-config.cmake"
-    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/mylib"
+    "${CMAKE_CURRENT_SOURCE_DIR}/lib/package-config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/lib/${PROJECT_NAME}-config.cmake"
+    INSTALL_DESTINATION "${project_package_install_dir}"
     NO_SET_AND_CHECK_MACRO
 )
 
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/lib/mylib-version.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/lib/${PROJECT_NAME}-version.cmake"
     COMPATIBILITY ExactVersion
 )
 
 install(
     FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/lib/mylib-config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/lib/mylib-version.cmake"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/mylib"
+        "${CMAKE_CURRENT_BINARY_DIR}/lib/${PROJECT_NAME}-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/lib/${PROJECT_NAME}-version.cmake"
+    DESTINATION "${project_package_install_dir}"
 )

@@ -13,11 +13,12 @@
   buildPython ? false,
 }:
 let
-  pname = if buildPython then "mylib-python-extension" else "mylib";
   projectRoot = ../../.;
   vcpkgManifest = builtins.fromJSON (builtins.readFile (projectRoot + "/vcpkg.json"));
 
+  projectName = vcpkgManifest.name;
   version = vcpkgManifest.version;
+  pname = if buildPython then "${projectName}-python-extension" else projectName;
 
   mkCMakeFlag = opt: if opt then "ON" else "OFF";
 

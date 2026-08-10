@@ -26,7 +26,7 @@ let
       pyproject-build-systems
       ;
     inherit (project) vcpkgDependencies pythonFeature;
-    cppPackage = project.cpp.mylib;
+    cppPackage = project.cpp.package;
   };
 
   development = {

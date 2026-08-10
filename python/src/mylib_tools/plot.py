@@ -4,9 +4,9 @@ from typing import Optional, Sequence
 
 import matplotlib.pyplot as plt
 
-from mylib_tools.sample_series import add_sample_range_arguments
-from mylib_tools.sample_series import compute_sample_series
-from mylib_tools.sample_series import parse_sample_grid
+from .sample_series import add_sample_range_arguments
+from .sample_series import compute_sample_series
+from .sample_series import parse_sample_grid
 
 
 def main(argv: Optional[Sequence[str]] = None) -> None:

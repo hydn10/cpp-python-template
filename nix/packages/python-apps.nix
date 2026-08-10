@@ -10,6 +10,9 @@
 let
   python = pythonFeature.python.package;
   nanobind = pythonFeature.nanobind.package;
+  pyproject = builtins.fromTOML (builtins.readFile ../../pyproject.toml);
+  distributionName = pyproject.project.name;
+  applicationScripts = builtins.attrNames pyproject.project.scripts;
 
   workspace = uv2nix.lib.workspace.loadWorkspace {
     workspaceRoot = ../../.;
@@ -36,7 +39,7 @@ let
           from = python.pkgs.tkinter;
         };
 
-        "mylib-tools" = prev."mylib-tools".overrideAttrs (old: {
+        "${distributionName}" = prev.${distributionName}.overrideAttrs (old: {
           nativeBuildInputs =
             (old.nativeBuildInputs or [ ])
             ++ [
@@ -60,21 +63,27 @@ let
     ]
   );
 
-  mylibVenv = pythonSet.mkVirtualEnv "mylib-tools-env" (
+  applicationVenv = pythonSet.mkVirtualEnv "${distributionName}-env" (
     workspace.deps.default
     // {
       tkinter = [ ];
     }
   );
 
-  mylibApplication = mkApplication {
-    venv = mylibVenv;
-    package = pythonSet."mylib-tools";
+  application = mkApplication {
+    venv = applicationVenv;
+    package = pythonSet.${distributionName};
   };
 
 in
 {
-  inherit python pythonSet mylibApplication;
+  inherit
+    application
+    applicationScripts
+    distributionName
+    python
+    pythonSet
+    ;
 
   shellPackages = [
     # Python remains a Nix-provided runtime in the holistic environment. uv is
