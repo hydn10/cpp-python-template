@@ -47,7 +47,6 @@ jobs:
             compiler: clang
             cc: clang
             cxx: clang++
-            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
@@ -68,15 +67,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-14 g++-14
 
-      - name: Install LLVM 22
+      - name: Install pinned LLVM
         if: matrix.compiler == 'clang'
         # This is the caller-provided compiler dimension, independent of Mise's
         # repository tooling.
-        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
-        with:
-          version: "22.1.6"
-          force-url: ${{ matrix.llvm_url }}
-          env: false
+        uses: ./.github/actions/setup-llvm
 
       - name: Select the installed Clang compiler
         if: matrix.compiler == 'clang'
@@ -119,7 +114,6 @@ jobs:
             compiler: clang-cl
             cc: clang-cl.exe
             cxx: clang-cl.exe
-            llvm_url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
     env:
       CC: ${{ matrix.cc }}
       CXX: ${{ matrix.cxx }}
@@ -133,15 +127,11 @@ jobs:
         with:
           install_args: cmake ninja just
 
-      - name: Install LLVM 22
+      - name: Install pinned LLVM
         if: matrix.compiler == 'clang-cl'
         # This is the caller-provided compiler dimension, independent of Mise's
         # repository tooling.
-        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
-        with:
-          version: "22.1.6"
-          force-url: ${{ matrix.llvm_url }}
-          env: false
+        uses: ./.github/actions/setup-llvm
 
       - name: Set up the Visual Studio environment
         shell: pwsh
@@ -208,14 +198,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y autoconf autoconf-archive automake libtool
 
-      - name: Install LLVM 22
+      - name: Install pinned LLVM
         # This is the caller-provided compiler dimension.
         # Repository clang-tidy comes from Mise above.
-        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
-        with:
-          version: "22.1.6"
-          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-Linux-X64.tar.xz
-          env: false
+        uses: ./.github/actions/setup-llvm
 
       - name: Select the installed Clang compiler
         shell: bash
@@ -259,14 +245,10 @@ jobs:
         with:
           install_args: clang-tools cmake ninja just
 
-      - name: Install LLVM 22
+      - name: Install pinned LLVM
         # This is the caller-provided compiler dimension.
         # Repository clang-tidy comes from Mise above.
-        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
-        with:
-          version: "22.1.6"
-          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.6/LLVM-22.1.6-win64.exe
-          env: false
+        uses: ./.github/actions/setup-llvm
 
       - name: Set up the Visual Studio environment
         shell: pwsh
