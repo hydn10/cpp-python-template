@@ -36,8 +36,8 @@ Requirements:
 - [C++ compiler](https://en.cppreference.com/w/cpp/compiler_support/23) with C++23 support
 
 The installed library itself requires only C++17. Native dependencies may be
-provided by the host environment, [vcpkg](https://learn.microsoft.com/vcpkg/),
-or [Nix](https://nixos.org/).
+supplied by the build environment, with built-in support for
+[vcpkg](https://learn.microsoft.com/vcpkg/).
 
 ```sh
 cmake --preset debug
