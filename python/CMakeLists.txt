@@ -29,7 +29,7 @@ endif()
 add_executable(Python::Interpreter ALIAS Python_BUILD::Interpreter)
 set(Python_EXECUTABLE "${Python_BUILD_EXECUTABLE}")
 
-find_package(nanobind CONFIG REQUIRED)
+find_package(nanobind 2.13 CONFIG REQUIRED)
 
 nanobind_add_module(
     _core

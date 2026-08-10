@@ -69,15 +69,28 @@
 
           projectName = workspace.project.cpp.package.pname;
           packageWithApps = workspace.project.cpp.packageWithApps;
+
           nativeSampleName = "${projectName}-sample";
-          nativeSampleApp = {
-            type = "app";
-            program = "${packageWithApps}/bin/${nativeSampleName}";
-            meta = {
-              description = "Run the packaged native sample application for ${projectName}.";
-            };
+        in
+        {
+          packages = {
+            default = self.packages.${system}.${projectName};
+            "${projectName}" = workspace.project.cpp.package;
           };
-          pythonScriptApps = builtins.listToAttrs (
+
+          # Expose runnable apps
+          apps = {
+            default = self.apps.${system}.${nativeSampleName};
+
+            "${nativeSampleName}" = {
+              type = "app";
+              program = "${packageWithApps}/bin/${nativeSampleName}";
+              meta = {
+                description = "Run the packaged native sample application for ${projectName}.";
+              };
+            };
+          }
+          // builtins.listToAttrs (
             map (scriptName: {
               name = scriptName;
               value = {
@@ -89,19 +102,6 @@
               };
             }) pythonModules.applicationScripts
           );
-        in
-        {
-          packages = {
-            default = workspace.project.cpp.package;
-            "${projectName}" = workspace.project.cpp.package;
-          };
-
-          # Expose runnable apps
-          apps = {
-            default = nativeSampleApp;
-            "${nativeSampleName}" = nativeSampleApp;
-          }
-          // pythonScriptApps;
 
           # Dev shell that inherits deps from the C++ package and adds the Python
           # development environment and provides common tools.
