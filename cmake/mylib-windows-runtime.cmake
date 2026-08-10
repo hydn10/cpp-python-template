@@ -1,5 +1,5 @@
 function(mylib_stage_runtime_dlls target_name)
-    if(NOT WIN32 OR NOT BUILD_SHARED_LIBS)
+    if(NOT WIN32)
         return()
     endif()
 
@@ -7,9 +7,9 @@ function(mylib_stage_runtime_dlls target_name)
         TARGET ${target_name}
         POST_BUILD
         COMMAND
-            "${CMAKE_COMMAND}" -E copy_if_different
+            "${CMAKE_COMMAND}" -E copy -t $<TARGET_FILE_DIR:${target_name}>
             $<TARGET_RUNTIME_DLLS:${target_name}>
-            $<TARGET_FILE_DIR:${target_name}>
         COMMAND_EXPAND_LISTS
+        VERBATIM
     )
 endfunction()
