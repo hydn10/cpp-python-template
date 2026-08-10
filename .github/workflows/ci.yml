@@ -10,6 +10,9 @@ permissions:
 env:
   # Do not let repository-tool installs resolve missing lock data in CI.
   MISE_LOCKED: "1"
+  LLVM_VERSION: "22.1.6"
+  LLVM_LINUX_X64_SHA256: c5ac8ef89ca39d30cb32e9b83772f995dd891c685ebc188d593c943a64d5f8b5
+  LLVM_WINDOWS_X64_SHA256: e2d9a6855ff22c0acf3adc87ff1e1ad9705b8b6fc5bab2542aefc3315fc24cf7
 
 jobs:
   formatting:
@@ -71,7 +74,11 @@ jobs:
         if: matrix.compiler == 'clang'
         # This is the caller-provided compiler dimension, independent of Mise's
         # repository tooling.
-        uses: ./.github/actions/setup-llvm
+        uses: hydn10/setup-llvm@v1
+        with:
+          version: ${{ env.LLVM_VERSION }}
+          linux-x64-sha256: ${{ env.LLVM_LINUX_X64_SHA256 }}
+          windows-x64-sha256: ${{ env.LLVM_WINDOWS_X64_SHA256 }}
 
       - name: Select the installed Clang compiler
         if: matrix.compiler == 'clang'
@@ -131,7 +138,11 @@ jobs:
         if: matrix.compiler == 'clang-cl'
         # This is the caller-provided compiler dimension, independent of Mise's
         # repository tooling.
-        uses: ./.github/actions/setup-llvm
+        uses: hydn10/setup-llvm@v1
+        with:
+          version: ${{ env.LLVM_VERSION }}
+          linux-x64-sha256: ${{ env.LLVM_LINUX_X64_SHA256 }}
+          windows-x64-sha256: ${{ env.LLVM_WINDOWS_X64_SHA256 }}
 
       - name: Set up the Visual Studio environment
         shell: pwsh
@@ -201,7 +212,11 @@ jobs:
       - name: Install pinned LLVM
         # This is the caller-provided compiler dimension.
         # Repository clang-tidy comes from Mise above.
-        uses: ./.github/actions/setup-llvm
+        uses: hydn10/setup-llvm@v1
+        with:
+          version: ${{ env.LLVM_VERSION }}
+          linux-x64-sha256: ${{ env.LLVM_LINUX_X64_SHA256 }}
+          windows-x64-sha256: ${{ env.LLVM_WINDOWS_X64_SHA256 }}
 
       - name: Select the installed Clang compiler
         shell: bash
@@ -248,7 +263,11 @@ jobs:
       - name: Install pinned LLVM
         # This is the caller-provided compiler dimension.
         # Repository clang-tidy comes from Mise above.
-        uses: ./.github/actions/setup-llvm
+        uses: hydn10/setup-llvm@v1
+        with:
+          version: ${{ env.LLVM_VERSION }}
+          linux-x64-sha256: ${{ env.LLVM_LINUX_X64_SHA256 }}
+          windows-x64-sha256: ${{ env.LLVM_WINDOWS_X64_SHA256 }}
 
       - name: Set up the Visual Studio environment
         shell: pwsh
