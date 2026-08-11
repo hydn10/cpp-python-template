@@ -244,18 +244,18 @@ conda_deps = [
 ]
 
 [[tools.cmake]]
-version = "4.1.6"
+version = "4.3.4"
 backend = "aqua:Kitware/CMake"
 
 [tools.cmake."platforms.linux-x64"]
-checksum = "sha256:d5c2e72820e01f1c3a07092d0a29e209263a7d22f55b4ad7f414ee870ae6b8e0"
-url = "https://github.com/Kitware/CMake/releases/download/v4.1.6/cmake-4.1.6-linux-x86_64.tar.gz"
-url_api = "https://api.github.com/repos/Kitware/CMake/releases/assets/401006498"
+checksum = "sha256:ca6f08ccbd5e6b0a9068d33317d0d1aff7278d08cccaed4529b8fbead7942a68"
+url = "https://github.com/Kitware/CMake/releases/download/v4.3.4/cmake-4.3.4-linux-x86_64.tar.gz"
+url_api = "https://api.github.com/repos/Kitware/CMake/releases/assets/450506632"
 
 [tools.cmake."platforms.windows-x64"]
-checksum = "sha256:d06278857a65a7a6cdd042c7f033d8a9fda67923fd6654e13296fa22186dca9e"
-url = "https://github.com/Kitware/CMake/releases/download/v4.1.6/cmake-4.1.6-windows-x86_64.zip"
-url_api = "https://api.github.com/repos/Kitware/CMake/releases/assets/401006784"
+checksum = "sha256:86e5fcafb38bdf58346a78b187c7b6b4f252ae5242cffe24c463a92bbd2e77d1"
+url = "https://github.com/Kitware/CMake/releases/download/v4.3.4/cmake-4.3.4-windows-x86_64.zip"
+url_api = "https://api.github.com/repos/Kitware/CMake/releases/assets/450507384"
 
 [[tools.gersemi]]
 version = "0.25.4"

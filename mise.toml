@@ -21,7 +21,7 @@ actionlint = "latest"
 shellcheck = "latest"
 
 # These versions are part of the repository's development-tool policy.
-cmake = "4.1"
+cmake = "4.3"
 # conda-forge splits the LLVM tools across these two packages: clang-format and
 # clang-tools (which supplies clang-tidy).
 clang-format = "22.1.8"

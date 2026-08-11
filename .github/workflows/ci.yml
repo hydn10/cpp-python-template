@@ -74,7 +74,7 @@ jobs:
         if: matrix.compiler == 'clang'
         # This is the caller-provided compiler dimension, independent of Mise's
         # repository tooling.
-        uses: hydn10/setup-llvm@v1
+        uses: hydn10/setup-llvm@d2c47c6f008b759a802e00fae832a2192dea52ef # v1
         with:
           version: ${{ env.LLVM_VERSION }}
           linux-x64-sha256: ${{ env.LLVM_LINUX_X64_SHA256 }}
@@ -138,7 +138,7 @@ jobs:
         if: matrix.compiler == 'clang-cl'
         # This is the caller-provided compiler dimension, independent of Mise's
         # repository tooling.
-        uses: hydn10/setup-llvm@v1
+        uses: hydn10/setup-llvm@d2c47c6f008b759a802e00fae832a2192dea52ef # v1
         with:
           version: ${{ env.LLVM_VERSION }}
           linux-x64-sha256: ${{ env.LLVM_LINUX_X64_SHA256 }}
@@ -212,7 +212,7 @@ jobs:
       - name: Install pinned LLVM
         # This is the caller-provided compiler dimension.
         # Repository clang-tidy comes from Mise above.
-        uses: hydn10/setup-llvm@v1
+        uses: hydn10/setup-llvm@d2c47c6f008b759a802e00fae832a2192dea52ef # v1
         with:
           version: ${{ env.LLVM_VERSION }}
           linux-x64-sha256: ${{ env.LLVM_LINUX_X64_SHA256 }}
@@ -263,7 +263,7 @@ jobs:
       - name: Install pinned LLVM
         # This is the caller-provided compiler dimension.
         # Repository clang-tidy comes from Mise above.
-        uses: hydn10/setup-llvm@v1
+        uses: hydn10/setup-llvm@d2c47c6f008b759a802e00fae832a2192dea52ef # v1
         with:
           version: ${{ env.LLVM_VERSION }}
           linux-x64-sha256: ${{ env.LLVM_LINUX_X64_SHA256 }}

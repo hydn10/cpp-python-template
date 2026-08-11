@@ -2,7 +2,7 @@
   "version": 6,
   "cmakeMinimumRequired": {
     "major": 4,
-    "minor": 1,
+    "minor": 3,
     "patch": 0
   },
   "include": ["cmake/presets/base-presets.json", "cmake/presets/vcpkg-presets.json"]

@@ -30,7 +30,7 @@ The Python tools call the same native implementation through a private
 
 Requirements:
 
-- [CMake](https://cmake.org/) >= 4.1
+- [CMake](https://cmake.org/) >= 4.3
 - [Ninja](https://ninja-build.org/)
 - [Eigen](https://eigen.tuxfamily.org/) 3
 - [C++ compiler](https://en.cppreference.com/w/cpp/compiler_support/23) with C++23 support
@@ -60,7 +60,7 @@ cmake --install out/build/release
 
 Use `shared-release` instead of `release` to build a shared library.
 
-Downstream CMake projects consume the installed package with:
+Downstream CMake projects consume the installed CPS package with:
 
 ```cmake
 find_package(mylib CONFIG REQUIRED)

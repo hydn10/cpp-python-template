@@ -43,6 +43,7 @@ validate preset=default-quality-preset: (fresh-build preset) (validate-built pre
 # Install one native build, then build and run a consumer of its CMake package.
 [arg("preset", pattern="release|shared-release|vcpkg-release|vcpkg-shared-release")]
 check-installed preset=default-release-preset:
+    cmake -E remove_directory "out/install/{{ preset }}"
     cmake --install "out/build/{{ preset }}"
     cmake -S tests/consumer-cmake -B "out/build/consumer-cmake/{{ preset }}" --fresh -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_PREFIX_PATH={{ repo-root }}/out/install/{{ preset }}"
     cmake --build "out/build/consumer-cmake/{{ preset }}" --clean-first

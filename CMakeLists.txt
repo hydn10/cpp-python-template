@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.1)
+cmake_minimum_required(VERSION 4.3)
 
 # Trigger configuration on file change.
 configure_file(vcpkg.json vcpkg.json COPYONLY)
@@ -26,7 +26,6 @@ project(
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/windows-runtime.cmake")
-include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
 set(MYLIB_BUILD_APPS_DEFAULT "${PROJECT_IS_TOP_LEVEL}")
@@ -70,30 +69,5 @@ if(MYLIB_BUILD_TESTING)
 endif()
 
 set(project_targets_export "${PROJECT_NAME}-targets")
-set(project_package_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
-install(
-    EXPORT "${project_targets_export}"
-    NAMESPACE "${PROJECT_NAME}::"
-    DESTINATION "${project_package_install_dir}"
-    FILE "${project_targets_export}.cmake"
-)
-
-configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/lib/package-config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/lib/${PROJECT_NAME}-config.cmake"
-    INSTALL_DESTINATION "${project_package_install_dir}"
-    NO_SET_AND_CHECK_MACRO
-)
-
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/lib/${PROJECT_NAME}-version.cmake"
-    COMPATIBILITY ExactVersion
-)
-
-install(
-    FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/lib/${PROJECT_NAME}-config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/lib/${PROJECT_NAME}-version.cmake"
-    DESTINATION "${project_package_install_dir}"
-)
+install(PACKAGE_INFO "${PROJECT_NAME}" EXPORT "${project_targets_export}")

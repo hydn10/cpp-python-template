@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 4.3)
 
 file(READ "${CMAKE_CURRENT_LIST_DIR}/../../vcpkg.json" PROJECT_MANIFEST_JSON)
 string(JSON package_name GET "${PROJECT_MANIFEST_JSON}" name)
@@ -6,6 +6,20 @@ string(JSON package_name GET "${PROJECT_MANIFEST_JSON}" name)
 project("${package_name}_consumer_smoke" LANGUAGES CXX)
 
 find_package("${package_name}" CONFIG REQUIRED)
+
+if(NOT "${${package_name}_CONFIG}" MATCHES "[.]cps$")
+    message(
+        FATAL_ERROR
+        "${package_name} was not discovered through CPS: ${${package_name}_CONFIG}"
+    )
+endif()
+
+if(NOT TARGET "${package_name}::${package_name}")
+    message(
+        FATAL_ERROR
+        "Expected installed target ${package_name}::${package_name} is missing"
+    )
+endif()
 
 set(target_name "${package_name}-consumer-smoke")
 
