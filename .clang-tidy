@@ -19,8 +19,8 @@ Checks: "*,
         -hicpp-uppercase-literal-suffix,
         -cert-dcl16-c,
 "
-WarningsAsErrors: ''
-HeaderFilterRegex: ''
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*'
 FormatStyle:     file
 
 CheckOptions:

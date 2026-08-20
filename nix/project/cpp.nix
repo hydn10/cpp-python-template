@@ -31,7 +31,7 @@ let
           pkgs.llvmPackages_22.clang-tools
         ];
         cmakeFlags = (oldAttrs.cmakeFlags or [ ]) ++ [
-          "-DCMAKE_CXX_CLANG_TIDY=clang-tidy;--warnings-as-errors=*"
+          "-DCMAKE_CXX_CLANG_TIDY=clang-tidy"
           "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
         ];
         doCheck = true;

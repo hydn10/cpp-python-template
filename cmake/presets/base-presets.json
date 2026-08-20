@@ -29,7 +29,7 @@
       "description": "Debug native build with clang-tidy.",
       "inherits": "debug",
       "cacheVariables": {
-        "CMAKE_CXX_CLANG_TIDY": "$<IF:$<PLATFORM_ID:Windows>,clang-tidy;--warnings-as-errors=*;--extra-arg=/EHsc,clang-tidy;--warnings-as-errors=*>",
+        "CMAKE_CXX_CLANG_TIDY": "$<IF:$<PLATFORM_ID:Windows>,clang-tidy;--extra-arg=/EHsc,clang-tidy>",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },

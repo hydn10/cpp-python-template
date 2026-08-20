@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MYLIB_MYLIB_HPP
+#define MYLIB_MYLIB_HPP
 
 #include <cstddef>
 #include <vector>
@@ -14,3 +15,5 @@ std::vector<double>
 compute_values(double xmin, double xmax, std::size_t point_count);
 
 } // namespace mylib
+
+#endif
